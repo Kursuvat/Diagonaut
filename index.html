@@ -1509,6 +1509,8 @@
             .chest-box.shaking, .chest-box.open, .chest-result { animation: none; }
             .xp-bar > span { transition: none; }
         }
+            /* Sayı ile birimi (5 sn) satır sonunda ayrılmasın */
+        .market-item .text-xs b { white-space: nowrap; }
     </style>
 
     <!-- Yardımcı sınıflar (Tailwind'in oyunda kullanılan kısmı) -->
@@ -2493,7 +2495,7 @@
             { id: 'mult',    icon: 'mult', name: 'Uzun Çarpan',       costs: [250, 500, 900],
               value: lv => `${15 + lv * 2} sn`, what: 'Çarpan süresi' },
             { id: 'slow',    icon: 'hourglass', name: 'Zaman Ustası',      costs: [200, 400, 700],
-              value: lv => `${(6 + lv * 1.5).toString().replace('.', ',')} sn`, what: 'Yavaşlatıcı süresi' },
+              value: lv => `${(LANG === 'en' || LANG === 'fil') ? (6 + lv * 1.5).toString() : (6 + lv * 1.5).toString().replace('.', ',')} sn`, what: 'Yavaşlatıcı süresi' },
             { id: 'bubbles', icon: 'bubble', name: 'Baloncuk Yağmuru',  costs: [350, 700, 1200],
               value: lv => lv === 0 ? 'normal' : `%${lv * 10} daha sık`, what: 'Baloncuk sıklığı' },
             { id: 'bag',     icon: 'bag', name: 'Dolu Kese',         costs: [350, 700, 1400],
@@ -11060,6 +11062,10 @@
         }
 
         pauseBtn.addEventListener('click', openSettings);
+        // Sekme/uygulama değişince maçı otomatik duraklat (geri dönünce oyuncu hazırlıksız yakalanmasın)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && (gameState === 'PLAYING' || gameState === 'COUNTDOWN') && settingsModal.style.display !== 'flex') openSettings();
+        });
         document.getElementById('settings-start-btn').addEventListener('click', openSettings);
         document.getElementById('diff-chip').addEventListener('click', openSettings);
         updateDifficultyUI();
