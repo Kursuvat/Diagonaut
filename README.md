@@ -13,7 +13,7 @@ Diagonaut takes the most humble piece on the chessboard and sends it on a run. B
 
 Every piece moves by its own rules. Knights mark the squares they threaten, rooks fire warning shots down their lane before they charge, and pawns sometimes arrive in protected chains where capturing the wrong one gets you taken right back.
 
-The game is built for mobile but plays just as well on desktop, and runs entirely in the browser from a single HTML file. No install, no account.
+The game is built for mobile but plays just as well on desktop, and runs entirely in the browser from a single HTML file. No install needed, and an account is optional.
 
 ## Game Modes
 
@@ -65,12 +65,11 @@ Bubbles float onto the board during a run. Grab them for:
 
 ## Languages
 
-Diagonaut is fully playable in:
+Diagonaut is fully playable in 16 languages:
 
-- English
-- Turkish (Türkçe)
-- Filipino
-- Russian (Русский)
+English · Türkçe · Filipino · Русский · Français · Deutsch · Español · Italiano · Português (Brasil) · Bahasa Indonesia · Azərbaycanca · 简体中文 · 日本語 · 한국어 · العربية · الدارجة المغربية (Moroccan Darija)
+
+Arabic and Darija are shown right-to-left.
 
 ## Running Locally
 
