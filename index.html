@@ -1512,6 +1512,36 @@
             /* Sayı ile birimi (5 sn) satır sonunda ayrılmasın */
         .market-item .text-xs b { white-space: nowrap; }
     
+        /* ===== Skor tablosu + dil seçimi ===== */
+        #start-screen .menu-tile.lb-tile { grid-column: 1 / -1; justify-content: center !important; border-right: 0 !important; color: var(--brass-hi, #fde68a) !important; font-weight: 700 !important; }
+        #start-screen .lb-grid + .menu-grid { margin-top: 0 !important; border-top: 0 !important; }
+        .lb-panel { max-height: 92vh; overflow-y: auto; padding: 1.25rem; }
+        .lb-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
+        .lb-tab { padding: 8px 6px; border-radius: 10px; font-size: 0.8rem; font-weight: 800; color: #cbd5e1; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .lb-tab.on { color: #1c1408; background: linear-gradient(180deg, #f3d48a, #c9a24e); border-color: #7a5a26; }
+        .lb-list { display: flex; flex-direction: column; gap: 4px; }
+        .lb-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border-radius: 10px; text-align: left;
+            background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.07); border-left: 3px solid var(--pc-bd, #64748b); color: #e2e8f0; }
+        button.lb-row:hover { background: rgba(255, 255, 255, 0.07); }
+        .lb-row.me { background: rgba(52, 211, 153, 0.12); border-color: rgba(52, 211, 153, 0.45); }
+        .lb-rank { width: 26px; flex-shrink: 0; text-align: center; font-weight: 900; font-size: 0.9rem; color: #94a3b8; }
+        .lb-row.top1 .lb-rank { color: #facc15; } .lb-row.top2 .lb-rank { color: #e2e8f0; } .lb-row.top3 .lb-rank { color: #f59e0b; }
+        .lb-sw { width: 22px; height: 16px; flex-shrink: 0; border-radius: 4px; background: var(--pc-bg); background-size: cover; border: 1px solid var(--pc-bd, #64748b); }
+        .lb-name { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 0.9rem; overflow: hidden; }
+        .lb-name > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .lb-diff { flex-shrink: 0; font-size: 0.62rem; font-weight: 800; color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.35); border-radius: 9999px; padding: 0 6px; }
+        .lb-score { font-weight: 900; color: #fde68a; font-size: 0.95rem; }
+        .lb-mine { margin-bottom: 8px; border-style: dashed; }
+        .lp-title { text-transform: none !important; display: inline-block; }
+        .lp-title::first-letter { text-transform: none !important; }
+        .lb-msg { color: #94a3b8; font-size: 0.85rem; text-align: center; margin: 14px 0 8px; }
+        .pcard-stats-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .flag { width: 28px; height: 19px; flex-shrink: 0; border-radius: 3px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18); }
+        .lang-choice { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border-radius: 12px; font-weight: 800; font-size: 1rem; color: #f1f5f9;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12); text-align: left; }
+        .lang-choice:hover { background: rgba(255, 255, 255, 0.08); }
+        .lang-choice.on { border-color: rgba(52, 211, 153, 0.6); }
+        .lang-name { display: flex; align-items: center; gap: 10px; }
         /* ===== Profil kartı ===== */
         .pcard { position: relative; overflow: hidden; border-radius: 16px; padding: 14px; margin-bottom: 12px; background: var(--pc-bg); background-size: cover;
             border: 2px solid var(--pc-bd); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.15); color: #fff; text-align: left; }
@@ -8630,10 +8660,18 @@
 
             if (tutorial.active) drawTutorialHints();
 
+            ctx.textAlign = 'center';
             for (let ft of floatingTexts) {
                 ctx.fillStyle = `rgba(${ft.rgb || '16, 185, 129'}, ${Math.min(1, ft.life)})`; 
+                const txt = T(ft.text);
+                // Kenar şeritlerde yazı ekrandan taşmasın: gerekirse küçült, sonra içeri kaydır
+                let size = 30;
                 ctx.font = 'bold 30px Arial';
-                ctx.fillText(T(ft.text), ft.x, ft.y);
+                let w = ctx.measureText(txt).width;
+                if (w > GAME_W - 12) { size = Math.max(14, Math.floor(30 * (GAME_W - 12) / w)); ctx.font = `bold ${size}px Arial`; w = ctx.measureText(txt).width; }
+                const x = Math.max(w / 2 + 6, Math.min(GAME_W - w / 2 - 6, ft.x));
+                const y = Math.max(size, ft.y);
+                ctx.fillText(txt, x, y);
             }
         }
 
@@ -14763,7 +14801,6 @@
             } else {
                 html = `<div id="acc-card-slot"></div>
                     <p id="acc-cloud" class="acc-cloud"></p>
-                    <p class="acc-text">Skor tablosu yakında geliyor.</p>
                     ${verify}${info}${err}
                     <button id="acc-out" class="btn btn-secondary btn-small w-full">Çıkış Yap</button>`;
             }
@@ -14950,7 +14987,7 @@
         const accPromptTimer = setInterval(() => {
             if (accPrompted) { clearInterval(accPromptTimer); return; }
             if (document.getElementById('splash')) return;             // açılış ekranı hâlâ açık
-            if (isShown(document.getElementById('input-choice')) || isShown(document.getElementById('tutorial-offer'))) return;   // önce ilk açılış soruları
+            if (isShown(document.getElementById('input-choice')) || isShown(document.getElementById('tutorial-offer')) || isShown(document.getElementById('lang-pick'))) return;   // önce ilk açılış soruları
             if (ACC.state === 'loading' && !ACC.user && !ACC.fb) return; // Firebase hâlâ yükleniyor
             if (ACC.state === 'loading') return;
             accPrompted = true;
@@ -14959,7 +14996,7 @@
             const wantsPrompt = save.settings.accPrompt !== false;
             if (ACC.state === 'needName' || (ACC.state === 'signedOut' && wantsPrompt)) openAccount();
         }, 250);
-        setTimeout(() => { accPrompted = true; }, 20000);   // 20 sn içinde bağlanamazsa hiç gösterme
+        setTimeout(() => { if (!ACC.fb) accPrompted = true; }, 20000);   // 20 sn içinde Firebase'e bağlanamazsa hiç gösterme
 
         async function accDeleteAccount() {
             if (!ACC.fb || ACC.busy || !ACC.fb.auth.currentUser) return;
@@ -14980,6 +15017,7 @@
                 batch.delete(F.doc(db, 'users', user.uid));
                 batch.delete(F.doc(db, 'saves', user.uid));
                 batch.delete(F.doc(db, 'profiles', user.uid));
+                for (const m of ['classic', 'timeAttack', 'dodge', 'puzzle']) batch.delete(F.doc(db, 'leaderboard', m, 'scores', user.uid));
                 await batch.commit();
                 await U.deleteUser(user);
                 accNotice = 'deleted';
@@ -15398,6 +15436,319 @@
         };
         for (const [lang, table] of [['en', I18N_EN], ['fil', I18N_FIL], ['ru', I18N_RU]])
             for (const [k, v] of Object.entries(CLOUD_TR[lang])) if (!(k in table)) table[k] = v;
+
+
+        // ===================== DİL SEÇİMİ (ilk açılış) + BAYRAKLAR =====================
+        function flagSVG(code) {
+            flagSVG.n = (flagSVG.n || 0) + 1;
+            const id = 'fl' + flagSVG.n;
+            const wrap = inner => `<svg class="flag" viewBox="0 0 30 20" aria-hidden="true" preserveAspectRatio="none">${inner}</svg>`;
+            if (code === 'tr') {
+                const pts = [];
+                for (let i = 0; i < 10; i++) {
+                    const a = Math.PI + i * Math.PI / 5, r = i % 2 ? 1.0 : 2.5;
+                    pts.push((16.6 + Math.cos(a) * r).toFixed(2) + ',' + (10 + Math.sin(a) * r).toFixed(2));
+                }
+                return wrap(`<rect width="30" height="20" fill="#E30A17"/><circle cx="11" cy="10" r="5" fill="#fff"/><circle cx="12.25" cy="10" r="4" fill="#E30A17"/><polygon fill="#fff" points="${pts.join(' ')}"/>`);
+            }
+            if (code === 'en') {
+                return `<svg class="flag" viewBox="0 0 60 30" aria-hidden="true" preserveAspectRatio="none"><clipPath id="${id}"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#${id})" stroke="#C8102E" stroke-width="4"/><path d="M30,0 v30 M0,15 h60" stroke="#fff" stroke-width="10"/><path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/></svg>`;
+            }
+            if (code === 'fil') {
+                const star = (x, y) => `<circle cx="${x}" cy="${y}" r="0.9" fill="#FCD116"/>`;
+                let rays = '';
+                for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; rays += `<line x1="${(5.6 + Math.cos(a) * 2.2).toFixed(2)}" y1="${(10 + Math.sin(a) * 2.2).toFixed(2)}" x2="${(5.6 + Math.cos(a) * 3.4).toFixed(2)}" y2="${(10 + Math.sin(a) * 3.4).toFixed(2)}" stroke="#FCD116" stroke-width="0.7"/>`; }
+                return wrap(`<rect width="30" height="10" fill="#0038A8"/><rect y="10" width="30" height="10" fill="#CE1126"/><polygon points="0,0 17.3,10 0,20" fill="#fff"/><circle cx="5.6" cy="10" r="1.8" fill="#FCD116"/>${rays}${star(1.8, 2.2)}${star(1.8, 17.8)}${star(14.6, 10)}`);
+            }
+            if (code === 'ru') return wrap(`<rect width="30" height="20" fill="#fff"/><rect y="6.67" width="30" height="6.67" fill="#0039A6"/><rect y="13.33" width="30" height="6.67" fill="#D52B1E"/>`);
+            return '';
+        }
+
+        const langPick = document.createElement('div');
+        langPick.id = 'lang-pick';
+        langPick.className = 'ui-layer interactive vivid';
+        langPick.style.cssText = 'display: none; background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(8px); z-index: 45;';
+        langPick.innerHTML = `<div class="glass-panel" style="padding: 1.5rem;">
+                <h2 class="text-2xl font-black mb-1 text-white" translate="no"><span class="lp-title">Dil · Language</span></h2>
+                <p class="text-slate-400 text-sm mb-4" translate="no">Dilini seç · Choose your language</p>
+                <div id="lang-pick-list" class="flex flex-col gap-2"></div>
+            </div>`;
+        document.body.appendChild(langPick);
+        function openLangPick() {
+            const list = document.getElementById('lang-pick-list');
+            list.innerHTML = '';
+            for (const lang of LANGUAGES) {
+                const b = document.createElement('button');
+                b.className = 'lang-choice' + (save.settings.lang === lang.code ? ' on' : '');
+                b.setAttribute('translate', 'no');
+                b.innerHTML = `${flagSVG(lang.code)}<span>${lang.name}</span>`;
+                b.onclick = () => {
+                    save.settings.lang = lang.code;
+                    save.settings.langChosen = true;
+                    writeSave();
+                    applyLanguage(lang.code);
+                    langPick.style.display = 'none';
+                };
+                list.appendChild(b);
+            }
+            langPick.style.display = 'flex';
+        }
+        // Sadece oyunu ilk kez açan yeni oyunculara, açılış ekranından hemen sonra
+        if (!hadSaveBefore && !save.settings.langChosen) {
+            const lpTimer = setInterval(() => {
+                if (document.getElementById('splash')) return;
+                clearInterval(lpTimer);
+                openLangPick();
+            }, 200);
+        }
+        // Ayarlar > Dil listesine de bayrak
+        const renderLanguageTabBase = renderLanguageTab;
+        renderLanguageTab = function () {
+            renderLanguageTabBase.apply(this, arguments);
+            const rows = settingsList.querySelectorAll('.setting-row');
+            rows.forEach((row, i) => {
+                const lang = LANGUAGES[i];
+                const nameEl = row.firstElementChild;
+                if (!lang || !nameEl || nameEl.querySelector('.flag')) return;
+                nameEl.classList.add('lang-name');
+                nameEl.insertAdjacentHTML('afterbegin', flagSVG(lang.code));
+            });
+        };
+
+        // ===================== SKOR TABLOSU =====================
+        // Her mod için ayrı tablo; her hesabın her tabloda tek satırı var (belge kimliği = hesap kimliği)
+        const LB_MODES = [
+            { id: 'classic',    name: 'Klasik',       best: () => save.bestScore },
+            { id: 'timeAttack', name: 'Zamana Karşı', best: () => save.taBest },
+            { id: 'dodge',      name: 'Sadece Kaç',   best: () => save.dodgeBest },
+            { id: 'puzzle',     name: 'Bulmaca',      best: () => totalPuzzleStars() }
+        ];
+        const LB = { mode: 'classic', remote: {}, remoteLoaded: false, cache: {}, view: null, lastDiff: {} };
+        const LB_LIMIT = 50;
+
+        const lbModal = document.createElement('div');
+        lbModal.id = 'lb-modal';
+        lbModal.className = 'ui-layer interactive vivid';
+        lbModal.style.cssText = 'display: none; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); z-index: 22;';
+        lbModal.innerHTML = `<div class="glass-panel lb-panel">
+                <h2 class="text-3xl font-black mb-3 text-white">Skor Tablosu</h2>
+                <div id="lb-tabs" class="lb-tabs"></div>
+                <div id="lb-me"></div>
+                <div id="lb-body"></div>
+                <button id="close-lb-btn" class="btn btn-secondary w-full" style="margin-top: 12px;">KAPAT</button>
+            </div>`;
+        document.body.appendChild(lbModal);
+        const lbBody = document.getElementById('lb-body');
+        const lbMe = document.getElementById('lb-me');
+        document.getElementById('close-lb-btn').addEventListener('click', () => { if (LB.view) { LB.view = null; lbRender(); } else lbModal.style.display = 'none'; });
+        MENU_CLOSE['lb-modal'] = 'close-lb-btn';
+
+        function lbCol(mode) { const { F, db } = ACC.fb; return F.collection(db, 'leaderboard', mode, 'scores'); }
+
+        // Başka bir oyuncunun kartı (skor tablosundaki satırdan)
+        function lookItem(cat, id) { return SHOP[cat].items.find(i => i.id === id) || SHOP[cat].items[0]; }
+        function buildPlayerCard(entry, modeName) {
+            const it = lookItem('card', entry.card);
+            const el = document.createElement('div');
+            el.className = 'pcard' + (it.dark ? ' pcard-dark' : '') + (it.shade ? ' pcard-shade' : '') + (it.anim ? ' pcard-' + it.anim : '');
+            el.style.setProperty('--pc-bg', it.bg); el.style.setProperty('--pc-bd', it.bd); el.style.setProperty('--pc-ac', it.ac);
+            el.innerHTML = `<div class="pcard-top"><canvas class="pcard-pawn" aria-hidden="true"></canvas>
+                    <div class="pcard-id"><div class="pcard-name" translate="no">${accEsc(entry.username)}</div>
+                    <div class="pcard-lvl"><span>Seviye ${Math.max(1, Number(entry.level) || 1)}</span></div></div></div>
+                <div class="pcard-stats pcard-stats-2">
+                    <div><b>#${entry.rank}</b><small>Sıra</small></div>
+                    <div><b>${entry.score}</b><small>${modeName}</small></div>
+                </div>`;
+            const cv = el.querySelector('canvas');
+            const look = entry.look || {};
+            const k = Math.min(3, Math.max(1, (window.devicePixelRatio || 1)));
+            cv.width = Math.round(120 * k); cv.height = Math.round(120 * k);
+            const g = cv.getContext('2d'); hdContext(g, k);
+            g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '84px Arial';
+            try {
+                const glyph = lookItem('piece', look.piece).glyph;
+                drawCape(g, lookItem('cape', look.cape), glyph, 84, 60, 70, 0, 0);
+                g.fillStyle = pawnColor(lookItem('pawn', look.pawn), performance.now());
+                g.shadowColor = 'rgba(0, 0, 0, 0.55)'; g.shadowBlur = 6;
+                glyphFill(g, glyph, 60, 70); g.shadowBlur = 0;
+                drawAccessories(g, glyph, 84, 60, 70, 0, lookItem('hat', look.hat), lookItem('face', look.face));
+            } catch (e) {}
+            return el;
+        }
+
+        async function lbLoad(mode, force) {
+            const c = LB.cache[mode];
+            if (!force && c && (c.rows || c.error) && Date.now() - c.at < 60000) return;
+            if (c && c.loading) return;
+            LB.cache[mode] = { loading: true, at: Date.now() };
+            lbRender();
+            try {
+                if (!ACC.fb) throw new Error('nofb');
+                const { F } = ACC.fb;
+                const snap = await F.getDocs(F.query(lbCol(mode), F.orderBy('score', 'desc'), F.limit(LB_LIMIT)));
+                const rows = [];
+                snap.forEach(d => { const v = d.data(); rows.push({ uid: d.id, username: v.username, score: Number(v.score) || 0, card: v.card, look: v.look, level: v.level, diff: v.diff || '' }); });
+                rows.forEach((r, i) => { r.rank = i + 1; });
+                const entry = { rows, at: Date.now() };
+                // Listede yoksam kendi sıram
+                const uid = ACC.user && ACC.user.uid;
+                const mine = uid && rows.find(r => r.uid === uid);
+                if (uid && !mine && ACC.state === 'ready') {
+                    const myScore = LB.remote[mode];
+                    if (myScore !== undefined) {
+                        try {
+                            const cnt = await F.getCountFromServer(F.query(lbCol(mode), F.where('score', '>', myScore)));
+                            entry.myRank = cnt.data().count + 1; entry.myScore = myScore;
+                        } catch (e) { entry.myScore = myScore; }
+                    }
+                }
+                LB.cache[mode] = entry;
+            } catch (e) {
+                console.warn('Skor tablosu yüklenemedi:', e);
+                LB.cache[mode] = { error: true, at: Date.now() };
+            }
+            if (lbModal.style.display === 'flex') lbRender();
+        }
+
+        function lbRender() {
+            const tabs = document.getElementById('lb-tabs');
+            tabs.innerHTML = '';
+            for (const m of LB_MODES) {
+                const b = document.createElement('button');
+                b.className = 'lb-tab' + (m.id === LB.mode ? ' on' : '');
+                b.textContent = m.name;
+                b.onclick = () => { LB.mode = m.id; LB.view = null; lbRender(); lbLoad(m.id); };
+                tabs.appendChild(b);
+            }
+            const modeName = LB_MODES.find(m => m.id === LB.mode).name;
+            document.getElementById('close-lb-btn').textContent = LB.view ? 'GERİ' : 'KAPAT';
+            lbMe.innerHTML = '';
+            if (LB.view) {   // bir oyuncunun kartı
+                lbBody.innerHTML = '';
+                lbBody.appendChild(buildPlayerCard(LB.view, modeName));
+                return;
+            }
+            if (ACC.state === 'unavailable') { lbBody.innerHTML = `<p class="lb-msg">Skor tablosuna şu an ulaşılamıyor.</p>`; return; }
+            const c = LB.cache[LB.mode];
+            if (!c || c.loading) { lbBody.innerHTML = `<p class="lb-msg">Yükleniyor…</p>`; return; }
+            if (c.error) {
+                lbBody.innerHTML = `<p class="lb-msg">Skor tablosuna şu an ulaşılamıyor.</p><button id="lb-retry" class="btn btn-secondary btn-small w-full">Tekrar dene</button>`;
+                document.getElementById('lb-retry').onclick = () => lbLoad(LB.mode, true);
+                return;
+            }
+            const uid = ACC.user && ACC.user.uid;
+            if (!c.rows.length) lbBody.innerHTML = `<p class="lb-msg">Bu tabloda henüz kimse yok. İlk sen ol!</p>`;
+            else {
+                const list = document.createElement('div');
+                list.className = 'lb-list';
+                for (const r of c.rows) {
+                    const it = lookItem('card', r.card);
+                    const row = document.createElement('button');
+                    row.className = 'lb-row' + (r.uid === uid ? ' me' : '') + (r.rank <= 3 ? ' top' + r.rank : '');
+                    row.style.setProperty('--pc-bd', it.bd);
+                    const diff = DIFFICULTIES[r.diff] ? `<small class="lb-diff">${DIFFICULTIES[r.diff].name}</small>` : '';
+                    row.innerHTML = `<span class="lb-rank">${r.rank}</span><span class="lb-sw" style="--pc-bg:${it.bg.replace(/"/g, "'")}"></span>
+                        <span class="lb-name"><span translate="no">${accEsc(r.username)}</span>${diff}</span><b class="lb-score">${r.score}</b>`;
+                    row.onclick = () => { LB.view = r; lbRender(); };
+                    list.appendChild(row);
+                }
+                lbBody.innerHTML = '';
+                lbBody.appendChild(list);
+            }
+            // Alt satır: benim durumum
+            if (ACC.state === 'ready') {
+                const mine = c.rows.find(r => r.uid === uid);
+                if (mine) lbMe.innerHTML = '';
+                else if (c.myRank) lbMe.innerHTML = `<div class="lb-row me lb-mine"><span class="lb-rank">${c.myRank}</span><span class="lb-name"><span translate="no">${accEsc(ACC.profile.username)}</span></span><b class="lb-score">${c.myScore}</b></div>`;
+                else lbMe.innerHTML = `<p class="lb-msg">Bu modda henüz skorun yok. Bir maç bitirince buraya girersin.</p>`;
+            } else {
+                lbMe.innerHTML = `<p class="lb-msg">Skor tablosuna girmek için giriş yap.</p><button id="lb-signin" class="btn btn-small w-full">Giriş Yap</button>`;
+                document.getElementById('lb-signin').onclick = () => openAccount();
+            }
+        }
+
+        function openLeaderboard() {
+            LB.view = null;
+            lbModal.style.display = 'flex';
+            lbRender();
+            if (ACC.fb) lbLoad(LB.mode);
+            else if (ACC.state !== 'unavailable') { LB.cache[LB.mode] = null; lbRender(); setTimeout(() => { if (ACC.fb) lbLoad(LB.mode); }, 1500); }
+        }
+
+        // Kendi skorlarını gönder: sadece rekor kırınca (ya da ilk girişte eski rekorlar)
+        async function lbSubmitAll(diffForMode) {
+            if (!ACC.fb || ACC.state !== 'ready' || !ACC.profile || !ACC.user) return;
+            const { F, db } = ACC.fb;
+            const uid = ACC.user.uid;
+            try {
+                if (!LB.remoteLoaded) {
+                    for (const m of LB_MODES) {
+                        const s = await F.getDoc(F.doc(db, 'leaderboard', m.id, 'scores', uid));
+                        if (s.exists()) { LB.remote[m.id] = Number(s.data().score) || 0; LB.lastDiff[m.id] = s.data().diff || ''; }
+                    }
+                    LB.remoteLoaded = true;
+                }
+                for (const m of LB_MODES) {
+                    const best = Math.floor(Number(m.best()) || 0);
+                    if (best <= 0) continue;
+                    const remote = LB.remote[m.id];
+                    if (remote !== undefined && best <= remote) continue;
+                    const diff = (diffForMode && diffForMode.mode === m.id) ? diffForMode.diff : (LB.lastDiff[m.id] || '');
+                    await F.setDoc(F.doc(db, 'leaderboard', m.id, 'scores', uid), {
+                        username: ACC.profile.username, score: best, level: Math.floor(save.level) || 1, diff: String(diff || ''),
+                        card: String(save.equipped.card || 'card-classic'),
+                        look: { piece: String(save.equipped.piece), pawn: String(save.equipped.pawn), hat: String(save.equipped.hat), face: String(save.equipped.face), cape: String(save.equipped.cape) },
+                        updatedAt: F.serverTimestamp()
+                    });
+                    LB.remote[m.id] = best; LB.lastDiff[m.id] = diff;
+                    delete LB.cache[m.id];   // tablo bir sonraki açılışta tazelensin
+                }
+            } catch (e) {
+                console.warn('Skor gönderilemedi:', e);
+            }
+        }
+        // Maç bitince
+        const endGameLB = endGame;
+        endGame = function () {
+            const mode = matchStats && matchStats.mode, diff = matchStats && matchStats.diff;
+            const r = endGameLB.apply(this, arguments);
+            if (mode && mode !== 'tutorial') setTimeout(() => lbSubmitAll({ mode, diff }), 600);
+            return r;
+        };
+        // Bulut kayıt eşitlenince eski rekorlar da tabloya girsin
+        const cloudSyncLB = cloudSync;
+        cloudSync = async function () {
+            await cloudSyncLB.apply(this, arguments);
+            if (CLOUD.ready) lbSubmitAll(null);
+        };
+        // Çıkışta önbelleği temizle
+        const accRenderLB = accRender;
+        accRender = function () {
+            if (!ACC.user && LB.remoteLoaded) { LB.remote = {}; LB.lastDiff = {}; LB.remoteLoaded = false; LB.cache = {}; }
+            accRenderLB.apply(this, arguments);
+            if (lbModal.style.display === 'flex' && !LB.view) lbRender();
+        };
+        // Ana menüye Skor Tablosu düğmesi
+        const lbGrid = document.createElement('div');
+        lbGrid.className = 'menu-grid lb-grid';
+        lbGrid.innerHTML = `<button id="lb-start-btn" class="menu-tile lb-tile"><span class="tile-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17"/><path d="M5.5 20.5v-6h4v6M10 20.5v-11h4v11M14.5 20.5v-8h4v8"/></svg></span><span>Skor Tablosu</span></button>`;
+        const mainGrid = document.querySelector('#start-screen .menu-grid');
+        mainGrid.parentNode.insertBefore(lbGrid, mainGrid);
+        document.getElementById('lb-start-btn').addEventListener('click', openLeaderboard);
+
+        const LB_TR = {
+            en: { 'Skor Tablosu': 'Leaderboard', 'Sıra': 'Rank', 'Skor tablosuna şu an ulaşılamıyor.': "Can't reach the leaderboard right now.",
+                'Bu tabloda henüz kimse yok. İlk sen ol!': 'Nobody here yet. Be the first!', 'Bu modda henüz skorun yok. Bir maç bitirince buraya girersin.': "You don't have a score in this mode yet. Finish a match to get on the board.",
+                'Skor tablosuna girmek için giriş yap.': 'Sign in to get on the leaderboard.', 'GERİ': 'BACK' },
+            fil: { 'Skor Tablosu': 'Leaderboard', 'Sıra': 'Ranggo', 'Skor tablosuna şu an ulaşılamıyor.': 'Hindi maabot ang leaderboard ngayon.',
+                'Bu tabloda henüz kimse yok. İlk sen ol!': 'Wala pang tao rito. Ikaw na ang mauna!', 'Bu modda henüz skorun yok. Bir maç bitirince buraya girersin.': 'Wala ka pang score sa mode na ito. Tapusin ang isang laro para mapasama rito.',
+                'Skor tablosuna girmek için giriş yap.': 'Mag-sign in para mapasama sa leaderboard.', 'GERİ': 'BUMALIK' },
+            ru: { 'Skor Tablosu': 'Таблица лидеров', 'Sıra': 'Место', 'Skor tablosuna şu an ulaşılamıyor.': 'Таблица лидеров сейчас недоступна.',
+                'Bu tabloda henüz kimse yok. İlk sen ol!': 'Здесь пока никого нет. Будьте первым!', 'Bu modda henüz skorun yok. Bir maç bitirince buraya girersin.': 'В этом режиме у вас ещё нет результата. Завершите матч, чтобы попасть в таблицу.',
+                'Skor tablosuna girmek için giriş yap.': 'Войдите, чтобы попасть в таблицу лидеров.', 'GERİ': 'НАЗАД' }
+        };
+        for (const [lang, table] of [['en', I18N_EN], ['fil', I18N_FIL], ['ru', I18N_RU]])
+            for (const [k, v] of Object.entries(LB_TR[lang])) if (!(k in table)) table[k] = v;
 
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
