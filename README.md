@@ -3,7 +3,7 @@
 **A chess-themed endless runner where you play as a lone pawn.**
 Dodge the black army, capture diagonally, outlast the Black Queen and the Black King, and see how far a single pawn can go.
 
-**[Play in your browser](https://kursuvat.github.io/Diagonaut/)**
+**[Play in your browser](https://diagonaut.com)**
 
 ---
 
