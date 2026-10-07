@@ -1874,6 +1874,61 @@
         .splash-bar { background: rgba(255, 255, 255, 0.1) !important; }
         .splash-bar > div { background: var(--brass) !important; box-shadow: none !important; }
     </style>
+<style id="menu-compact-css">
+        /* ===== Ana menü: tek ekrana sığan, kutucuklu düzen ===== */
+        #start-screen .menu-panel.menu-compact { padding: 14px 16px 12px !important; }
+        #start-screen .menu-compact .hero-wrap, #start-screen .menu-compact #hero-canvas { width: 84px !important; height: 84px !important; }
+        #start-screen .menu-compact .menu-title { font-size: clamp(2rem, 9vw, 2.5rem) !important; margin: 2px 0 0 !important; }
+        #start-screen .menu-compact .title-bar { margin: 4px auto 4px !important; }
+        #start-screen .menu-compact .menu-tagline { font-size: 0.84rem !important; margin: 0 0 8px !important; line-height: 1.3 !important; }
+        #start-screen .menu-compact .menu-chips { margin: 0 0 8px !important; }
+        #start-screen .menu-compact .menu-chips .menu-chip { padding-top: 4px !important; padding-bottom: 4px !important; }
+        #start-screen .menu-compact .lvl-card { padding: 4px 2px 8px !important; margin: 0 0 8px !important; gap: 10px !important; }
+        #start-screen .menu-compact .lvl-badge { width: 34px !important; height: 34px !important; font-size: 0.95rem !important; }
+        #start-screen .menu-compact .lvl-info { gap: 3px !important; }
+        #start-screen .menu-compact #mode-btn { padding: 8px 10px !important; }
+        #start-screen .menu-compact #mode-btn .mode-card-icon { width: 34px !important; height: 34px !important; }
+        #start-screen .menu-compact #mode-btn .mode-card-text small { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        #start-screen .menu-compact #mode-btn + div { height: 8px !important; }
+        #start-screen .menu-compact #start-btn { padding-top: 12px !important; padding-bottom: 12px !important; }
+        #start-screen .menu-compact .menu-controls { display: none !important; }
+        #start-screen .menu-grid.menu-grid4 { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 6px !important;
+            margin-top: 10px !important; border-top: 0 !important; }
+        #start-screen .menu-grid4 .menu-tile { flex-direction: column !important; justify-content: center !important; align-items: center !important; gap: 4px !important;
+            min-width: 0; min-height: 58px; padding: 8px 3px 7px !important; border: 1px solid var(--rule) !important; border-radius: 12px !important;
+            background: rgba(255, 255, 255, 0.035) !important; font-size: clamp(0.6rem, 2.9vw, 0.68rem) !important; font-weight: 600 !important; line-height: 1.15 !important;
+            word-break: normal !important; overflow-wrap: normal !important; hyphens: none;
+            text-align: center !important; color: var(--ivory-2) !important; width: auto !important; margin: 0 !important; }
+        #start-screen .menu-grid4 .menu-tile:nth-child(odd) { border-right: 1px solid var(--rule) !important; }
+        #start-screen .menu-grid4 .menu-tile:hover { background: rgba(255, 255, 255, 0.07) !important; color: var(--ivory) !important; }
+        #start-screen .menu-grid4 .menu-tile .tile-icon .ico { width: 20px !important; height: 20px !important; }
+        #start-screen .menu-grid4 .menu-tile > span:not(.tile-icon) { font-size: inherit !important; font-weight: inherit !important; max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: normal; }
+        #start-screen .menu-grid4 #lb-start-btn { border-color: rgba(201, 163, 90, 0.55) !important; color: var(--brass-hi, #fde68a) !important; }
+        #start-screen .menu-grid4 #acc-btn.signed { border-color: rgba(52, 211, 153, 0.5) !important; color: #fff !important; }
+        #start-screen .menu-grid4 #acc-btn.signed .tile-icon { color: #34d399 !important; }
+        #start-screen .menu-grid4 #acc-btn > span:not(.tile-icon) { -webkit-line-clamp: 1; white-space: nowrap; display: block; }
+        @media (max-height: 720px) {
+            #start-screen .menu-compact .hero-wrap, #start-screen .menu-compact #hero-canvas { width: 64px !important; height: 64px !important; }
+            #start-screen .menu-compact .menu-title { font-size: 2rem !important; }
+            #start-screen .menu-compact .lvl-next { display: none !important; }
+        }
+        @media (max-height: 640px) {
+            #start-screen .menu-compact .menu-tagline, #start-screen .menu-compact .title-bar { display: none !important; }
+            #start-screen .menu-compact .hero-wrap, #start-screen .menu-compact #hero-canvas { width: 52px !important; height: 52px !important; }
+            #start-screen .menu-grid4 .menu-tile { min-height: 52px; padding: 6px 2px !important; }
+        }
+        /* Gizlilik */
+        .pv-panel { max-height: 90vh; overflow-y: auto; padding: 1.25rem 1.25rem 1rem; text-align: left; }
+        .pv-body h3 { color: var(--ivory, #f1f5f9); font-size: 0.95rem; font-weight: 700; margin: 14px 0 4px; }
+        .pv-body p, .pv-body li { color: #cbd5e1; font-size: 0.84rem; line-height: 1.5; }
+        .pv-body ul { padding-left: 18px; list-style: disc; margin: 4px 0; }
+        .pv-body li { margin: 3px 0; }
+        .pv-body a { color: #7dd3fc; text-decoration: underline; }
+        .pv-body .pv-date, .pv-body .pv-note { color: #94a3b8; font-size: 0.75rem; margin-top: 12px; }
+        .pv-body .pv-note { margin: 0 0 6px; }
+        .pv-link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; font: inherit; pointer-events: auto; }
+    </style>
 </head>
 <body>
     <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -15828,7 +15883,7 @@
             en: { 'Skor Tablosu': 'Leaderboard', 'Sıra': 'Rank', 'Skor tablosuna şu an ulaşılamıyor.': "Can't reach the leaderboard right now.",
                 'Bu tabloda henüz kimse yok. İlk sen ol!': 'Nobody here yet. Be the first!', 'Bu modda henüz skorun yok. Bir maç bitirince buraya girersin.': "You don't have a score in this mode yet. Finish a match to get on the board.",
                 'Skor tablosuna girmek için giriş yap.': 'Sign in to get on the leaderboard.', 'GERİ': 'BACK', 'Boss': 'Bosses' },
-            fil: { 'Skor Tablosu': 'Leaderboard', 'Sıra': 'Ranggo', 'Skor tablosuna şu an ulaşılamıyor.': 'Hindi maabot ang leaderboard ngayon.',
+            fil: { 'Skor Tablosu': 'Mga Nangunguna', 'Sıra': 'Ranggo', 'Skor tablosuna şu an ulaşılamıyor.': 'Hindi maabot ang leaderboard ngayon.',
                 'Bu tabloda henüz kimse yok. İlk sen ol!': 'Wala pang tao rito. Ikaw na ang mauna!', 'Bu modda henüz skorun yok. Bir maç bitirince buraya girersin.': 'Wala ka pang score sa mode na ito. Tapusin ang isang laro para mapasama rito.',
                 'Skor tablosuna girmek için giriş yap.': 'Mag-sign in para mapasama sa leaderboard.', 'GERİ': 'BUMALIK', 'Boss': 'Boss' },
             ru: { 'Skor Tablosu': 'Таблица лидеров', 'Sıra': 'Место', 'Skor tablosuna şu an ulaşılamıyor.': 'Таблица лидеров сейчас недоступна.',
@@ -16918,6 +16973,94 @@
         try { if (ACC.fb) ACC.fb.auth.languageCode = LANG; } catch (e) {}
         const applyLanguageFR = applyLanguage;
         applyLanguage = function (lang) { applyLanguageFR.apply(this, arguments); try { if (ACC.fb) ACC.fb.auth.languageCode = LANG; } catch (e) {} };
+
+
+        // ===================== GİZLİLİK POLİTİKASI =====================
+        const PRIVACY = {"tr": "<h3>Kısaca</h3>\n<p>Diagonaut'u hesap açmadan oynayabilirsin. Hesap açmazsan ilerlemen sadece kendi cihazında, tarayıcının hafızasında durur ve bize hiçbir şey gönderilmez. Reklam yok; verilerin satılmaz ve reklam için kullanılmaz.</p>\n<h3>Kim sorumlu?</h3>\n<p>Diagonaut'u Muhammed Kürşad Topkara (Kursuvat) geliştiriyor ve bu sayfadaki verilerden o sorumlu. Sorular ve talepler için: <a href=\"https://github.com/Kursuvat\" target=\"_blank\" rel=\"noopener\">github.com/Kursuvat</a></p>\n<h3>Hangi verileri topluyoruz?</h3>\n<ul>\n<li><b>Hesap bilgileri:</b> Hesap açarsan e-posta adresin giriş için kullanılır. Google ile girersen Google adını ve profil fotoğrafını da giriş sistemine iletir; bunları oyunda göstermiyoruz.</li>\n<li><b>Kullanıcı adı:</b> Kendi seçtiğin isim.</li>\n<li><b>Oyun ilerlemesi (bulut kayıt):</b> Tokenler, kozmetikler, seviye, rekorlar, başarımlar ve istatistikler. Sadece sen görebilirsin.</li>\n<li><b>Herkese açık profil ve skor tablosu:</b> Kullanıcı adın, seviyen, rekorların, başarım ve oyun sayın, kullandığın kozmetikler ve rekor koşundaki boss sayıları diğer oyunculara görünür.</li>\n</ul>\n<p>E-posta adresin ve gerçek adın <b>asla</b> başka oyunculara gösterilmez.</p>\n<h3>Veriler nerede tutuluyor?</h3>\n<p>Hesap, bulut kayıt ve skor tablosu Google'ın Firebase hizmetinde saklanır. Oyunun dosyaları GitHub Pages üzerinden yüklenir. Bu hizmetler, sayfayı sana ulaştırmak için teknik olarak IP adresin gibi bilgileri işleyebilir.</p>\n<h3>Ne için kullanıyoruz?</h3>\n<p>Sadece giriş yapabilmen, ilerlemenin cihazlar arasında korunması ve skor tablosu için. Analiz, reklam ya da takip araçları kullanmıyoruz.</p>\n<h3>Verilerini silme</h3>\n<p><b>Ayarlar → Hesap → Hesabı sil</b> ile hesabın, kullanıcı adın, bulut kaydın, profilin ve skor tablosundaki satırların kalıcı olarak silinir. Cihazındaki ilerlemeyi <b>Ayarlar → Kayıt</b> kısmından ya da tarayıcı verilerini temizleyerek silebilirsin.</p>\n<h3>Hakların</h3>\n<p>6698 sayılı KVKK kapsamında verilerinin işlenip işlenmediğini öğrenme, düzeltilmesini ya da silinmesini isteme gibi hakların var. Bunun için yukarıdaki iletişim adresinden ulaşabilirsin.</p>\n<h3>Çocuklar</h3>\n<p>Hesap açmak isteğe bağlıdır. Reşit değilsen hesap açmadan önce ailenden izin almanı rica ederiz.</p>\n<h3>Değişiklikler</h3>\n<p>Bu metin güncellenirse yeni hâli burada yayınlanır.</p>\n<p class=\"pv-date\">Son güncelleme: 7 Ekim 2026</p>", "en": "<h3>In short</h3>\n<p>You can play Diagonaut without an account. If you don't create one, your progress stays only on your own device, in your browser's storage, and nothing is sent to us. There are no ads, and your data is never sold or used for advertising.</p>\n<h3>Who is responsible?</h3>\n<p>Diagonaut is developed by Muhammed Kürşad Topkara (Kursuvat), who is responsible for the data described here. For questions and requests: <a href=\"https://github.com/Kursuvat\" target=\"_blank\" rel=\"noopener\">github.com/Kursuvat</a></p>\n<h3>What we collect</h3>\n<ul>\n<li><b>Account details:</b> If you create an account, your email address is used to sign in. If you sign in with Google, Google also passes your name and profile photo to the sign-in system; we don't show them in the game.</li>\n<li><b>Username:</b> The name you choose.</li>\n<li><b>Game progress (cloud save):</b> Tokens, cosmetics, level, records, achievements and stats. Only you can see it.</li>\n<li><b>Public profile and leaderboard:</b> Your username, level, records, achievement and game counts, equipped cosmetics, and the bosses defeated in your record run are visible to other players.</li>\n</ul>\n<p>Your email address and real name are <b>never</b> shown to other players.</p>\n<h3>Where it's stored</h3>\n<p>Accounts, cloud saves and the leaderboard are stored in Google's Firebase service. The game's files are served by GitHub Pages. To deliver the page to you, these services may technically process information such as your IP address.</p>\n<h3>What we use it for</h3>\n<p>Only to let you sign in, keep your progress across devices, and run the leaderboard. We don't use analytics, advertising or tracking tools.</p>\n<h3>Deleting your data</h3>\n<p><b>Settings → Account → Delete account</b> permanently deletes your account, username, cloud save, profile and leaderboard entries. You can delete the progress on your device in <b>Settings → Save</b> or by clearing your browser data.</p>\n<h3>Your rights</h3>\n<p>You have the right to know whether your data is processed and to ask for it to be corrected or deleted. You can reach us at the contact address above.</p>\n<h3>Children</h3>\n<p>Creating an account is optional. If you're under the age of majority, please ask a parent before creating one.</p>\n<h3>Changes</h3>\n<p>If this policy changes, the new version will be published here.</p>\n<p class=\"pv-date\">Last updated: October 7, 2026</p>"};
+        const pvModal = document.createElement('div');
+        pvModal.id = 'privacy-modal';
+        pvModal.className = 'ui-layer interactive vivid';
+        pvModal.style.cssText = 'display: none; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(8px); z-index: 50;';
+        pvModal.innerHTML = `<div class="glass-panel pv-panel">
+                <h2 id="pv-title" class="text-2xl font-black mb-3 text-white"></h2>
+                <div id="pv-body" class="pv-body" translate="no"></div>
+                <button id="close-pv-btn" class="btn btn-secondary w-full" style="margin-top: 12px;">KAPAT</button>
+            </div>`;
+        document.body.appendChild(pvModal);
+        document.getElementById('close-pv-btn').addEventListener('click', () => { pvModal.style.display = 'none'; });
+        MENU_CLOSE['privacy-modal'] = 'close-pv-btn';
+        function openPrivacy() {
+            const tr = LANG === 'tr';
+            document.getElementById('pv-title').textContent = 'Gizlilik Politikası';   // diğer dillerde çeviri tablosundan gelir
+            document.getElementById('pv-body').innerHTML = (tr || LANG === 'en') ? PRIVACY[tr ? 'tr' : 'en']
+                : `<p class="pv-note">This policy is available in English and Turkish.</p>` + PRIVACY.en;
+            pvModal.querySelector('.pv-panel').scrollTop = 0;
+            pvModal.style.display = 'flex';
+        }
+        // Bağlantılar: menü altı, hesap penceresi, Ayarlar > Hesap
+        const copyNote = document.querySelector('.copyright-note');
+        if (copyNote) {
+            const a = document.createElement('button');
+            a.className = 'pv-link'; a.id = 'pv-footer-link'; a.textContent = 'Gizlilik';
+            a.onclick = openPrivacy;
+            copyNote.appendChild(document.createTextNode(' · '));
+            copyNote.appendChild(a);
+        }
+        const accRenderPV = accRender;
+        accRender = function () {
+            accRenderPV.apply(this, arguments);
+            if (accModal.style.display === 'flex' && !document.getElementById('acc-pv-link')) {
+                const a = document.createElement('button');
+                a.id = 'acc-pv-link'; a.className = 'acc-skip'; a.textContent = 'Gizlilik Politikası';
+                a.onclick = openPrivacy;
+                accBody.appendChild(a);
+            }
+        };
+        const renderAccountTabPV = renderAccountTab;
+        renderAccountTab = function () {
+            renderAccountTabPV.apply(this, arguments);
+            const row = document.createElement('div');
+            row.className = 'setting-row';
+            row.innerHTML = `<div><div class="font-bold text-white text-sm">Gizlilik Politikası</div><div class="text-xs text-slate-400">Hangi verilerin tutulduğu ve nasıl silindiği</div></div>`;
+            const b = document.createElement('button');
+            b.className = 'market-btn equip'; b.textContent = 'Aç'; b.onclick = openPrivacy;
+            row.appendChild(b);
+            settingsList.appendChild(row);
+        };
+
+        // ===================== ANA MENÜ: TEK EKRANA SIĞAN DÜZEN =====================
+        (function compactMenu() {
+            const grid = document.querySelector('#start-screen .menu-grid:not(.lb-grid)');
+            const lbWrap = document.querySelector('#start-screen .lb-grid');
+            const lb = document.getElementById('lb-start-btn');
+            const acc = document.getElementById('acc-btn');
+            if (!grid || !lb || !acc) return;
+            // Hesap düğmesi de bir kutucuk olsun
+            acc.classList.remove('acc-bar');
+            acc.classList.add('menu-tile', 'acc-tile');
+            const accSvg = acc.querySelector('svg');
+            if (accSvg && !accSvg.parentElement.classList.contains('tile-icon')) {
+                const ic = document.createElement('span'); ic.className = 'tile-icon';
+                acc.insertBefore(ic, accSvg); ic.appendChild(accSvg);
+            }
+            lb.classList.remove('lb-tile');
+            const order = ['lb-start-btn', 'market-start-btn', 'ach-start-btn', 'acc-btn', 'how-to-play-start-btn', 'tutorial-start-btn', 'stats-start-btn', 'settings-start-btn'];
+            for (const id of order) { const el = document.getElementById(id); if (el) grid.appendChild(el); }
+            if (lbWrap) lbWrap.remove();
+            grid.classList.add('menu-grid4');
+            // Seviye kartındaki etiket kısaltması
+            const startPanel = document.querySelector('#start-screen .menu-panel');
+            if (startPanel) startPanel.classList.add('menu-compact');
+        })();
+
+        const PV_TR = {
+            en: { 'Gizlilik': 'Privacy', 'Gizlilik Politikası': 'Privacy Policy', 'Hangi verilerin tutulduğu ve nasıl silindiği': 'What data is stored and how to delete it', 'Aç': 'Open' },
+            fil: { 'Gizlilik': 'Privacy', 'Gizlilik Politikası': 'Privacy Policy', 'Hangi verilerin tutulduğu ve nasıl silindiği': 'Anong data ang naka-save at paano ito buburahin', 'Aç': 'Buksan' },
+            ru: { 'Gizlilik': 'Конфиденциальность', 'Gizlilik Politikası': 'Политика конфиденциальности', 'Hangi verilerin tutulduğu ve nasıl silindiği': 'Какие данные хранятся и как их удалить', 'Aç': 'Открыть' },
+            fr: { 'Gizlilik': 'Confidentialité', 'Gizlilik Politikası': 'Politique de confidentialité', 'Hangi verilerin tutulduğu ve nasıl silindiği': 'Quelles données sont conservées et comment les supprimer', 'Aç': 'Ouvrir' }
+        };
+        for (const [lang, table] of [['en', I18N_EN], ['fil', I18N_FIL], ['ru', I18N_RU], ['fr', I18N_FR]])
+            for (const [k, v] of Object.entries(PV_TR[lang])) if (!(k in table)) table[k] = v;
 
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
