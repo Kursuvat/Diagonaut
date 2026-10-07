@@ -1512,6 +1512,41 @@
             /* Sayı ile birimi (5 sn) satır sonunda ayrılmasın */
         .market-item .text-xs b { white-space: nowrap; }
     
+        /* ===== Profil kartı ===== */
+        .pcard { position: relative; overflow: hidden; border-radius: 16px; padding: 14px; margin-bottom: 12px; background: var(--pc-bg); background-size: cover;
+            border: 2px solid var(--pc-bd); box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.15); color: #fff; text-align: left; }
+        .pcard-shade::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.65)); }
+        .pcard > * { position: relative; }
+        .pcard-top { display: flex; align-items: center; gap: 10px; }
+        .pcard-pawn { width: 72px; height: 72px; flex-shrink: 0; background: transparent !important; box-shadow: none !important; }
+        .pcard-id { min-width: 0; }
+        .pcard-name { font-size: 1.35rem; font-weight: 900; word-break: break-all; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6); }
+        .pcard-lvl span { display: inline-block; margin-top: 4px; padding: 2px 10px; border-radius: 9999px; font-size: 0.72rem; font-weight: 900;
+            background: rgba(0, 0, 0, 0.35); color: var(--pc-ac); border: 1px solid var(--pc-bd); }
+        .pcard-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+        .pcard-stats div { background: rgba(0, 0, 0, 0.32); border-radius: 10px; padding: 6px 4px; text-align: center; }
+        .pcard-stats b { display: block; font-size: 1rem; font-weight: 900; color: #fff; }
+        .pcard-stats small { display: block; font-size: 0.65rem; font-weight: 800; color: var(--pc-ac); text-transform: uppercase; letter-spacing: 0.04em; }
+        .pcard-dark .pcard-name { color: #111827; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5); }
+        .pcard-dark .pcard-stats div { background: rgba(255, 255, 255, 0.45); }
+        .pcard-dark .pcard-stats b { color: #111827; }
+        .pcard-dark .pcard-lvl span { background: rgba(255, 255, 255, 0.55); }
+        .pcard-flow { background-size: 300% 300%; animation: pcFlow 8s ease-in-out infinite; }
+        .pcard-shine { background-size: 250% 250%; animation: pcFlow 5s linear infinite; }
+        .pcard-stars::after { content: ''; position: absolute; inset: 0; pointer-events: none;
+            background-image: radial-gradient(1.5px 1.5px at 12% 22%, #fff, transparent), radial-gradient(1px 1px at 34% 70%, #fff, transparent), radial-gradient(1.5px 1.5px at 58% 18%, #fff, transparent),
+                radial-gradient(1px 1px at 76% 46%, #fff, transparent), radial-gradient(1.5px 1.5px at 90% 84%, #fff, transparent), radial-gradient(1px 1px at 46% 90%, #fff, transparent), radial-gradient(1px 1px at 22% 52%, #fff, transparent);
+            animation: pcTwinkle 3s ease-in-out infinite; }
+        @keyframes pcFlow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+        @keyframes pcTwinkle { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.35; } }
+        @media (prefers-reduced-motion: reduce) { .pcard-flow, .pcard-shine, .pcard-stars::after { animation: none; } }
+        .pcard-swatch { position: relative; overflow: hidden; width: 40px; height: 28px; border-radius: 6px; background: var(--pc-bg); background-size: cover; border: 2px solid var(--pc-bd); }
+        .pcard-swatch.pcard-flow, .pcard-swatch.pcard-shine { background-size: 300% 300%; }
+        #card-preview { max-width: 320px; margin: 0 auto; }
+        #card-preview .pcard { margin-bottom: 0; }
+        .acc-cloud { color: #6ee7b7; font-size: 0.78rem; font-weight: 700; margin: 0 0 10px; }
+        .acc-cloud.err { color: #fcd34d; }
+        .acc-cloud:empty { display: none; }
         /* ===== Hesap ===== */
         .acc-bar { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 10px 0 0;
             padding: 8px 14px; border-radius: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
@@ -14499,8 +14534,7 @@
                             ACC.profile = snap.exists() ? snap.data() : null;
                             ACC.state = ACC.profile ? 'ready' : 'needName';
                         } catch (e) {
-                            ACC.state = 'needName';
-                            ACC.error = 'net';
+                            ACC.state = 'netError';   // profil okunamadı: isim ekranı gösterme, tekrar denet
                         }
                     } else {
                         ACC.state = 'signedOut';
@@ -14535,6 +14569,19 @@
                     ACC.error = 'signin';
                 }
             }
+            ACC.busy = false;
+            accRender();
+        }
+
+        async function accRetryProfile() {
+            if (!ACC.fb || !ACC.user || ACC.busy) return;
+            const { F, db } = ACC.fb;
+            ACC.busy = true; accRender();
+            try {
+                const snap = await F.getDoc(F.doc(db, 'users', ACC.user.uid));
+                ACC.profile = snap.exists() ? snap.data() : null;
+                ACC.state = ACC.profile ? 'ready' : 'needName';
+            } catch (e) { ACC.state = 'netError'; }
             ACC.busy = false;
             accRender();
         }
@@ -14669,6 +14716,7 @@
             if (ACC.state === 'ready' && ACC.profile) label = ACC.profile.username;
             else if (ACC.state === 'needName') label = 'Kullanıcı adını seç';
             else if (ACC.state === 'loading' && ACC.user) label = 'Yükleniyor…';
+            else if (ACC.state === 'netError') label = 'Hesap';
             else label = 'Giriş Yap';
             accBtn.classList.toggle('signed', ACC.state === 'ready');
             accBtn.dataset.name = ACC.state === 'ready' ? '1' : '';
@@ -14687,6 +14735,10 @@
                 html = `<p class="acc-text">Hesap sistemi şu an kullanılamıyor. Oyunu yine de oynayabilirsin.</p>`;
             } else if (ACC.state === 'loading') {
                 html = `<p class="acc-text">Yükleniyor…</p>`;
+            } else if (ACC.state === 'netError') {
+                html = `<p class="acc-error" style="margin:0 0 12px">Bağlantı kurulamadı. İnternetini kontrol et.</p>
+                    <button id="acc-retry" class="btn w-full" ${ACC.busy ? 'disabled' : ''}>Tekrar dene</button>
+                    <button id="acc-out" class="btn btn-secondary btn-small w-full">Çıkış Yap</button>`;
             } else if (ACC.state === 'signedOut') {
                 const inApp = IN_APP_BROWSER ? `<p class="acc-warn">Google girişi bu uygulamanın içindeki tarayıcıda çalışmaz. Aşağıdan e-posta ile devam edebilir ya da menüden "Tarayıcıda aç"ı seçebilirsin.</p>` : '';
                 html = `<p class="acc-text">Google ile giriş yap ya da e-postayla kayıt ol. Google hesabıyla ilk girişte hesabın otomatik açılır.</p>
@@ -14709,8 +14761,8 @@
                     <button id="acc-save" class="btn w-full" ${ACC.busy ? 'disabled' : ''}>Kaydet</button>
                     <button id="acc-out" class="btn btn-secondary btn-small w-full">Çıkış Yap</button>`;
             } else {
-                html = `<p class="acc-label">Oyuncu adın</p>
-                    <p class="acc-name" translate="no">${accEsc(ACC.profile.username)}</p>
+                html = `<div id="acc-card-slot"></div>
+                    <p id="acc-cloud" class="acc-cloud"></p>
                     <p class="acc-text">Skor tablosu yakında geliyor.</p>
                     ${verify}${info}${err}
                     <button id="acc-out" class="btn btn-secondary btn-small w-full">Çıkış Yap</button>`;
@@ -14734,6 +14786,7 @@
             const go = document.getElementById('acc-email-go'); if (go) go.onclick = accEmailSubmit;
             const fg = document.getElementById('acc-forgot'); if (fg) fg.onclick = accResetPassword;
             const vf = document.getElementById('acc-verify'); if (vf) vf.onclick = accResendVerify;
+            const rt = document.getElementById('acc-retry'); if (rt) rt.onclick = accRetryProfile;
             const g = document.getElementById('acc-google');
             if (g) g.onclick = accSignIn;
             const out = document.getElementById('acc-out');
@@ -14774,6 +14827,7 @@
         MENU_CLOSE['acc-modal'] = 'close-acc-btn';
 
         Object.assign(I18N_EN, {
+            'Tekrar dene': "Try again",
             "ya da e-posta ile": "or with email",
             "Kayıt Ol": "Sign Up",
             "E-posta": "Email",
@@ -14810,6 +14864,7 @@
             'Yükleniyor…': 'Loading…'
         });
         Object.assign(I18N_FIL, {
+            'Tekrar dene': "Subukan ulit",
             "ya da e-posta ile": "o gamit ang email",
             "Kayıt Ol": "Mag-sign up",
             "E-posta": "Email",
@@ -14846,6 +14901,7 @@
             'Yükleniyor…': 'Naglo-load…'
         });
         Object.assign(I18N_RU, {
+            'Tekrar dene': "Повторить",
             "ya da e-posta ile": "или по электронной почте",
             "Kayıt Ol": "Регистрация",
             "E-posta": "Эл. почта",
@@ -14922,6 +14978,8 @@
                 const batch = F.writeBatch(db);
                 if (ACC.profile) batch.delete(F.doc(db, 'usernames', ACC.profile.usernameLower));
                 batch.delete(F.doc(db, 'users', user.uid));
+                batch.delete(F.doc(db, 'saves', user.uid));
+                batch.delete(F.doc(db, 'profiles', user.uid));
                 await batch.commit();
                 await U.deleteUser(user);
                 accNotice = 'deleted';
@@ -14943,6 +15001,9 @@
 
             if (ACC.state === 'unavailable') {
                 add(`<div class="text-xs text-slate-400">Hesap sistemi şu an kullanılamıyor. Oyunu yine de oynayabilirsin.</div>`);
+            } else if (ACC.state === 'netError') {
+                const r = add(`<div class="text-xs text-slate-400">Bağlantı kurulamadı. İnternetini kontrol et.</div>`);
+                btn(r, 'market-btn equip', 'Tekrar dene', accRetryProfile);
             } else if (ACC.state === 'loading') {
                 add(`<div class="text-xs text-slate-400">Yükleniyor…</div>`);
             } else if (ACC.state === 'ready') {
@@ -15055,6 +15116,290 @@
             for (const [k, v] of Object.entries(ACC2_TR[lang])) if (!(k in table)) table[k] = v;
         if (LANG !== 'tr') applyLanguage(LANG);
 
+
+        // ===================== PROFİL KARTI (market kozmetiği) =====================
+        // Kart arka planları: marketten alınır, hesap ekranındaki profil kartını süsler
+        SHOP.card = { title: 'Profil Kartı', icon: 'user', note: 'Hesap ekranındaki profil kartının görünümü. Skor tablosu gelince diğer oyuncular da kartını görecek.', items: [
+            { id: 'card-classic',  name: 'Klasik',          price: 0,    bg: 'linear-gradient(135deg, #1e293b, #0f172a)', bd: 'rgba(148, 163, 184, 0.35)', ac: '#94a3b8' },
+            { id: 'card-ocean',    name: 'Derin Deniz',     price: 150,  bg: 'linear-gradient(135deg, #0e7490, #082f49)', bd: 'rgba(56, 189, 248, 0.55)', ac: '#7dd3fc' },
+            { id: 'card-forest',   name: 'Zümrüt',          price: 200,  bg: 'linear-gradient(135deg, #047857, #022c22)', bd: 'rgba(52, 211, 153, 0.55)', ac: '#6ee7b7' },
+            { id: 'card-ember',    name: 'Kor',             price: 250,  bg: 'linear-gradient(135deg, #9a3412, #2a0a04)', bd: 'rgba(251, 146, 60, 0.6)', ac: '#fdba74' },
+            { id: 'card-wood',     name: 'Ceviz Tahta',     price: 300,  bg: 'repeating-linear-gradient(100deg, #5c3a1a 0 14px, #6b4423 14px 22px, #4e3016 22px 34px)', bd: 'rgba(217, 160, 91, 0.6)', ac: '#f3c98b' },
+            { id: 'card-royal',    name: 'Kraliyet Moru',   price: 400,  bg: 'linear-gradient(135deg, #6d28d9, #1e0b3d)', bd: 'rgba(192, 132, 252, 0.65)', ac: '#d8b4fe' },
+            { id: 'card-marble',   name: 'Mermer',          price: 450,  bg: 'linear-gradient(120deg, #e5e7eb 0%, #9ca3af 30%, #f3f4f6 45%, #6b7280 70%, #d1d5db 100%)', bd: 'rgba(255, 255, 255, 0.7)', ac: '#111827', dark: true },
+            { id: 'card-checker',  name: 'Şah Mat',         price: 600,  bg: 'repeating-conic-gradient(#e7d7b4 0 25%, #8b5a2b 0 50%) 0 0 / 28px 28px', bd: 'rgba(250, 204, 21, 0.7)', ac: '#fde68a', shade: true },
+            { id: 'card-gold',     name: 'Altın Varak',     price: 800,  bg: 'linear-gradient(135deg, #a16207, #fde047 35%, #ca8a04 55%, #fef08a 75%, #a16207)', bd: 'rgba(254, 240, 138, 0.9)', ac: '#422006', dark: true, anim: 'shine' },
+            { id: 'card-aurora',   name: 'Kutup Işıkları',  price: 1000, bg: 'linear-gradient(120deg, #064e3b, #0ea5e9, #7c3aed, #10b981, #064e3b)', bd: 'rgba(110, 231, 183, 0.8)', ac: '#a7f3d0', anim: 'flow' },
+            { id: 'card-galaxy',   name: 'Galaksi',         price: 1500, bg: 'radial-gradient(circle at 20% 30%, rgba(236, 72, 153, 0.55), transparent 45%), radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.6), transparent 50%), #0b0620', bd: 'rgba(196, 181, 253, 0.85)', ac: '#e9d5ff', anim: 'stars' }
+        ]};
+        DEFAULT_SAVE.owned.push('card-classic');
+        DEFAULT_SAVE.equipped.card = 'card-classic';
+        if (!save.owned.includes('card-classic')) save.owned.push('card-classic');
+        if (!save.equipped.card || !SHOP.card.items.some(i => i.id === save.equipped.card)) save.equipped.card = 'card-classic';
+        // Kartlar sandıktan çıkmaz, sadece marketten alınır
+        const chestPoolBase = chestPool;
+        chestPool = function () { return chestPoolBase().filter(p => p.cat !== 'card'); };
+
+        function drawCardPawn(cv) {
+            const k = Math.min(3, Math.max(1, (window.devicePixelRatio || 1)));
+            cv.width = Math.round(120 * k); cv.height = Math.round(120 * k);
+            const g = cv.getContext('2d');
+            hdContext(g, k);
+            g.textAlign = 'center'; g.textBaseline = 'middle';
+            g.font = '84px Arial';
+            try {
+                drawCape(g, getEquipped('cape'), playerGlyph(), 84, 60, 70, 0, 0);
+                g.fillStyle = pawnColor(getEquipped('pawn'), performance.now());
+                g.shadowColor = 'rgba(0, 0, 0, 0.55)'; g.shadowBlur = 6;
+                glyphFill(g, playerGlyph(), 60, 70);
+                g.shadowBlur = 0;
+                drawAccessories(g, playerGlyph(), 84, 60, 70, 0, getEquipped('hat'), getEquipped('face'));
+            } catch (e) { /* çizilemezse boş kalır */ }
+        }
+
+        // Profil kartı: kart kozmetiği + oyuncunun piyonu + birkaç istatistik
+        function buildProfileCard(cardItem, name) {
+            const it = cardItem || getEquipped('card');
+            const el = document.createElement('div');
+            el.className = 'pcard' + (it.dark ? ' pcard-dark' : '') + (it.shade ? ' pcard-shade' : '') + (it.anim ? ' pcard-' + it.anim : '');
+            el.style.setProperty('--pc-bg', it.bg);
+            el.style.setProperty('--pc-bd', it.bd);
+            el.style.setProperty('--pc-ac', it.ac);
+            const achTotal = (typeof ACHIEVEMENTS !== 'undefined') ? ACHIEVEMENTS.length : 0;
+            el.innerHTML = `<div class="pcard-top">
+                    <canvas class="pcard-pawn" aria-hidden="true"></canvas>
+                    <div class="pcard-id">
+                        <div class="pcard-name" translate="no">${accEsc(name || 'Misafir')}</div>
+                        <div class="pcard-lvl"><span>Seviye ${save.level}</span></div>
+                    </div>
+                </div>
+                <div class="pcard-stats">
+                    <div><b>${save.bestScore}</b><small>Rekor</small></div>
+                    <div><b>${save.achievements.length}/${achTotal}</b><small>Başarım</small></div>
+                    <div><b>${save.stats.games}</b><small>Oyun</small></div>
+                </div>`;
+            drawCardPawn(el.querySelector('canvas'));
+            return el;
+        }
+
+        // Markette Profil Kartı sekmesinde üstteki oyun önizlemesi yerine kartın kendisi gösterilir
+        const cardPreviewBox = document.createElement('div');
+        cardPreviewBox.id = 'card-preview';
+        cardPreviewBox.style.display = 'none';
+        previewCanvas.parentNode.insertBefore(cardPreviewBox, previewCanvas.nextSibling);
+        const renderMarketBase = renderMarket;
+        renderMarket = function () {
+            renderMarketBase.apply(this, arguments);
+            if (marketTab === 'card') {
+                previewCanvas.style.display = 'none';
+                cardPreviewBox.style.display = 'block';
+                cardPreviewBox.innerHTML = '';
+                cardPreviewBox.appendChild(buildProfileCard(previewItem('card'), ACC.profile ? ACC.profile.username : null));
+            } else {
+                cardPreviewBox.style.display = 'none';
+            }
+        };
+        // Market listesindeki küçük kart önizlemesi
+        const makePreviewBase = makePreview;
+        makePreview = function (cat, item, big) {
+            if (cat !== 'card') return makePreviewBase.apply(this, arguments);
+            const el = document.createElement('div');
+            el.className = 'market-preview';
+            const sw = document.createElement('div');
+            sw.className = 'pcard-swatch' + (item.anim ? ' pcard-' + item.anim : '');
+            sw.style.setProperty('--pc-bg', item.bg);
+            sw.style.setProperty('--pc-bd', item.bd);
+            el.appendChild(sw);
+            return el;
+        };
+
+        // ===================== BULUT KAYIT =====================
+        // Giriş yapan oyuncunun ilerlemesi hesabına da kaydedilir (saves/{uid}).
+        // Hangi kayıt geçerli?  Aynı hesabın kaydıysa en yeni olan; misafir ilerlemesiyse en çok ilerleme olan;
+        // bu cihazdaki kayıt başka bir hesabınsa buluttaki kayıt.
+        const OWNER_KEY = SAVE_KEY + '_owner';
+        const WELCOME_TOKENS = 1000;
+        const CLOUD = { uid: null, syncing: false, ready: false, pending: false, lastPush: 0, timer: null, status: '' };
+        const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+        const lsSet = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
+
+        // Kaydın zaman damgası (loadSave bilinmeyen alanları atladığı için ayrıca taşınır)
+        try { const r = JSON.parse(lsGet(SAVE_KEY) || '{}'); save.savedAt = Number(r.savedAt) || 0; } catch (e) { save.savedAt = 0; }
+        const loadSaveBase = loadSave;
+        loadSave = function (raw) {
+            loadSaveBase.apply(this, arguments);
+            try { const r = JSON.parse(raw !== undefined ? raw : (lsGet(SAVE_KEY) || '{}')); save.savedAt = Number(r && r.savedAt) || 0; } catch (e) {}
+            if (!save.owned.includes('card-classic')) save.owned.push('card-classic');
+            if (!save.equipped.card || !SHOP.card.items.some(i => i.id === save.equipped.card)) save.equipped.card = 'card-classic';
+        };
+        const writeSaveBase = writeSave;
+        writeSave = function () {
+            save.savedAt = Date.now();
+            writeSaveBase.apply(this, arguments);
+            cloudSchedule();
+        };
+
+        function progressScore(s) {
+            return (Number(s.level) || 1) * 1e6 + (Number(s.xp) || 0) + ((s.stats && Number(s.stats.games)) || 0) * 0.001;
+        }
+        function cloudPayload() {
+            const copy = JSON.parse(JSON.stringify(save));
+            delete copy.settings;   // ayarlar (kontroller, dil...) cihaza özel kalır
+            return JSON.stringify(copy);
+        }
+        function refreshAfterSaveChange() {
+            try { updateTokenUI(); } catch (e) {}
+            try { updateLevelUI(); } catch (e) {}
+            try { renderModeSelect(); } catch (e) {}
+            try { updateDifficultyUI(); } catch (e) {}
+            try { if (gameState === 'START') draw(); } catch (e) {}
+        }
+        function applySaveJSON(json) {
+            const keepSettings = save.settings;
+            save = JSON.parse(JSON.stringify(DEFAULT_SAVE));
+            loadSave(json);
+            save.settings = keepSettings;
+        }
+
+        async function cloudSync(uid) {
+            if (!ACC.fb || CLOUD.syncing) return;
+            // Maç sırasında kayıt değiştirilmez: maç bitince yapılır
+            if (gameState !== 'START' && gameState !== 'GAMEOVER') { setTimeout(() => cloudSync(uid), 2000); return; }
+            const { F, db } = ACC.fb;
+            CLOUD.syncing = true; CLOUD.status = 'syncing'; accRender();
+            try {
+                const snap = await F.getDoc(F.doc(db, 'saves', uid));
+                if (!ACC.user || ACC.user.uid !== uid) { CLOUD.syncing = false; return; }   // bu arada çıkış yapıldı
+                const owner = lsGet(OWNER_KEY);
+                const cloudDoc = snap.exists() ? snap.data() : null;
+                let cloud = null;
+                if (cloudDoc && cloudDoc.data) { try { cloud = JSON.parse(cloudDoc.data); } catch (e) { cloud = null; } }
+                let useCloud = false, fresh = false;
+                if (cloud) {
+                    if (owner === uid) useCloud = (Number(cloud.savedAt) || 0) > (Number(save.savedAt) || 0);
+                    else if (!owner) useCloud = progressScore(cloud) >= progressScore(save);
+                    else useCloud = true;                       // bu cihazdaki kayıt başka bir hesabın
+                } else if (owner && owner !== uid) {
+                    fresh = true;                               // yeni hesap, cihazdaki kayıt başkasının: sıfırdan başla
+                }
+                if (useCloud) applySaveJSON(JSON.stringify(cloud));
+                else if (fresh) applySaveJSON('{}');
+                lsSet(OWNER_KEY, uid);
+                CLOUD.uid = uid;
+                // Hoş geldin hediyesi: her hesaba bir kez
+                const giveGift = !(cloudDoc && cloudDoc.welcome);
+                if (giveGift) {
+                    save.tokens += WELCOME_TOKENS;
+                    showToast('Hoş geldin hediyesi', WELCOME_TOKENS, 'gift');
+                    try { playSound('buy'); } catch (e) {}
+                }
+                writeSaveBase();                                 // yerel kaydı güncelle (zaman damgasını bozmadan)
+                CLOUD.ready = true;
+                await cloudPush(true);
+                refreshAfterSaveChange();
+                CLOUD.status = 'ok';
+            } catch (e) {
+                console.warn('Bulut kayıt alınamadı:', e);
+                CLOUD.status = 'error';
+            }
+            CLOUD.syncing = false;
+            accRender();
+        }
+
+        async function cloudPush(force) {
+            if (!ACC.fb || !CLOUD.ready || !ACC.user || ACC.user.uid !== CLOUD.uid) return;
+            clearTimeout(CLOUD.timer); CLOUD.timer = null;
+            CLOUD.pending = false;
+            CLOUD.lastPush = Date.now();
+            const { F, db } = ACC.fb;
+            const uid = CLOUD.uid;
+            try {
+                const batch = F.writeBatch(db);
+                batch.set(F.doc(db, 'saves', uid), { data: cloudPayload(), updatedAt: F.serverTimestamp(), welcome: true, v: 1 });
+                if (ACC.profile) {
+                    batch.set(F.doc(db, 'profiles', uid), {
+                        username: ACC.profile.username, level: Math.floor(save.level) || 1, best: Math.floor(save.bestScore) || 0,
+                        card: String(save.equipped.card || 'card-classic'),
+                        look: { piece: String(save.equipped.piece), pawn: String(save.equipped.pawn), hat: String(save.equipped.hat), face: String(save.equipped.face), cape: String(save.equipped.cape) },
+                        updatedAt: F.serverTimestamp()
+                    });
+                }
+                await batch.commit();
+                if (CLOUD.status === 'error') { CLOUD.status = 'ok'; accRender(); }
+            } catch (e) {
+                console.warn('Bulut kayda yazılamadı:', e);
+                CLOUD.pending = true;
+                if (CLOUD.status !== 'error') { CLOUD.status = 'error'; accRender(); }
+                if (!force) CLOUD.timer = setTimeout(() => cloudPush(), 30000);
+            }
+        }
+        // Çok sık yazmamak için: değişiklikten sonra en fazla 15 sn'de bir, maç sırasında hiç
+        function cloudSchedule() {
+            if (!CLOUD.ready || CLOUD.syncing) return;
+            CLOUD.pending = true;
+            if (CLOUD.timer) return;
+            const wait = Math.max(3000, 15000 - (Date.now() - CLOUD.lastPush));
+            CLOUD.timer = setTimeout(function tick() {
+                CLOUD.timer = null;
+                if (gameState === 'PLAYING' || gameState === 'COUNTDOWN' || gameState === 'PAUSED') { CLOUD.timer = setTimeout(tick, 5000); return; }
+                if (CLOUD.pending) cloudPush();
+            }, wait);
+        }
+        // Uygulama arka plana atılınca bekleyen kaydı hemen gönder
+        document.addEventListener('visibilitychange', () => { if (document.hidden && CLOUD.pending) cloudPush(true); });
+
+        // Giriş durumu değişince senkronize et
+        const accRenderBase3 = accRender;
+        let lastSyncedUid = null;
+        accRender = function () {
+            // Kullanıcı adı hazır olunca bir kez senkronize et; çıkış yapılınca bulut kaydı durdur
+            if (ACC.state === 'ready' && ACC.user && lastSyncedUid !== ACC.user.uid) { lastSyncedUid = ACC.user.uid; setTimeout(() => cloudSync(ACC.user.uid), 0); }
+            if (!ACC.user && lastSyncedUid) { lastSyncedUid = null; CLOUD.ready = false; CLOUD.uid = null; CLOUD.status = ''; clearTimeout(CLOUD.timer); CLOUD.timer = null; }
+            accRenderBase3.apply(this, arguments);
+            const slot = document.getElementById('acc-card-slot');
+            if (slot && ACC.profile) { slot.innerHTML = ''; slot.appendChild(buildProfileCard(null, ACC.profile.username)); }
+            const cs = document.getElementById('acc-cloud');
+            if (cs) {
+                const txt = { syncing: 'Bulut kayıt eşitleniyor…', ok: 'Bulut kayıt açık: ilerlemen hesabına kaydediliyor.', error: 'Bulut kayda şu an ulaşılamıyor. İlerlemen bu cihazda güvende, bağlantı gelince tekrar denenecek.' }[CLOUD.status] || '';
+                cs.textContent = txt;
+                cs.className = 'acc-cloud' + (CLOUD.status === 'error' ? ' err' : '');
+            }
+        };
+        // Hesap silinince bulut kayıt ve profil de silinsin
+        const accDeleteBase = accDeleteAccount;
+        accDeleteAccount = async function () {
+            if (ACC.fb && ACC.fb.auth.currentUser) {
+                const uid = ACC.fb.auth.currentUser.uid;
+                CLOUD.ready = false; clearTimeout(CLOUD.timer); CLOUD.timer = null;
+                await accDeleteBase.apply(this, arguments);
+                if (accNotice === 'deleted') { if (lsGet(OWNER_KEY) === uid) lsSet(OWNER_KEY, null); }
+                else if (ACC.user) CLOUD.ready = true;
+                return;
+            }
+            return accDeleteBase.apply(this, arguments);
+        };
+
+        const CLOUD_TR = {
+            en: { 'Profil Kartı': 'Profile Card', 'Hesap ekranındaki profil kartının görünümü. Skor tablosu gelince diğer oyuncular da kartını görecek.': "How the profile card on your account screen looks. Once the leaderboard arrives, other players will see your card too.",
+                'Klasik': 'Classic', 'Derin Deniz': 'Deep Sea', 'Zümrüt': 'Emerald', 'Kor': 'Ember', 'Ceviz Tahta': 'Walnut', 'Kraliyet Moru': 'Royal Purple', 'Mermer': 'Marble', 'Şah Mat': 'Checkmate', 'Altın Varak': 'Gold Leaf', 'Kutup Işıkları': 'Northern Lights', 'Galaksi': 'Galaxy',
+                'Misafir': 'Guest', 'Rekor': 'Best', 'Başarım': 'Achievements', 'Oyun': 'Games', 'Hoş geldin hediyesi': 'Welcome gift',
+                'Bulut kayıt eşitleniyor…': 'Syncing cloud save…', 'Bulut kayıt açık: ilerlemen hesabına kaydediliyor.': 'Cloud save is on: your progress is saved to your account.',
+                'Bulut kayda şu an ulaşılamıyor. İlerlemen bu cihazda güvende, bağlantı gelince tekrar denenecek.': "Can't reach cloud save right now. Your progress is safe on this device and will sync when you're back online." },
+            fil: { 'Profil Kartı': 'Profile Card', 'Hesap ekranındaki profil kartının görünümü. Skor tablosu gelince diğer oyuncular da kartını görecek.': 'Ang itsura ng profile card sa account screen mo. Pagdating ng leaderboard, makikita rin ng ibang manlalaro ang card mo.',
+                'Klasik': 'Classic', 'Derin Deniz': 'Malalim na Dagat', 'Zümrüt': 'Esmeralda', 'Kor': 'Baga', 'Ceviz Tahta': 'Walnut', 'Kraliyet Moru': 'Royal na Lila', 'Mermer': 'Marmol', 'Şah Mat': 'Checkmate', 'Altın Varak': 'Gintong Dahon', 'Kutup Işıkları': 'Northern Lights', 'Galaksi': 'Galaxy',
+                'Misafir': 'Bisita', 'Rekor': 'Rekord', 'Başarım': 'Achievement', 'Oyun': 'Laro', 'Hoş geldin hediyesi': 'Regalo sa pagdating',
+                'Bulut kayıt eşitleniyor…': 'Sini-sync ang cloud save…', 'Bulut kayıt açık: ilerlemen hesabına kaydediliyor.': 'Naka-on ang cloud save: naka-save ang progreso mo sa iyong account.',
+                'Bulut kayda şu an ulaşılamıyor. İlerlemen bu cihazda güvende, bağlantı gelince tekrar denenecek.': 'Hindi maabot ang cloud save ngayon. Ligtas ang progreso mo sa device na ito at magsi-sync ito pagbalik ng koneksyon.' },
+            ru: { 'Profil Kartı': 'Карточка профиля', 'Hesap ekranındaki profil kartının görünümü. Skor tablosu gelince diğer oyuncular da kartını görecek.': 'Внешний вид карточки профиля на экране аккаунта. Когда появится таблица лидеров, вашу карточку увидят и другие игроки.',
+                'Klasik': 'Классика', 'Derin Deniz': 'Морская глубь', 'Zümrüt': 'Изумруд', 'Kor': 'Угли', 'Ceviz Tahta': 'Орех', 'Kraliyet Moru': 'Королевский пурпур', 'Mermer': 'Мрамор', 'Şah Mat': 'Шах и мат', 'Altın Varak': 'Сусальное золото', 'Kutup Işıkları': 'Северное сияние', 'Galaksi': 'Галактика',
+                'Misafir': 'Гость', 'Rekor': 'Рекорд', 'Başarım': 'Достижения', 'Oyun': 'Игры', 'Hoş geldin hediyesi': 'Подарок новичку',
+                'Bulut kayıt eşitleniyor…': 'Синхронизация облачного сохранения…', 'Bulut kayıt açık: ilerlemen hesabına kaydediliyor.': 'Облачное сохранение включено: прогресс сохраняется в аккаунте.',
+                'Bulut kayda şu an ulaşılamıyor. İlerlemen bu cihazda güvende, bağlantı gelince tekrar denenecek.': 'Облачное сохранение сейчас недоступно. Прогресс сохранён на этом устройстве и синхронизируется, когда появится связь.' }
+        };
+        for (const [lang, table] of [['en', I18N_EN], ['fil', I18N_FIL], ['ru', I18N_RU]])
+            for (const [k, v] of Object.entries(CLOUD_TR[lang])) if (!(k in table)) table[k] = v;
+
+        if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
         accInit();
 
