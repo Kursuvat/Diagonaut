@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Diagonaut</title>
+    <title>Diagonaut Beta</title>
     <!-- Taban stiller (eski Tailwind CDN yerine, internetsiz de çalışır) -->
     <style id="base-reset">
         *, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: #e5e7eb; }
@@ -1511,6 +1511,41 @@
         }
             /* Sayı ile birimi (5 sn) satır sonunda ayrılmasın */
         .market-item .text-xs b { white-space: nowrap; }
+    
+        /* ===== Hesap ===== */
+        .acc-bar { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin: 10px 0 0;
+            padding: 8px 14px; border-radius: 12px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #cbd5e1; font-weight: 800; font-size: 0.9rem; cursor: pointer; }
+        .acc-bar:hover { border-color: rgba(56, 189, 248, 0.5); }
+        .acc-bar.signed { color: #f8fafc; border-color: rgba(52, 211, 153, 0.45); }
+        .acc-bar.signed .ico { color: #34d399; }
+        .acc-bar span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .acc-text { color: #cbd5e1; font-size: 0.9rem; margin-bottom: 14px; line-height: 1.5; }
+        .acc-note { color: #94a3b8; font-size: 0.75rem; margin-top: 12px; }
+        .acc-sub { color: #fff; font-weight: 900; font-size: 1.1rem; margin-bottom: 6px; }
+        .acc-label { color: #94a3b8; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+        .acc-name { color: #fff; font-size: 1.6rem; font-weight: 900; margin: 2px 0 12px; word-break: break-all; }
+        .acc-error { color: #fca5a5; font-size: 0.85rem; font-weight: 700; margin: 10px 0 0; }
+        .acc-input { width: 100%; padding: 12px 14px; border-radius: 12px; background: rgba(15, 23, 42, 0.8); color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15); font-size: 1rem; font-weight: 700; outline: none; }
+        .acc-input:focus { border-color: #38bdf8; }
+        .acc-google { display: flex !important; align-items: center; justify-content: center; gap: 10px; }
+        .acc-google span { text-transform: none !important; }
+        .acc-google { font-size: 1rem !important; }
+        .acc-google svg { flex-shrink: 0; }   /* "Google" büyük harfle kalsın */
+        #acc-body .btn { margin-top: 10px; }
+        #acc-body .btn:disabled { opacity: 0.6; cursor: wait; }
+        .acc-or { display: flex; align-items: center; gap: 10px; color: #94a3b8; font-size: 0.75rem; font-weight: 700; margin: 16px 0 10px; }
+        .acc-or::before, .acc-or::after { content: ''; flex: 1; height: 1px; background: rgba(255, 255, 255, 0.12); }
+        .acc-seg { width: 100%; margin-bottom: 8px; }
+        .acc-seg button { flex: 1; }
+        #acc-body .acc-input + .acc-input { margin-top: 8px; }
+        .acc-warn { color: #fcd34d; font-size: 0.82rem; font-weight: 700; margin: 0 0 10px; }
+        .acc-info { color: #6ee7b7; font-size: 0.85rem; font-weight: 700; margin: 10px 0 0; }
+        .acc-verify { background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.4); border-radius: 12px; padding: 10px 12px; margin-bottom: 12px; color: #fde68a; font-size: 0.82rem; font-weight: 700; }
+        .acc-verify .acc-skip { margin-top: 4px; color: #fde68a; }
+        .acc-del-pass { margin: -4px 0 4px; }
+        .acc-skip { display: block; margin: 12px auto 0; background: none; border: none; color: #94a3b8; font-size: 0.8rem; font-weight: 700; text-decoration: underline; cursor: pointer; }
     </style>
 
     <!-- Yardımcı sınıflar (Tailwind'in oyunda kullanılan kısmı) -->
@@ -1869,6 +1904,8 @@
                     <button id="diff-chip" class="menu-chip chip-diff" aria-label="Zorluğu değiştir"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg><b id="diff-chip-name">Orta</b></button>
                 </div>
 
+                <button id="acc-btn" class="acc-bar" aria-label="Hesap"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg><span id="acc-label">Giriş Yap</span></button>
+
                 <button id="level-btn" class="lvl-card" aria-label="Seviye ödüllerini gör">
                     <span id="lvl-badge" class="lvl-badge">1</span>
                     <span class="lvl-info">
@@ -2045,6 +2082,14 @@
                 <h2 class="text-3xl font-black mb-1 text-white">İstatistikler</h2>
                 <div id="stats-body" class="mb-4"></div>
                 <button id="close-stats-btn" class="btn btn-secondary w-full !mt-0">KAPAT</button>
+            </div>
+        </div>
+
+        <div id="acc-modal" class="ui-layer interactive vivid" style="display: none; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 35;">
+            <div class="glass-panel" style="max-height: 90vh; overflow-y: auto; padding: 1.5rem;">
+                <h2 class="text-3xl font-black mb-3 text-white">Hesap</h2>
+                <div id="acc-body" class="mb-4"></div>
+                <button id="close-acc-btn" class="btn btn-secondary w-full !mt-0">KAPAT</button>
             </div>
         </div>
 
@@ -2839,7 +2884,7 @@
         }
 
         // ===================== MARKET / KAYIT =====================
-        const SAVE_KEY = 'firariPiyonSave_v1_normal';   // 66872 tokenlı sürümle kayıtlar karışmasın
+        const SAVE_KEY = 'firariPiyonSave_v1_beta';   // 66872 tokenlı sürümle kayıtlar karışmasın
         const SHOP = {
             piece: { title: 'Terfi', icon: 'crown', note: 'Piyonun yerine başka bir beyaz taşla oyna. Sadece görünüş değişir, hareket ve kurallar aynı kalır. Renkler, auralar ve izler seçtiğin taşa da uygulanır.', items: [
                 { id: 'piece-pawn',   name: 'Piyon', price: 0,    glyph: '♙' },
@@ -14383,6 +14428,636 @@
 
         window.regicideReady = true;
         //Made By Muhammed Kürşad Topkara
+    
+        // ===================== HESAP SİSTEMİ (Firebase) =====================
+        // Google ile giriş + benzersiz kullanıcı adı. Giriş isteğe bağlı: hesapsız da oynanır.
+        // Firebase yüklenemezse (internet yok vb.) oyun hiç etkilenmez, sadece hesap ekranı uyarı gösterir.
+        const FB_CONFIG = {
+            apiKey: "AIzaSyBNIaYLr0BJoBfcvtziCA-BWJnxq3Dk-Tg",
+            authDomain: "diagonaut.firebaseapp.com",
+            projectId: "diagonaut",
+            storageBucket: "diagonaut.firebasestorage.app",
+            messagingSenderId: "1008452091451",
+            appId: "1:1008452091451:web:904f7a7f9ec9459282e61e",
+            measurementId: "G-96XW2W2EH9"
+        };
+        const FB_VER = '12.19.0';
+        const ACC = { state: 'loading', user: null, profile: null, busy: false, error: '', fb: null, mode: 'login', info: '' };
+        const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
+        // Instagram, TikTok, Facebook gibi uygulamaların içindeki tarayıcılarda Google girişe izin vermiyor
+        const IN_APP_BROWSER = /Instagram|FBAN|FBAV|FB_IAB|musical_ly|TikTok|Snapchat|Line\/|; wv\)/i.test(navigator.userAgent || '');
+        // Kullanıcı adında geçemeyecek kelimeler (küçük harfle, parçası olarak aranır)
+        const NAME_BLOCK = ['admin', 'moderator', 'diagonaut', 'kursuvat', 'official', 'resmi', 'destek', 'support',
+            'amk', 'aq', 'orospu', 'sik', 'yarrak', 'pic', 'ibne', 'got', 'gavat', 'kahpe', 'fuck', 'shit', 'bitch',
+            'nigg', 'cunt', 'dick', 'porn', 'sex', 'nazi', 'hitler'];
+        // Kısa ve masum kelimelerin içinde geçebilenler sadece tam kelime olarak engellenir
+        const NAME_BLOCK_EXACT = new Set(['aq', 'pic', 'got', 'sik']);
+
+        const accBtn = document.getElementById('acc-btn');
+        const accLabel = document.getElementById('acc-label');
+        const accModal = document.getElementById('acc-modal');
+        const accBody = document.getElementById('acc-body');
+
+        function accEsc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function accNameProblem(name) {
+            if (!USERNAME_RE.test(name)) return 'format';
+            const low = name.toLowerCase();
+            const parts = low.split('_').filter(Boolean);
+            for (const w of NAME_BLOCK) {
+                if (NAME_BLOCK_EXACT.has(w)) { if (parts.includes(w) || low === w) return 'blocked'; }
+                else if (low.includes(w)) return 'blocked';
+            }
+            return null;
+        }
+
+        async function accInit() {
+            try {
+                const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
+                const [A, U, F] = await Promise.all([
+                    import(base + 'firebase-app.js'),
+                    import(base + 'firebase-auth.js'),
+                    import(base + 'firebase-firestore.js')
+                ]);
+                const app = A.initializeApp(FB_CONFIG);
+                const auth = U.getAuth(app);
+                try { auth.languageCode = LANG; } catch (e) {}   // doğrulama/sıfırlama e-postaları oyunun dilinde gelsin
+                const db = F.getFirestore(app);
+                ACC.fb = { U, F, auth, db };
+                U.onAuthStateChanged(auth, async user => {
+                    ACC.user = user;
+                    ACC.profile = null;
+                    ACC.error = '';
+                    if (!user) ACC.info = '';
+                    if (user) {
+                        ACC.state = 'loading';
+                        accRender();
+                        try {
+                            const snap = await F.getDoc(F.doc(db, 'users', user.uid));
+                            ACC.profile = snap.exists() ? snap.data() : null;
+                            ACC.state = ACC.profile ? 'ready' : 'needName';
+                        } catch (e) {
+                            ACC.state = 'needName';
+                            ACC.error = 'net';
+                        }
+                    } else {
+                        ACC.state = 'signedOut';
+                    }
+                    accRender();
+                });
+            } catch (e) {
+                console.warn('Hesap sistemi yüklenemedi:', e);
+                ACC.state = 'unavailable';
+                accRender();
+            }
+        }
+
+        async function accSignIn() {
+            if (!ACC.fb || ACC.busy) return;
+            const { U, auth } = ACC.fb;
+            ACC.busy = true; ACC.error = ''; accRender();
+            const provider = new U.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            try {
+                await U.signInWithPopup(auth, provider);
+            } catch (e) {
+                const code = (e && e.code) || '';
+                if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+                    try { await U.signInWithRedirect(auth, provider); return; } catch (e2) { ACC.error = 'signin'; }
+                } else if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+                    ACC.error = 'closed';
+                } else if (code === 'auth/network-request-failed') {
+                    ACC.error = 'net';
+                } else {
+                    console.warn('Giriş hatası:', e);
+                    ACC.error = 'signin';
+                }
+            }
+            ACC.busy = false;
+            accRender();
+        }
+
+        async function accSignOut() {
+            if (!ACC.fb || ACC.busy) return;
+            try { await ACC.fb.U.signOut(ACC.fb.auth); } catch (e) { ACC.error = 'net'; accRender(); }
+        }
+
+        async function accClaimName(name) {
+            if (!ACC.fb || !ACC.user || ACC.busy) return;
+            const problem = accNameProblem(name);
+            if (problem) { ACC.error = problem; accRender(); return; }
+            const { F, db } = ACC.fb;
+            const uid = ACC.user.uid;
+            const lower = name.toLowerCase();
+            ACC.busy = true; ACC.error = ''; accRender();
+            try {
+                // İsim ve profil tek işlemde yazılır: aynı isim iki kişiye verilemez
+                await F.runTransaction(db, async tx => {
+                    const nameRef = F.doc(db, 'usernames', lower);
+                    const taken = await tx.get(nameRef);
+                    if (taken.exists()) throw { code: 'taken' };
+                    tx.set(nameRef, { uid: uid });
+                    tx.set(F.doc(db, 'users', uid), { username: name, usernameLower: lower, createdAt: F.serverTimestamp() });
+                });
+                ACC.profile = { username: name, usernameLower: lower };
+                ACC.state = 'ready';
+            } catch (e) {
+                const code = (e && e.code) || '';
+                ACC.error = code === 'taken' || code === 'permission-denied' ? 'taken'
+                    : (code === 'unavailable' || code === 'deadline-exceeded') ? 'net' : 'signin';
+                if (code !== 'taken') console.warn('İsim kaydedilemedi:', e);
+            }
+            ACC.busy = false;
+            accRender();
+        }
+
+        const ACC_ERRORS = {
+            taken: 'Bu isim alınmış, başka bir tane dene.',
+            format: 'İsim 3‑16 karakter olmalı ve sadece İngilizce harf, rakam ve alt çizgi içermeli.',
+            blocked: 'Bu isim kullanılamaz.',
+            signin: 'Giriş yapılamadı. Tekrar dene.',
+            net: 'Bağlantı kurulamadı. İnternetini kontrol et.',
+            closed: 'Giriş penceresi kapatıldı.',
+            badEmail: 'Geçerli bir e-posta adresi yaz.',
+            weakPass: 'Şifre en az 8 karakter olmalı.',
+            noMatch: 'Şifreler aynı değil.',
+            emailUsed: 'Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.',
+            wrongPass: 'E-posta ya da şifre yanlış.',
+            tooMany: 'Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.',
+            noPass: 'Şifreni yaz.'
+        };
+        const ACC_INFOS = {
+            resetSent: 'Bu adrese kayıtlı bir hesap varsa şifre sıfırlama bağlantısı gönderildi. Spam klasörünü de kontrol et.',
+            verifySent: 'Doğrulama e-postası gönderildi. Spam klasörünü de kontrol et.'
+        };
+        const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        function accAuthError(e) {
+            const code = (e && e.code) || '';
+            if (code === 'auth/invalid-email') return 'badEmail';
+            if (code === 'auth/weak-password' || code === 'auth/password-does-not-meet-requirements') return 'weakPass';
+            if (code === 'auth/email-already-in-use') return 'emailUsed';
+            if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found' || code === 'auth/invalid-login-credentials') return 'wrongPass';
+            if (code === 'auth/too-many-requests') return 'tooMany';
+            if (code === 'auth/missing-password') return 'noPass';
+            if (code === 'auth/network-request-failed') return 'net';
+            console.warn('Giriş hatası:', e);
+            return 'signin';
+        }
+        function accIsPasswordUser() {
+            const u = ACC.fb && ACC.fb.auth.currentUser;
+            return !!(u && (u.providerData || []).some(p => p && p.providerId === 'password'));
+        }
+        async function accEmailSubmit() {
+            if (!ACC.fb || ACC.busy) return;
+            const { U, auth } = ACC.fb;
+            const email = (document.getElementById('acc-email').value || '').trim();
+            const pass = document.getElementById('acc-pass').value || '';
+            const pass2El = document.getElementById('acc-pass2');
+            ACC.info = '';
+            if (!EMAIL_RE.test(email)) { ACC.error = 'badEmail'; accRender(); return; }
+            if (!pass) { ACC.error = 'noPass'; accRender(); return; }
+            if (ACC.mode === 'signup') {
+                if (pass.length < 8) { ACC.error = 'weakPass'; accRender(); return; }
+                if (pass2El && pass2El.value !== pass) { ACC.error = 'noMatch'; accRender(); return; }
+            }
+            ACC.busy = true; ACC.error = ''; accRender();
+            try {
+                if (ACC.mode === 'signup') {
+                    const cred = await U.createUserWithEmailAndPassword(auth, email, pass);
+                    try { await U.sendEmailVerification(cred.user); ACC.info = 'verifySent'; } catch (e) { /* sonra tekrar gönderilebilir */ }
+                } else {
+                    await U.signInWithEmailAndPassword(auth, email, pass);
+                }
+            } catch (e) {
+                ACC.error = accAuthError(e);
+            }
+            ACC.busy = false;
+            accRender();
+        }
+        async function accResetPassword() {
+            if (!ACC.fb || ACC.busy) return;
+            const email = (document.getElementById('acc-email').value || '').trim();
+            ACC.info = '';
+            if (!EMAIL_RE.test(email)) { ACC.error = 'badEmail'; accRender(); return; }
+            ACC.busy = true; ACC.error = ''; accRender();
+            try {
+                await ACC.fb.U.sendPasswordResetEmail(ACC.fb.auth, email);
+                ACC.info = 'resetSent';
+            } catch (e) {
+                const k = accAuthError(e);
+                if (k === 'wrongPass') ACC.info = 'resetSent'; else ACC.error = k;   // hesabın var olup olmadığını belli etme
+            }
+            ACC.busy = false;
+            accRender();
+        }
+        async function accResendVerify() {
+            if (!ACC.fb || ACC.busy || !ACC.fb.auth.currentUser) return;
+            ACC.busy = true; ACC.error = ''; accRender();
+            try { await ACC.fb.U.sendEmailVerification(ACC.fb.auth.currentUser); ACC.info = 'verifySent'; }
+            catch (e) { ACC.error = accAuthError(e); }
+            ACC.busy = false;
+            accRender();
+        }
+        const ACC_USER_SVG = '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/></svg>';
+        const ACC_G_SVG = '<svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>';
+
+        function accRender() {
+            // Menüdeki hesap düğmesi
+            let label;
+            if (ACC.state === 'ready' && ACC.profile) label = ACC.profile.username;
+            else if (ACC.state === 'needName') label = 'Kullanıcı adını seç';
+            else if (ACC.state === 'loading' && ACC.user) label = 'Yükleniyor…';
+            else label = 'Giriş Yap';
+            accBtn.classList.toggle('signed', ACC.state === 'ready');
+            accBtn.dataset.name = ACC.state === 'ready' ? '1' : '';
+            accLabel.textContent = label;
+            if (ACC.state === 'ready') accLabel.setAttribute('translate', 'no'); else accLabel.removeAttribute('translate');
+            if (accModal.style.display !== 'flex') return;
+
+            const err = ACC.error ? `<p class="acc-error">${ACC_ERRORS[ACC.error] || ACC_ERRORS.signin}</p>` : '';
+            const infoLine = ACC.info ? `<p class="acc-info">${ACC_INFOS[ACC.info]}</p>` : '';
+            const cu = ACC.fb && ACC.fb.auth.currentUser;
+            const verify = (cu && accIsPasswordUser() && !cu.emailVerified)
+                ? `<div class="acc-verify"><p>${ACC.info === 'verifySent' ? ACC_INFOS.verifySent : 'E-posta adresin henüz doğrulanmadı. Gelen kutundaki bağlantıya tıkla.'}</p><button id="acc-verify" class="acc-skip">Tekrar gönder</button></div>` : '';
+            const info = (verify && ACC.info === 'verifySent') ? '' : infoLine;
+            let html = '';
+            if (ACC.state === 'unavailable') {
+                html = `<p class="acc-text">Hesap sistemi şu an kullanılamıyor. Oyunu yine de oynayabilirsin.</p>`;
+            } else if (ACC.state === 'loading') {
+                html = `<p class="acc-text">Yükleniyor…</p>`;
+            } else if (ACC.state === 'signedOut') {
+                const inApp = IN_APP_BROWSER ? `<p class="acc-warn">Google girişi bu uygulamanın içindeki tarayıcıda çalışmaz. Aşağıdan e-posta ile devam edebilir ya da menüden "Tarayıcıda aç"ı seçebilirsin.</p>` : '';
+                html = `<p class="acc-text">Google ile giriş yap ya da e-postayla kayıt ol. Google hesabıyla ilk girişte hesabın otomatik açılır.</p>
+                    ${inApp}
+                    <button id="acc-google" class="btn w-full acc-google" ${ACC.busy ? 'disabled' : ''}>${ACC_G_SVG}<span>Google ile giriş yap</span></button>
+                    <div class="acc-or"><span>ya da e-posta ile</span></div>
+                    <div class="seg acc-seg"><button id="acc-mode-login" class="${ACC.mode === 'login' ? 'on' : ''}">Giriş Yap</button><button id="acc-mode-signup" class="${ACC.mode === 'signup' ? 'on' : ''}">Kayıt Ol</button></div>
+                    <input id="acc-email" class="acc-input" type="email" autocomplete="email" autocapitalize="off" spellcheck="false" placeholder="E-posta" translate="no">
+                    <input id="acc-pass" class="acc-input" type="password" autocomplete="${ACC.mode === 'signup' ? 'new-password' : 'current-password'}" placeholder="Şifre">
+                    ${ACC.mode === 'signup' ? '<input id="acc-pass2" class="acc-input" type="password" autocomplete="new-password" placeholder="Şifre (tekrar)">' : ''}
+                    ${err}${info}
+                    <button id="acc-email-go" class="btn w-full" ${ACC.busy ? 'disabled' : ''}>${ACC.mode === 'signup' ? 'Kayıt Ol' : 'Giriş Yap'}</button>
+                    ${ACC.mode === 'login' ? '<button id="acc-forgot" class="acc-skip">Şifremi unuttum</button>' : ''}
+                    <p class="acc-note">E-posta adresin ve gerçek adın asla başka oyunculara gösterilmez.</p>`;
+            } else if (ACC.state === 'needName') {
+                html = `${verify}${info}<h3 class="acc-sub">Kullanıcı adını seç</h3>
+                    <p class="acc-text">Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan değiştirilemez.</p>
+                    <input id="acc-name" class="acc-input" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="pawn_master" translate="no">
+                    ${err}
+                    <button id="acc-save" class="btn w-full" ${ACC.busy ? 'disabled' : ''}>Kaydet</button>
+                    <button id="acc-out" class="btn btn-secondary btn-small w-full">Çıkış Yap</button>`;
+            } else {
+                html = `<p class="acc-label">Oyuncu adın</p>
+                    <p class="acc-name" translate="no">${accEsc(ACC.profile.username)}</p>
+                    <p class="acc-text">Skor tablosu yakında geliyor.</p>
+                    ${verify}${info}${err}
+                    <button id="acc-out" class="btn btn-secondary btn-small w-full">Çıkış Yap</button>`;
+            }
+            // Yazılan isim yeniden çizimde kaybolmasın
+            const prevInput = document.getElementById('acc-name');
+            const typed = prevInput ? prevInput.value : '';
+            const keep = {};
+            for (const id of ['acc-email', 'acc-pass', 'acc-pass2']) { const el = document.getElementById(id); if (el) keep[id] = el.value; }
+            accBody.innerHTML = html;
+            for (const id in keep) { const el = document.getElementById(id); if (el) el.value = keep[id]; }
+            const stopKeys = el => { if (el) el.onkeydown = e => { if (e.key === 'Escape') return; if (e.key === 'Enter') accEmailSubmit(); e.stopPropagation(); }; };
+            for (const id of ['acc-email', 'acc-pass', 'acc-pass2']) {
+                const el = document.getElementById(id);
+                stopKeys(el);
+                if (el) el.oninput = () => { if (ACC.error || ACC.info) { ACC.error = ''; ACC.info = ''; accBody.querySelectorAll('.acc-error,.acc-info').forEach(x => x.remove()); } };
+            }
+            const ml = document.getElementById('acc-mode-login'), ms = document.getElementById('acc-mode-signup');
+            if (ml) ml.onclick = () => { ACC.mode = 'login'; ACC.error = ''; ACC.info = ''; accRender(); };
+            if (ms) ms.onclick = () => { ACC.mode = 'signup'; ACC.error = ''; ACC.info = ''; accRender(); };
+            const go = document.getElementById('acc-email-go'); if (go) go.onclick = accEmailSubmit;
+            const fg = document.getElementById('acc-forgot'); if (fg) fg.onclick = accResetPassword;
+            const vf = document.getElementById('acc-verify'); if (vf) vf.onclick = accResendVerify;
+            const g = document.getElementById('acc-google');
+            if (g) g.onclick = accSignIn;
+            const out = document.getElementById('acc-out');
+            if (out) out.onclick = accSignOut;
+            const input = document.getElementById('acc-name');
+            if (input) {
+                input.value = typed;
+                input.oninput = () => {
+                    input.value = input.value.replace(/[^A-Za-z0-9_]/g, '');
+                    if (ACC.error) { ACC.error = ''; const e = accBody.querySelector('.acc-error'); if (e) e.remove(); }
+                };
+                input.onkeydown = e => {
+                    if (e.key === 'Escape') return;   // Esc menüyü kapatabilsin
+                    if (e.key === 'Enter') accClaimName(input.value.trim());
+                    e.stopPropagation();          // yazarken oyun tuşları (WASD vb.) tetiklenmesin
+                };
+                document.getElementById('acc-save').onclick = () => accClaimName(input.value.trim());
+            }
+        }
+
+        function openAccount() {
+            ACC.error = '';
+            ACC.info = '';
+            accModal.style.display = 'flex';
+            accRender();
+            const input = document.getElementById('acc-name');
+            if (input && !touchMode()) input.focus();
+        }
+        // E-postasını doğruladıysa durumu yenile (sayfa yenilemeden banner kaybolsun)
+        const openAccountBase = openAccount;
+        openAccount = function () {
+            openAccountBase.apply(this, arguments);
+            const u = ACC.fb && ACC.fb.auth.currentUser;
+            if (u && !u.emailVerified && accIsPasswordUser() && u.reload) u.reload().then(() => accRender()).catch(() => {});
+        };
+        accBtn.addEventListener('click', () => openAccount());
+        document.getElementById('close-acc-btn').addEventListener('click', () => { accModal.style.display = 'none'; });
+        MENU_CLOSE['acc-modal'] = 'close-acc-btn';
+
+        Object.assign(I18N_EN, {
+            "ya da e-posta ile": "or with email",
+            "Kayıt Ol": "Sign Up",
+            "E-posta": "Email",
+            "Şifre": "Password",
+            "Şifre (tekrar)": "Password (again)",
+            "Şifremi unuttum": "Forgot password",
+            "Geçerli bir e-posta adresi yaz.": "Enter a valid email address.",
+            "Şifre en az 8 karakter olmalı.": "Password must be at least 8 characters.",
+            "Şifreler aynı değil.": "Passwords don't match.",
+            "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.": "An account with this email already exists. Try signing in.",
+            "E-posta ya da şifre yanlış.": "Wrong email or password.",
+            "Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.": "Too many attempts. Wait a bit and try again.",
+            "Şifreni yaz.": "Enter your password.",
+            "Bu adrese kayıtlı bir hesap varsa şifre sıfırlama bağlantısı gönderildi. Spam klasörünü de kontrol et.": "If an account exists for this address, a password reset link has been sent. Check your spam folder too.",
+            "Doğrulama e-postası gönderildi. Spam klasörünü de kontrol et.": "Verification email sent. Check your spam folder too.",
+            "E-posta adresin henüz doğrulanmadı. Gelen kutundaki bağlantıya tıkla.": "Your email address isn't verified yet. Click the link in your inbox.",
+            "Tekrar gönder": "Send again",
+            "Onay için şifren": "Your password to confirm",
+            "Google girişi bu uygulamanın içindeki tarayıcıda çalışmaz. Aşağıdan e-posta ile devam edebilir ya da menüden \"Tarayıcıda aç\"ı seçebilirsin.": "Google sign-in doesn't work in this app's built-in browser. You can continue with email below, or choose \"Open in browser\" from the menu.",
+            'Giriş Yap': 'Sign In', 'Hesap': 'Account', 'Google ile giriş yap': 'Sign in with Google',
+            'Google ile giriş yap ya da e-postayla kayıt ol. Google hesabıyla ilk girişte hesabın otomatik açılır.': "Sign in with Google or sign up with email. With Google, your account is created on your first sign-in.",
+            'E-posta adresin ve gerçek adın asla başka oyunculara gösterilmez.': 'Your email address and real name are never shown to other players.',
+            'Kullanıcı adını seç': 'Choose your username',
+            'Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan değiştirilemez.': "Other players will see you by this name. 3‑16 characters: English letters, numbers and underscores (_). It can't be changed later.",
+            'Kaydet': 'Save', 'Çıkış Yap': 'Sign Out', 'Oyuncu adın': 'Your player name',
+            'Skor tablosu yakında geliyor.': 'Leaderboard coming soon.',
+            'Bu isim alınmış, başka bir tane dene.': 'That name is taken. Try another one.',
+            'İsim 3‑16 karakter olmalı ve sadece İngilizce harf, rakam ve alt çizgi içermeli.': 'Names must be 3‑16 characters and use only English letters, numbers and underscores.',
+            'Bu isim kullanılamaz.': "That name isn't allowed.",
+            'Giriş yapılamadı. Tekrar dene.': "Couldn't sign in. Try again.",
+            'Bağlantı kurulamadı. İnternetini kontrol et.': "Couldn't connect. Check your internet connection.",
+            'Giriş penceresi kapatıldı.': 'The sign-in window was closed.',
+            'Hesap sistemi şu an kullanılamıyor. Oyunu yine de oynayabilirsin.': "Accounts aren't available right now. You can still play the game.",
+            'Yükleniyor…': 'Loading…'
+        });
+        Object.assign(I18N_FIL, {
+            "ya da e-posta ile": "o gamit ang email",
+            "Kayıt Ol": "Mag-sign up",
+            "E-posta": "Email",
+            "Şifre": "Password",
+            "Şifre (tekrar)": "Password (ulit)",
+            "Şifremi unuttum": "Nakalimutan ang password",
+            "Geçerli bir e-posta adresi yaz.": "Maglagay ng tamang email address.",
+            "Şifre en az 8 karakter olmalı.": "Dapat hindi bababa sa 8 character ang password.",
+            "Şifreler aynı değil.": "Hindi magkapareho ang mga password.",
+            "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.": "May account na sa email na ito. Subukang mag-sign in.",
+            "E-posta ya da şifre yanlış.": "Mali ang email o password.",
+            "Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.": "Masyadong maraming pagsubok. Maghintay muna at subukan ulit.",
+            "Şifreni yaz.": "Ilagay ang iyong password.",
+            "Bu adrese kayıtlı bir hesap varsa şifre sıfırlama bağlantısı gönderildi. Spam klasörünü de kontrol et.": "Kung may account sa address na ito, naipadala na ang link para i-reset ang password. Tingnan din ang spam folder.",
+            "Doğrulama e-postası gönderildi. Spam klasörünü de kontrol et.": "Naipadala na ang verification email. Tingnan din ang spam folder.",
+            "E-posta adresin henüz doğrulanmadı. Gelen kutundaki bağlantıya tıkla.": "Hindi pa verified ang iyong email. I-click ang link sa iyong inbox.",
+            "Tekrar gönder": "Ipadala ulit",
+            "Onay için şifren": "Ang password mo para kumpirmahin",
+            "Google girişi bu uygulamanın içindeki tarayıcıda çalışmaz. Aşağıdan e-posta ile devam edebilir ya da menüden \"Tarayıcıda aç\"ı seçebilirsin.": "Hindi gumagana ang Google sign-in sa browser sa loob ng app na ito. Puwede kang magpatuloy gamit ang email sa ibaba, o piliin ang \"Open in browser\" sa menu.",
+            'Giriş Yap': 'Mag-sign in', 'Hesap': 'Account', 'Google ile giriş yap': 'Mag-sign in gamit ang Google',
+            'Google ile giriş yap ya da e-postayla kayıt ol. Google hesabıyla ilk girişte hesabın otomatik açılır.': "Mag-sign in gamit ang Google o mag-sign up gamit ang email. Sa Google, awtomatikong gagawin ang account mo sa unang pag-sign in.",
+            'E-posta adresin ve gerçek adın asla başka oyunculara gösterilmez.': 'Hindi kailanman ipapakita sa ibang manlalaro ang iyong email at tunay na pangalan.',
+            'Kullanıcı adını seç': 'Piliin ang iyong username',
+            'Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan değiştirilemez.': 'Ito ang pangalang makikita ng ibang manlalaro. 3‑16 na character: mga letrang Ingles, numero at underscore (_). Hindi na ito mababago.',
+            'Kaydet': 'I-save', 'Çıkış Yap': 'Mag-sign out', 'Oyuncu adın': 'Ang pangalan mo',
+            'Skor tablosu yakında geliyor.': 'Malapit nang dumating ang leaderboard.',
+            'Bu isim alınmış, başka bir tane dene.': 'May gumagamit na ng pangalang iyan. Sumubok ng iba.',
+            'İsim 3‑16 karakter olmalı ve sadece İngilizce harf, rakam ve alt çizgi içermeli.': 'Dapat 3‑16 na character ang pangalan at mga letrang Ingles, numero at underscore lang.',
+            'Bu isim kullanılamaz.': 'Hindi puwede ang pangalang iyan.',
+            'Giriş yapılamadı. Tekrar dene.': 'Hindi naka-sign in. Subukan ulit.',
+            'Bağlantı kurulamadı. İnternetini kontrol et.': 'Hindi makakonekta. Tingnan ang iyong internet.',
+            'Giriş penceresi kapatıldı.': 'Naisara ang sign-in window.',
+            'Hesap sistemi şu an kullanılamıyor. Oyunu yine de oynayabilirsin.': 'Hindi available ang mga account ngayon. Puwede ka pa ring maglaro.',
+            'Yükleniyor…': 'Naglo-load…'
+        });
+        Object.assign(I18N_RU, {
+            "ya da e-posta ile": "или по электронной почте",
+            "Kayıt Ol": "Регистрация",
+            "E-posta": "Эл. почта",
+            "Şifre": "Пароль",
+            "Şifre (tekrar)": "Пароль (ещё раз)",
+            "Şifremi unuttum": "Забыли пароль?",
+            "Geçerli bir e-posta adresi yaz.": "Введите правильный адрес эл. почты.",
+            "Şifre en az 8 karakter olmalı.": "Пароль должен содержать не менее 8 символов.",
+            "Şifreler aynı değil.": "Пароли не совпадают.",
+            "Bu e-posta ile zaten bir hesap var. Giriş yapmayı dene.": "Аккаунт с этой почтой уже существует. Попробуйте войти.",
+            "E-posta ya da şifre yanlış.": "Неверная почта или пароль.",
+            "Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.": "Слишком много попыток. Подождите немного и попробуйте снова.",
+            "Şifreni yaz.": "Введите пароль.",
+            "Bu adrese kayıtlı bir hesap varsa şifre sıfırlama bağlantısı gönderildi. Spam klasörünü de kontrol et.": "Если для этого адреса есть аккаунт, ссылка для сброса пароля отправлена. Проверьте и папку «Спам».",
+            "Doğrulama e-postası gönderildi. Spam klasörünü de kontrol et.": "Письмо для подтверждения отправлено. Проверьте и папку «Спам».",
+            "E-posta adresin henüz doğrulanmadı. Gelen kutundaki bağlantıya tıkla.": "Ваш адрес эл. почты ещё не подтверждён. Нажмите на ссылку в письме.",
+            "Tekrar gönder": "Отправить снова",
+            "Onay için şifren": "Пароль для подтверждения",
+            "Google girişi bu uygulamanın içindeki tarayıcıda çalışmaz. Aşağıdan e-posta ile devam edebilir ya da menüden \"Tarayıcıda aç\"ı seçebilirsin.": "Вход через Google не работает во встроенном браузере этого приложения. Продолжите с электронной почтой ниже или выберите в меню «Открыть в браузере».",
+            'Giriş Yap': 'Войти', 'Hesap': 'Аккаунт', 'Google ile giriş yap': 'Войти через Google',
+            'Google ile giriş yap ya da e-postayla kayıt ol. Google hesabıyla ilk girişte hesabın otomatik açılır.': "Войдите через Google или зарегистрируйтесь по эл. почте. При входе через Google аккаунт создаётся автоматически.",
+            'E-posta adresin ve gerçek adın asla başka oyunculara gösterilmez.': 'Ваш адрес электронной почты и настоящее имя никогда не показываются другим игрокам.',
+            'Kullanıcı adını seç': 'Выберите имя пользователя',
+            'Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan değiştirilemez.': 'Под этим именем вас увидят другие игроки. 3‑16 символов: латинские буквы, цифры и подчёркивание (_). Изменить имя позже нельзя.',
+            'Kaydet': 'Сохранить', 'Çıkış Yap': 'Выйти', 'Oyuncu adın': 'Ваше имя игрока',
+            'Skor tablosu yakında geliyor.': 'Таблица лидеров скоро появится.',
+            'Bu isim alınmış, başka bir tane dene.': 'Это имя уже занято. Попробуйте другое.',
+            'İsim 3‑16 karakter olmalı ve sadece İngilizce harf, rakam ve alt çizgi içermeli.': 'Имя должно содержать 3‑16 символов: только латинские буквы, цифры и подчёркивание.',
+            'Bu isim kullanılamaz.': 'Это имя использовать нельзя.',
+            'Giriş yapılamadı. Tekrar dene.': 'Не удалось войти. Попробуйте ещё раз.',
+            'Bağlantı kurulamadı. İnternetini kontrol et.': 'Не удалось подключиться. Проверьте интернет.',
+            'Giriş penceresi kapatıldı.': 'Окно входа было закрыто.',
+            'Hesap sistemi şu an kullanılamıyor. Oyunu yine de oynayabilirsin.': 'Аккаунты сейчас недоступны. Играть всё равно можно.',
+            'Yükleniyor…': 'Загрузка…'
+        });
+        if (LANG !== 'tr') applyLanguage(LANG);
+
+        // ===================== HESAP: AÇILIŞ EKRANI + AYARLAR SEKMESİ =====================
+        ICON_PATHS.user = '<circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5"/>';
+        SETTINGS_TABS.splice(1, 0, { id: 'account', label: 'Hesap', icon: 'user' });
+        let accDeleteArmed = false;
+        let accNotice = '';
+
+        // Oyun açılınca (açılış ekranı kapanınca) giriş yapılmamışsa hesap ekranını bir kez göster
+        let accPrompted = false;
+        const accPromptTimer = setInterval(() => {
+            if (accPrompted) { clearInterval(accPromptTimer); return; }
+            if (document.getElementById('splash')) return;             // açılış ekranı hâlâ açık
+            if (isShown(document.getElementById('input-choice')) || isShown(document.getElementById('tutorial-offer'))) return;   // önce ilk açılış soruları
+            if (ACC.state === 'loading' && !ACC.user && !ACC.fb) return; // Firebase hâlâ yükleniyor
+            if (ACC.state === 'loading') return;
+            accPrompted = true;
+            clearInterval(accPromptTimer);
+            if (gameState !== 'START') return;
+            const wantsPrompt = save.settings.accPrompt !== false;
+            if (ACC.state === 'needName' || (ACC.state === 'signedOut' && wantsPrompt)) openAccount();
+        }, 250);
+        setTimeout(() => { accPrompted = true; }, 20000);   // 20 sn içinde bağlanamazsa hiç gösterme
+
+        async function accDeleteAccount() {
+            if (!ACC.fb || ACC.busy || !ACC.fb.auth.currentUser) return;
+            const { U, F, auth, db } = ACC.fb;
+            const user = auth.currentUser;
+            const pw = (document.getElementById('acc-del-pass') || {}).value || '';   // yeniden çizimden önce oku
+            ACC.busy = true; accNotice = ''; renderSettings();
+            try {
+                // Güvenlik gereği silmeden önce Google ile bir kez daha onay alınır
+                if (accIsPasswordUser()) {
+                    if (!pw) { accNotice = 'needpass'; ACC.busy = false; renderSettings(); return; }
+                    await U.reauthenticateWithCredential(user, U.EmailAuthProvider.credential(user.email, pw));
+                } else {
+                    await U.reauthenticateWithPopup(user, new U.GoogleAuthProvider());
+                }
+                const batch = F.writeBatch(db);
+                if (ACC.profile) batch.delete(F.doc(db, 'usernames', ACC.profile.usernameLower));
+                batch.delete(F.doc(db, 'users', user.uid));
+                await batch.commit();
+                await U.deleteUser(user);
+                accNotice = 'deleted';
+            } catch (e) {
+                const code = (e && e.code) || '';
+                accNotice = (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') ? 'closed'
+                    : (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/invalid-login-credentials') ? 'badpass'
+                    : code === 'auth/too-many-requests' ? 'toomany' : 'delfail';
+                if (accNotice === 'delfail') console.warn('Hesap silinemedi:', e);
+            }
+            ACC.busy = false;
+            if (accNotice !== 'needpass' && accNotice !== 'badpass') accDeleteArmed = false;
+            renderSettings();
+        }
+
+        function renderAccountTab() {
+            const add = html => { const d = document.createElement('div'); d.className = 'setting-row'; d.innerHTML = html; settingsList.appendChild(d); return d; };
+            const btn = (row, cls, text, fn) => { const b = document.createElement('button'); b.className = cls; b.textContent = text; b.onclick = fn; row.appendChild(b); return b; };
+
+            if (ACC.state === 'unavailable') {
+                add(`<div class="text-xs text-slate-400">Hesap sistemi şu an kullanılamıyor. Oyunu yine de oynayabilirsin.</div>`);
+            } else if (ACC.state === 'loading') {
+                add(`<div class="text-xs text-slate-400">Yükleniyor…</div>`);
+            } else if (ACC.state === 'ready') {
+                const r = add(`<div><div class="text-xs text-slate-400">Oyuncu adı</div><div class="font-bold text-white text-sm" translate="no">${accEsc(ACC.profile.username)}</div></div>`);
+                btn(r, 'market-btn equip', 'Çıkış Yap', accSignOut);
+            } else if (ACC.state === 'needName') {
+                const r = add(`<div class="font-bold text-white text-sm">Kullanıcı adı seçilmedi</div>`);
+                btn(r, 'market-btn equip', 'İsim seç', openAccount);
+            } else {
+                const r = add(`<div class="font-bold text-white text-sm">Giriş yapılmadı</div>`);
+                btn(r, 'market-btn equip', 'Giriş Yap', openAccount);
+            }
+
+            // Açılışta giriş ekranı açık/kapalı
+            const on = save.settings.accPrompt !== false;
+            const pr = document.createElement('div');
+            pr.className = 'setting-row';
+            pr.innerHTML = `<div><div class="font-bold text-white text-sm">Açılışta giriş ekranı</div><div class="text-xs text-slate-400">Giriş yapmadıysan oyun açılınca hesap ekranı gösterilir.</div></div>`;
+            const seg = document.createElement('div');
+            seg.className = 'seg';
+            for (const [val, text] of [[true, 'Açık'], [false, 'Kapalı']]) {
+                const b = document.createElement('button');
+                b.textContent = text;
+                if (val === on) b.className = 'on';
+                b.onclick = () => { save.settings.accPrompt = val; writeSave(); renderSettings(); };
+                seg.appendChild(b);
+            }
+            pr.appendChild(seg);
+            settingsList.appendChild(pr);
+
+            // Hesabı sil
+            if (ACC.state === 'ready' || ACC.state === 'needName') {
+                const d = add(`<div><div class="font-bold text-white text-sm">Hesabı sil</div><div class="text-xs text-slate-400">Kullanıcı adın ve hesabın kalıcı olarak silinir. Oyundaki ilerlemen bu cihazda kalır.</div></div>`);
+                const b = btn(d, 'danger-btn' + (accDeleteArmed ? ' confirm' : ''), accDeleteArmed ? 'Emin misin? Tekrar bas' : 'Sil', () => {
+                    if (!accDeleteArmed) { accDeleteArmed = true; renderSettings(); return; }
+                    accDeleteAccount();
+                });
+                if (ACC.busy) b.disabled = true;
+                if (accDeleteArmed && accIsPasswordUser()) {
+                    const pw = document.createElement('input');
+                    pw.id = 'acc-del-pass'; pw.type = 'password'; pw.className = 'acc-input acc-del-pass';
+                    pw.placeholder = 'Onay için şifren'; pw.autocomplete = 'current-password';
+                    pw.onkeydown = e => { if (e.key !== 'Escape') e.stopPropagation(); if (e.key === 'Enter') accDeleteAccount(); };
+                    settingsList.appendChild(pw);
+                }
+            }
+            const notes = { deleted: 'Hesap silindi.', delfail: 'Hesap silinemedi. Tekrar dene.', closed: 'Giriş penceresi kapatıldı.',
+                needpass: 'Şifreni yaz.', badpass: 'E-posta ya da şifre yanlış.', toomany: 'Çok fazla deneme yapıldı. Biraz bekleyip tekrar dene.' };
+            if (accNotice) {
+                const p = document.createElement('p');
+                p.className = accNotice === 'deleted' ? 'text-xs text-emerald-400 px-1' : 'acc-error px-1';
+                p.textContent = notes[accNotice];
+                settingsList.appendChild(p);
+            }
+        }
+
+        const renderSettingsBase = renderSettings;
+        renderSettings = function () {
+            if (settingsTab !== 'account') { accDeleteArmed = false; return renderSettingsBase.apply(this, arguments); }
+            renderSettingsTabs();
+            settingsList.innerHTML = '';
+            settingsList.classList.remove('compact');
+            renderAccountTab();
+        };
+        // Giriş durumu değişince açık olan Hesap sekmesi de güncellensin
+        const accRenderBase = accRender;
+        accRender = function () {
+            accRenderBase.apply(this, arguments);
+            if (settingsModal.style.display === 'flex' && settingsTab === 'account') renderSettings();
+        };
+        // Açılış ekranındaki hesap penceresine "açılışta gösterme" seçeneği
+        const accRenderBase2 = accRender;
+        accRender = function () {
+            accRenderBase2.apply(this, arguments);
+            if (accModal.style.display !== 'flex' || ACC.state !== 'signedOut' || save.settings.accPrompt === false) return;
+            const b = document.createElement('button');
+            b.className = 'acc-skip';
+            b.id = 'acc-noprompt';
+            b.textContent = 'Açılışta gösterme';
+            b.onclick = () => { save.settings.accPrompt = false; writeSave(); accModal.style.display = 'none'; };
+            const hint = document.createElement('p');
+            hint.className = 'acc-note';
+            hint.textContent = 'Bunu daha sonra Ayarlar → Hesap kısmından değiştirebilirsin.';
+            accBody.appendChild(b);
+            accBody.appendChild(hint);
+        };
+
+        const ACC2_TR = {
+            en: { 'Oyuncu adı': 'Player name', 'Giriş yapılmadı': 'Not signed in', 'Kullanıcı adı seçilmedi': 'No username chosen yet', 'İsim seç': 'Choose name',
+                'Açılışta giriş ekranı': 'Sign-in screen at start', 'Giriş yapmadıysan oyun açılınca hesap ekranı gösterilir.': "If you're not signed in, the account screen appears when the game opens.",
+                'Açık': 'On', 'Kapalı': 'Off', 'Hesabı sil': 'Delete account',
+                'Kullanıcı adın ve hesabın kalıcı olarak silinir. Oyundaki ilerlemen bu cihazda kalır.': 'Your username and account are permanently deleted. Your game progress stays on this device.',
+                'Sil': 'Delete', 'Emin misin? Tekrar bas': 'Are you sure? Tap again', 'Hesap silindi.': 'Account deleted.', 'Hesap silinemedi. Tekrar dene.': "Couldn't delete the account. Try again.",
+                'Açılışta gösterme': "Don't show at start", 'Bunu daha sonra Ayarlar → Hesap kısmından değiştirebilirsin.': 'You can change this later in Settings → Account.' },
+            fil: { 'Oyuncu adı': 'Pangalan ng manlalaro', 'Giriş yapılmadı': 'Hindi naka-sign in', 'Kullanıcı adı seçilmedi': 'Wala pang napiling username', 'İsim seç': 'Pumili ng pangalan',
+                'Açılışta giriş ekranı': 'Sign-in screen sa simula', 'Giriş yapmadıysan oyun açılınca hesap ekranı gösterilir.': 'Kung hindi ka naka-sign in, lalabas ang account screen pagbukas ng laro.',
+                'Açık': 'Naka-on', 'Kapalı': 'Naka-off', 'Hesabı sil': 'Burahin ang account',
+                'Kullanıcı adın ve hesabın kalıcı olarak silinir. Oyundaki ilerlemen bu cihazda kalır.': 'Permanenteng mabubura ang iyong username at account. Mananatili sa device na ito ang progreso mo sa laro.',
+                'Sil': 'Burahin', 'Emin misin? Tekrar bas': 'Sigurado ka ba? Pindutin ulit', 'Hesap silindi.': 'Nabura na ang account.', 'Hesap silinemedi. Tekrar dene.': 'Hindi nabura ang account. Subukan ulit.',
+                'Açılışta gösterme': 'Huwag ipakita sa simula', 'Bunu daha sonra Ayarlar → Hesap kısmından değiştirebilirsin.': 'Mababago mo ito mamaya sa Settings → Account.' },
+            ru: { 'Oyuncu adı': 'Имя игрока', 'Giriş yapılmadı': 'Вход не выполнен', 'Kullanıcı adı seçilmedi': 'Имя пользователя не выбрано', 'İsim seç': 'Выбрать имя',
+                'Açılışta giriş ekranı': 'Экран входа при запуске', 'Giriş yapmadıysan oyun açılınca hesap ekranı gösterilir.': 'Если вы не вошли, экран аккаунта появится при запуске игры.',
+                'Açık': 'Вкл.', 'Kapalı': 'Выкл.', 'Hesabı sil': 'Удалить аккаунт',
+                'Kullanıcı adın ve hesabın kalıcı olarak silinir. Oyundaki ilerlemen bu cihazda kalır.': 'Имя пользователя и аккаунт будут удалены навсегда. Прогресс в игре останется на этом устройстве.',
+                'Sil': 'Удалить', 'Emin misin? Tekrar bas': 'Вы уверены? Нажмите ещё раз', 'Hesap silindi.': 'Аккаунт удалён.', 'Hesap silinemedi. Tekrar dene.': 'Не удалось удалить аккаунт. Попробуйте ещё раз.',
+                'Açılışta gösterme': 'Не показывать при запуске', 'Bunu daha sonra Ayarlar → Hesap kısmından değiştirebilirsin.': 'Это можно изменить позже в Настройки → Аккаунт.' }
+        };
+        // Var olan çevirileri ezme, sadece eksikleri ekle
+        for (const [lang, table] of [['en', I18N_EN], ['fil', I18N_FIL], ['ru', I18N_RU]])
+            for (const [k, v] of Object.entries(ACC2_TR[lang])) if (!(k in table)) table[k] = v;
+        if (LANG !== 'tr') applyLanguage(LANG);
+
+        accRender();
+        accInit();
+
     </script>
 </body>
 </html>
