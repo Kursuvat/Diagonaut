@@ -2069,6 +2069,7 @@
             color: var(--ivory-2); font-size: 0.75rem; font-weight: 700; cursor: pointer; }
         .sp-leave .ico { width: 15px; height: 15px; }
             /* ===================== TEK EKRANA SIĞAN PENCERELER (ana menüyle aynı görünüm) ===================== */
+            #paused-note .ico { width: 1.05em; height: 1.05em; vertical-align: -0.17em; margin-inline-end: 5px; stroke-width: 3; }
         .ui-layer.vivid > .glass-panel {
             display: flex !important; flex-direction: column !important;
             width: min(400px, calc(100vw - 20px)) !important; max-width: none !important;
@@ -2411,7 +2412,7 @@
                     <p>Kırmızı bir piyonu yersen, onu koruyan arkadaki piyon <strong>anında çapraz atlayıp seni alır</strong> ve elenirsin.</p>
                     <p><span class="text-amber-400 font-bold">Süslü Rakipler:</span> Rakiplerin <strong>%3'ü</strong> şapka ya da gözlükle gelir ve altın renginde parlar. Onları yersen <strong>+10 token</strong> kazanırsın.</p>
                     <p>Önce <strong>arkadaki</strong> piyonu yersen önündeki artık korunmaz, siyaha döner ve onu da güvenle yiyebilirsin. Kalkan varken korunan piyonları da güvenle yiyebilirsin.</p>
-                    <p>Bir zincirin bütün piyonlarını yersen zincir kırılır ve <strong>+10 puan</strong> bonus alırsın (bulmacalar hariç).</p>
+                    <p>Bir zincirin bütün piyonlarını yersen zincir kırılır ve bonus alırsın: ikili zincirde <strong>+10</strong>, üçlü zincirde <strong>+20 puan</strong> (bulmacalar hariç).</p>
                     <hr class="border-slate-600">
                     <p class="text-center font-bold text-emerald-400">Puan Tablosu:</p>
                     <ul class="list-disc pl-5 font-bold space-y-1">
@@ -7490,7 +7491,7 @@
         }
 
         // Bir zincirin bütün piyonları yendiyse başarım sayacını artır
-        const CHAIN_BONUS = 10;   // bir zincirin bütün piyonlarını yiyince verilen puan
+        const CHAIN_BONUS = 10;   // zincirdeki her bağlantı için puan: ikili zincir +10, üçlü zincir +20
         function trackChainEat(e) {
             if (!e.chainId) return;
             chainEaten[e.chainId] = (chainEaten[e.chainId] || 0) + 1;
@@ -7499,7 +7500,7 @@
                 if (e.chainSize >= 3) save.stats.triosCleared++;
                 // Zincir kırma bonusu (bulmacalarda yıldız dengesi bozulmasın diye verilmez)
                 if (!puzzle) {
-                    const bonus = CHAIN_BONUS * effects.mult;   // çarpan aktifse bonus da katlanır
+                    const bonus = CHAIN_BONUS * Math.max(1, e.chainSize - 1) * effects.mult;   // çarpan aktifse bonus da katlanır
                     score += bonus;
                     onScoreChanged();
                     floatingTexts.push({ x: e.x + TS / 2, y: e.y - 20, text: `ZİNCİR KIRILDI! +${bonus}`, life: 1.3, rgb: '251, 113, 133' });
@@ -9830,7 +9831,7 @@
             startMenuLoop();
         }
 
-        document.getElementById('menu-over-btn').addEventListener('click', showMainMenu);
+        document.getElementById('menu-over-btn').addEventListener('click', () => showMainMenu());
 
         // ===================== ANİMASYONLU ANA MENÜ =====================
         // Arkada tahta yavaşça akar ve siyah taşlar düşer; üstte oyuncunun kendi taşı süzülür
@@ -11532,15 +11533,15 @@
             }
         }
 
-        pauseBtn.addEventListener('click', openSettings);
+        pauseBtn.addEventListener('click', () => openSettings());
         // Sekme/uygulama değişince maçı otomatik duraklat (geri dönünce oyuncu hazırlıksız yakalanmasın)
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && (gameState === 'PLAYING' || gameState === 'COUNTDOWN') && settingsModal.style.display !== 'flex') openSettings();
         });
-        document.getElementById('settings-start-btn').addEventListener('click', openSettings);
-        document.getElementById('diff-chip').addEventListener('click', openSettings);
+        document.getElementById('settings-start-btn').addEventListener('click', () => openSettings());
+        document.getElementById('diff-chip').addEventListener('click', () => openSettings());
         updateDifficultyUI();
-        document.getElementById('settings-over-btn').addEventListener('click', openSettings);
+        document.getElementById('settings-over-btn').addEventListener('click', () => openSettings());
         closeSettingsBtn.addEventListener('click', closeSettings);
         quitMatchBtn.addEventListener('click', () => {
             settingsModal.style.display = 'none';
@@ -15180,7 +15181,7 @@
             const g = document.getElementById('acc-google');
             if (g) g.onclick = accSignIn;
             const out = document.getElementById('acc-out');
-            if (out) out.onclick = accSignOut;
+            if (out) out.onclick = () => accSignOut();
             const input = document.getElementById('acc-name');
             if (input) {
                 input.value = typed;
@@ -15400,10 +15401,10 @@
                 btn(r, 'market-btn equip', 'Çıkış Yap', () => askConfirm({ title: 'Çıkış yap', text: 'Hesabından çıkış yapmak istediğine emin misin?', yes: 'Çıkış yap', no: 'Vazgeç' }).then(ok => { if (ok) accSignOut(); }));
             } else if (ACC.state === 'needName') {
                 const r = add(`<div class="font-bold text-white text-sm">Kullanıcı adı seçilmedi</div>`);
-                btn(r, 'market-btn equip', 'İsim seç', openAccount);
+                btn(r, 'market-btn equip', 'İsim seç', () => openAccount());
             } else {
                 const r = add(`<div class="font-bold text-white text-sm">Giriş yapılmadı</div>`);
-                btn(r, 'market-btn equip', 'Giriş Yap', openAccount);
+                btn(r, 'market-btn equip', 'Giriş Yap', () => openAccount());
             }
 
             // Açılışta giriş ekranı açık/kapalı
@@ -16088,6 +16089,8 @@
 
         function openLeaderboard() {
             LB.view = null;
+            // Her açılışta o an seçili modun tablosu gelir (Bulmaca'nın tablosu yok, o zaman Klasik)
+            LB.mode = LB_MODES.some(m => m.id === gameMode) ? gameMode : 'classic';
             lbModal.style.display = 'flex';
             lbRender();
             if (ACC.fb) lbLoad(LB.mode);
@@ -16124,6 +16127,7 @@
                     });
                     LB.remote[m.id] = best; LB.lastDiff[m.id] = diff;
                     delete LB.cache[m.id];   // tablo bir sonraki açılışta tazelensin
+                    if (lbModal.style.display === 'flex' && LB.mode === m.id && !LB.view) lbLoad(m.id, true);   // açıksa hemen tazele
                 }
             } catch (e) {
                 console.warn('Skor gönderilemedi:', e);
@@ -16157,7 +16161,7 @@
         lbGrid.innerHTML = `<button id="lb-start-btn" class="menu-tile lb-tile"><span class="tile-icon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5h17"/><path d="M5.5 20.5v-6h4v6M10 20.5v-11h4v11M14.5 20.5v-8h4v8"/></svg></span><span>Skor Tablosu</span></button>`;
         const mainGrid = document.querySelector('#start-screen .menu-grid');
         mainGrid.parentNode.insertBefore(lbGrid, mainGrid);
-        document.getElementById('lb-start-btn').addEventListener('click', openLeaderboard);
+        document.getElementById('lb-start-btn').addEventListener('click', () => openLeaderboard());
 
         const LB_TR = {
             en: { 'Skor Tablosu': 'Leaderboard', 'Sıra': 'Rank', 'Skor tablosuna şu an ulaşılamıyor.': "Can't reach the leaderboard right now.",
@@ -29585,8 +29589,13 @@
                         else if (act === 'cancel') friendCancel(fuid);
                         else if (act === 'duel') duelInviteFriend(fuid);
                         else if (act === 'remove') {
+                            clearTimeout(ON.armTimer);
                             if (ON.armedRemove === fuid) { ON.armedRemove = null; friendRemove(fuid); }
-                            else { ON.armedRemove = fuid; friendsRender(); }
+                            else {
+                                ON.armedRemove = fuid; friendsRender();
+                                // Onaylanmazsa birkaç saniye sonra kendiliğinden eski haline döner
+                                ON.armTimer = setTimeout(() => { if (ON.armedRemove === fuid) { ON.armedRemove = null; friendsRender(); } }, 4000);
+                            }
                         }
                     };
                 });
@@ -30750,7 +30759,7 @@
             }
             if (sp.mo) sp.mo.observe(el, { childList: true, subtree: true, characterData: true });
         }
-        addEventListener('resize', () => { for (const sp of Object.values(PG_SPECS)) { sp.page = Math.max(0, sp.page); pgSchedule(sp); } });
+        addEventListener('resize', () => { for (const sp of Object.values(PG_SPECS)) pgSchedule(sp); });   // açılış sayfası henüz seçilmediyse (-1) seçilsin
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(pgAll);
         setTimeout(pgAll, 0);
 
@@ -30910,6 +30919,7 @@
                 tabs.querySelectorAll('button').forEach(b => b.onclick = () => {
                     if (accTab === b.dataset.t) return;
                     accTab = b.dataset.t;
+                    ON.armedRemove = null;
                     if (PG_SPECS.friends) PG_SPECS.friends.page = -1;
                     accTabsApply();
                     if (accTab === 'friends') { friendsRender(); pgSchedule(PG_SPECS.friends); }
@@ -31186,6 +31196,124 @@
         (function pauseI18n() {
             const k = "Rakibin oynamaya devam ediyor. Oyun {0} saniye içinde kendiliğinden devam eder.";
             const v = {"en": "Your opponent is still playing. The game resumes on its own in {0} seconds.", "fil": "Patuloy pang naglalaro ang kalaban mo. Kusang magpapatuloy ang laro sa loob ng {0} segundo.", "ru": "Соперник продолжает играть. Игра продолжится сама через {0} с.", "fr": "Ton adversaire continue de jouer. La partie reprend toute seule dans {0} secondes.", "de": "Dein Gegner spielt weiter. Das Spiel geht in {0} Sekunden von selbst weiter.", "es": "Tu rival sigue jugando. La partida se reanudará sola en {0} segundos.", "it": "Il tuo avversario sta ancora giocando. La partita riprende da sola tra {0} secondi.", "pt": "O teu adversário continua a jogar. O jogo retoma sozinho dentro de {0} segundos.", "id": "Lawanmu masih bermain. Permainan otomatis lanjut dalam {0} detik.", "az": "Rəqibin oynamağa davam edir. Oyun {0} saniyəyə özü davam edəcək.", "zh": "对手仍在游戏中。游戏将在 {0} 秒后自动继续。", "ja": "相手はまだプレイ中です。{0}秒後に自動で再開します。", "ko": "상대는 아직 플레이 중이에요. {0}초 뒤 게임이 자동으로 다시 시작돼요.", "ar": "خصمك ما زال يلعب. ستستأنف اللعبة تلقائيًا خلال {0} ثانية.", "ary": "خصمك باقي كيلعب. اللعبة غادي ترجع بوحدها من بعد {0} ثانية."};
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const l in v) { const t = tables[l] || I18N_MORE[l]; if (t) t[k] = v[l]; }
+        })();
+        // ===================== TAKILI KALAN DURUMLAR =====================
+        // Pencereler her açılışta temiz başlar: eski onaylar, eski mesajlar ve eski sayfa konumları kalmaz.
+        (function freshWindows() {
+            // Hesap penceresi: "Sil?" onayı, eski arkadaş mesajı, yazılmış isim ve şifreler sıfırlanır
+            let accFromOnline = false;
+            const openAccountFresh = openAccount;
+            openAccount = function () {
+                accFromOnline = false;
+                clearTimeout(ON.armTimer);
+                ON.armedRemove = null;
+                ON.msg = '';
+                for (const id of ['fr-input', 'acc-pass', 'acc-pass2']) { const el = document.getElementById(id); if (el) el.value = ''; }
+                return openAccountFresh.apply(this, arguments);
+            };
+            // Başka bir yere dokununca "Sil?" kapanır
+            accModal.addEventListener('click', e => {
+                if (!ON.armedRemove || (e.target.closest && e.target.closest('.fr-x'))) return;
+                clearTimeout(ON.armTimer);
+                ON.armedRemove = null;
+                friendsRender();
+            });
+            // Online menüsünden açılan arkadaş listesi kapanınca Online menüsüne dönülür
+            document.getElementById('onl-friends').onclick = () => { onlineModal.style.display = 'none'; openAccount('friends'); accFromOnline = true; };
+            document.getElementById('close-acc-btn').addEventListener('click', () => {
+                if (!accFromOnline) return;
+                accFromOnline = false;
+                if (gameState === 'START' && DUEL.phase === 'idle' && ACC.state === 'ready') openOnline();
+            });
+
+            // Online menüsünden başlatılan rakip araması iptal edilince Online menüsüne dönülür
+            let searchFromOnline = false;
+            const onlFind = document.getElementById('onl-find'), onlFindBase = onlFind.onclick;
+            onlFind.onclick = function (e) { searchFromOnline = true; return onlFindBase.call(this, e); };
+            const duelInviteFriendFresh = duelInviteFriend;
+            duelInviteFriend = function () { searchFromOnline = false; return duelInviteFriendFresh.apply(this, arguments); };
+            const duelAcceptInviteFresh = duelAcceptInvite;
+            duelAcceptInvite = function () { searchFromOnline = false; return duelAcceptInviteFresh.apply(this, arguments); };
+            const duelStartVsFresh = duelStartVs;
+            duelStartVs = function () { searchFromOnline = false; return duelStartVsFresh.apply(this, arguments); };
+            const duelSearchingUIFresh = duelSearchingUI;
+            duelSearchingUI = function () {
+                const r = duelSearchingUIFresh.apply(this, arguments);
+                duelOn('duel-cancel', () => {
+                    const back = searchFromOnline && accModal.style.display !== 'flex' && gameState === 'START';
+                    searchFromOnline = false;
+                    duelCancelLobby();
+                    if (back && ACC.state === 'ready') openOnline();
+                });
+                return r;
+            };
+
+            // Düello bitince ya da iptal edilince açık arkadaş listesindeki "Düello" düğmeleri yeniden etkinleşir
+            const duelResetStateFresh = duelResetState;
+            duelResetState = function () { const r = duelResetStateFresh.apply(this, arguments); friendsRender(); return r; };
+
+            // Ayarlar: hesap silme bildirimi her açılışta temizlenir; sekme değişince ilk sayfadan başlanır,
+            // Dil sekmesi seçili dilin bulunduğu sayfayla açılır
+            const openSettingsFresh = openSettings;
+            openSettings = function () { accNotice = ''; return openSettingsFresh.apply(this, arguments); };
+            let setPgTab = null;
+            const renderSettingsFresh = renderSettings;
+            renderSettings = function () {
+                if (settingsTab !== setPgTab) { setPgTab = settingsTab; if (PG_SPECS.settings) PG_SPECS.settings.page = -1; }
+                return renderSettingsFresh.apply(this, arguments);
+            };
+            if (PG_SPECS.settings) PG_SPECS.settings.start = el => settingsTab === 'language'
+                ? (Array.from(el.querySelectorAll('.setting-row')).find(r => r.querySelector('.market-btn.on')) || null) : null;
+
+            // Mod seçimi seçili modun bulunduğu sayfayla açılır
+            if (PG_SPECS.mode) PG_SPECS.mode.start = el => el.querySelector('.mode-option.on');
+
+            // Skor tablosu: sekme değişince ilk sayfa; bir oyuncunun kartından dönünce kaldığın sayfa
+            let lbPgMode = null, lbPgView = false, lbPgSaved = 0;
+            const lbRenderFresh = lbRender;
+            lbRender = function () {
+                const sp = PG_SPECS.lb, viewing = !!LB.view;
+                if (sp) {
+                    if (LB.mode !== lbPgMode) { sp.page = -1; lbPgSaved = 0; }
+                    else if (viewing && !lbPgView) lbPgSaved = sp.page;
+                    else if (!viewing && lbPgView) sp.page = lbPgSaved;
+                }
+                lbPgMode = LB.mode; lbPgView = viewing;
+                return lbRenderFresh.apply(this, arguments);
+            };
+        })();
+
+        // "Oyun duraklatıldı" yazısındaki emoji yerine çizgi ikon
+        (function pausedNoteIcon() {
+            ICON_PATHS.pauseBars = '<path d="M9 5.5v13M15 5.5v13"/>';
+            const key = 'Oyun duraklatıldı', old = '⏸️ Oyun duraklatıldı';
+            for (const t of [I18N_EN, I18N_FIL, I18N_RU, I18N_FR, ...Object.values(I18N_MORE)])
+                if (t && t[old] && !t[key]) t[key] = t[old].replace(/^⏸️\s*/, '');
+            pausedNote.innerHTML = `${ico('pauseBars')}<span>Oyun duraklatıldı</span>`;
+        })();
+
+        // Zincir bonusu: ikili zincir +10, üçlü zincir +20
+        (function chainI18n() {
+            const k = "Bir zincirin bütün piyonlarını yersen zincir kırılır ve bonus alırsın: ikili zincirde <strong>+{0}</strong>, üçlü zincirde <strong>+{1} puan</strong> (bulmacalar hariç).";
+            const v = {
+                en: "Capture every pawn in a chain to break it and get a bonus: <strong>+{0}</strong> for a two-pawn chain, <strong>+{1} points</strong> for a three-pawn chain (not in puzzles).",
+                fil: "Kapag nakuha mo ang lahat ng pawn sa isang kadena, mababasag ito at may bonus ka: <strong>+{0}</strong> sa kadenang may dalawang pawn, <strong>+{1} puntos</strong> sa kadenang may tatlong pawn (hindi sa mga puzzle).",
+                ru: "Возьмите все пешки цепи, чтобы разбить её и получить бонус: <strong>+{0}</strong> за цепь из двух пешек, <strong>+{1} к счёту</strong> за цепь из трёх (кроме головоломок).",
+                fr: "Capture tous les pions d'une chaîne pour la briser et gagner un bonus : <strong>+{0}</strong> pour une chaîne de deux pions, <strong>+{1} points</strong> pour une chaîne de trois (pas dans les puzzles).",
+                de: "Schlag jeden Bauern einer Kette, um sie zu brechen und einen Bonus zu bekommen: <strong>+{0}</strong> für eine Zweierkette, <strong>+{1} Punkte</strong> für eine Dreierkette (nicht in Puzzles).",
+                es: "Come todos los peones de una cadena para romperla y ganar un bonus: <strong>+{0}</strong> por una cadena de dos peones, <strong>+{1} puntos</strong> por una de tres (no en los puzles).",
+                it: "Cattura tutti i pedoni di una catena per spezzarla e ottenere un bonus: <strong>+{0}</strong> per una catena di due pedoni, <strong>+{1} punti</strong> per una di tre (non nei puzzle).",
+                pt: "Captura todos os peões de uma cadeia para a quebrares e ganhares um bónus: <strong>+{0}</strong> numa cadeia de dois peões, <strong>+{1} pontos</strong> numa de três (não se aplica aos puzzles).",
+                id: "Makan semua pion dalam rantai untuk memutusnya dan dapat bonus: <strong>+{0}</strong> untuk rantai dua pion, <strong>+{1} poin</strong> untuk rantai tiga pion (kecuali di teka-teki).",
+                az: "Zəncirin bütün piyadalarını vursan, zəncir qırılır və bonus alırsan: ikili zəncirdə <strong>+{0}</strong>, üçlü zəncirdə <strong>+{1} xal</strong> (tapmacalar istisna olmaqla).",
+                zh: "吃掉兵链中的所有兵即可打破兵链并获得奖励：双兵链 <strong>+{0}</strong>，三兵链 <strong>+{1} 分</strong>（谜题模式除外）。",
+                ja: "チェーンのポーンをすべて取るとチェーンが壊れ、ボーナスがもらえます：2つのチェーンは<strong>+{0}</strong>、3つのチェーンは<strong>+{1}ポイント</strong>（パズルを除く）。",
+                ko: "사슬의 폰을 전부 잡으면 사슬이 끊어지고 보너스를 받아요: 2개짜리 사슬은 <strong>+{0}</strong>, 3개짜리 사슬은 <strong>+{1}점</strong> (퍼즐 제외).",
+                ar: "كُل جميع بيادق السلسلة لتكسرها وتحصل على مكافأة: <strong>+{0}</strong> لسلسلة من بيدقين، و<strong>+{1} نقطة</strong> لسلسلة من ثلاثة بيادق (ليس في الألغاز).",
+                ary: "كول كاع البيادق ديال شي سلسلة باش تهرسها وتاخد بونوس: <strong>+{0}</strong> على سلسلة ديال جوج بيادق، و<strong>+{1} نقطة</strong> على سلسلة ديال تلاتة (ماشي فاللغاز)."
+            };
             const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
             for (const l in v) { const t = tables[l] || I18N_MORE[l]; if (t) t[k] = v[l]; }
         })();
