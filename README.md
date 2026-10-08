@@ -67,7 +67,7 @@ Bubbles float onto the board during a run. Grab them for:
 
 Diagonaut is fully playable in 16 languages:
 
-English · Türkçe · Filipino · Русский · Français · Deutsch · Español · Italiano · Português (Brasil) · Bahasa Indonesia · Azərbaycanca · 简体中文 · 日本語 · 한국어 · العربية · الدارجة المغربية (Moroccan Darija)
+English · Türkçe · Filipino · Русский · Français · Deutsch · Español · Italiano · Português · Bahasa Indonesia · Azərbaycanca · 简体中文 · 日本語 · 한국어 · العربية · الدارجة المغربية (Moroccan Darija)
 
 Arabic and Darija are shown right-to-left.
 
