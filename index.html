@@ -1951,6 +1951,263 @@
         /* Sağdan sola diller: oyun tahtası ve sayılar soldan sağa kalır */
         html[dir="rtl"] canvas { direction: ltr; }
         html[dir="rtl"] input[type="email"], html[dir="rtl"] input[type="password"] { direction: ltr; text-align: right; }
+            /* ===================== ARKADAŞLAR VE DÜELLO ===================== */
+        :root { --duel-blue: #5b8def; --duel-blue-lo: #2f5fc4; --duel-red: #d0574a; --duel-red-lo: #9c3328; }
+        /* Ana menü: Oyuna başla + Düello yan yana */
+        #start-screen .start-row { display: flex; gap: 8px; align-items: stretch; width: 100%; }
+        #start-screen .start-row #start-btn { flex: 1 1 auto; min-width: 0; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: clamp(1.05rem, 5.4vw, 1.3rem) !important; padding-left: 8px !important; padding-right: 8px !important; }
+        #duel-btn { flex: 0 0 auto; width: 26%; min-width: 80px; margin: 0 !important; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+            padding: 6px 6px !important; border-radius: 12px; color: var(--ivory) !important; font-weight: 700; font-size: 0.82rem; line-height: 1.1;
+            background: linear-gradient(135deg, rgba(91, 141, 239, 0.28) 0 50%, rgba(208, 87, 74, 0.28) 50% 100%), #2b2e34 !important;
+            border: 1px solid var(--wood-line) !important; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important; text-shadow: none !important; }
+        #duel-btn:hover { background: linear-gradient(135deg, rgba(91, 141, 239, 0.4) 0 50%, rgba(208, 87, 74, 0.4) 50% 100%), #2b2e34 !important; }
+        #duel-btn .ico { width: 22px; height: 22px; color: var(--brass-hi); }
+        #duel-btn::after, #duel-btn::before { display: none !important; }
+
+        /* Hesap penceresi: Arkadaşlar */
+        .fr-box { margin: 14px 0 6px; padding-top: 12px; border-top: 1px solid var(--rule); text-align: left; }
+        .fr-head { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; font-size: 1.05rem; margin-bottom: 8px; }
+        .fr-head .ico { width: 20px; height: 20px; color: var(--brass-hi); }
+        .fr-record { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 6px; font-size: 0.75rem; color: var(--muted); margin-bottom: 10px; }
+        .fr-record > span { color: var(--ivory-2); font-weight: 700; margin-right: 4px; }
+        .fr-record b { color: var(--ivory); font-size: 0.95rem; }
+        .fr-record b.fr-w { color: #7fb38f; }
+        .fr-record b.fr-l { color: #e08a7f; }
+        .fr-record small { margin-right: 6px; }
+        .fr-record.small { justify-content: center; margin: 10px 0 4px; }
+        .fr-add { display: flex; gap: 6px; }
+        .fr-add .acc-input { flex: 1; min-width: 0; padding: 10px 12px; }
+        .fr-btn { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 34px; padding: 6px 10px; border-radius: 10px;
+            border: 1px solid var(--wood-line); background: rgba(255, 255, 255, 0.05); color: var(--ivory-2); font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+        .fr-btn .ico { width: 16px; height: 16px; }
+        .fr-btn:disabled { opacity: 0.4; cursor: default; }
+        .fr-btn.fr-main { background: var(--brass); border-color: var(--brass-lo); color: #1b1608; }
+        .fr-btn.fr-duel { color: #fff; border-color: rgba(91, 141, 239, 0.45);
+            background: linear-gradient(135deg, rgba(91, 141, 239, 0.35) 0 50%, rgba(208, 87, 74, 0.35) 50% 100%); }
+        .fr-btn.fr-x { width: 34px; padding: 0; }
+        .fr-btn.fr-x.armed { width: auto; padding: 0 8px; color: #fff; background: var(--oxblood); border-color: var(--oxblood); }
+        .fr-sub { margin: 12px 0 6px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); }
+        .fr-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 10px; background: rgba(255, 255, 255, 0.035); margin-bottom: 5px; }
+        .fr-av { flex-shrink: 0; }
+        canvas.fr-av, canvas.duel-av { background: transparent !important; box-shadow: none !important; border: 0 !important; }
+        .fr-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .fr-row > .fr-name { flex: 1; }
+        .fr-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-weight: 700; font-size: 0.88rem; }
+        .fr-state { display: inline-flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--faint); }
+        .fr-state i { width: 7px; height: 7px; border-radius: 50%; background: #5b5e66; flex-shrink: 0; }
+        .fr-state.menu { color: #8fc39c; } .fr-state.menu i { background: #4fbf72; }
+        .fr-state.play i, .fr-state.duel i { background: var(--brass); } .fr-state.play, .fr-state.duel { color: var(--brass-hi); }
+        .fr-wait { font-size: 0.72rem; color: var(--faint); margin-right: 2px; }
+        .fr-note { font-size: 0.8rem; color: var(--muted); margin: 4px 0; }
+        .fr-msg { font-size: 0.8rem; color: #f0a39a; margin: 6px 0 0; }
+        .fr-msg.ok { color: #8fc39c; }
+
+        /* Düello penceresi */
+        .duel-panel { width: min(92vw, 380px); padding: 1.4rem 1.2rem !important; text-align: center; max-height: 92vh; overflow-y: auto; }
+        .duel-title { font-size: 1.7rem; font-weight: 900; color: #fff; margin: 4px 0 6px; line-height: 1.15; }
+        .ui-layer h2.duel-title { text-transform: none !important; color: #fff !important; font-weight: 800 !important; }
+        .ui-layer h2.duel-title.win { color: var(--brass-hi) !important; }
+        .ui-layer h2.duel-title.lose { color: #e08a7f !important; }
+        .ui-layer h2.duel-title.draw { color: var(--ivory-2) !important; }
+        #duel-body .btn, #duel-btn { text-transform: none !important; }
+        .duel-sub { color: var(--brass-hi); font-weight: 800; font-size: 1rem; min-height: 0; }
+        .duel-sub.big { font-size: 1.3rem; color: #fff; }
+        .duel-text { color: var(--muted); font-size: 0.82rem; line-height: 1.45; margin: 8px 0 14px; }
+        .duel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .duel-actions.col { grid-template-columns: 1fr; }
+        .duel-actions .btn { margin: 0 !important; white-space: nowrap; font-size: 1rem !important; padding-left: 8px !important; padding-right: 8px !important; }
+        #duel-body > .btn { margin-top: 4px; }
+        .duel-spin { width: 64px; height: 64px; margin: 4px auto 6px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgba(91, 141, 239, 0.3) 0 50%, rgba(208, 87, 74, 0.3) 50% 100%); border: 1px solid var(--wood-line);
+            animation: duelSpin 2.4s linear infinite; }
+        .duel-spin.still { animation: none; }
+        .duel-spin .ico { width: 30px; height: 30px; color: #fff; }
+        @keyframes duelSpin { to { transform: rotate(360deg); } }
+        @media (prefers-reduced-motion: reduce) { .duel-spin { animation: none; } }
+        .duel-vs, .duel-score { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 12px 0 6px; }
+        .duel-side { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 6px; border-radius: 12px; }
+        .duel-side.me { background: rgba(91, 141, 239, 0.14); border: 1px solid rgba(91, 141, 239, 0.45); }
+        .duel-side.opp { background: rgba(208, 87, 74, 0.14); border: 1px solid rgba(208, 87, 74, 0.45); }
+        .duel-side.top { box-shadow: 0 0 0 2px var(--brass) inset; }
+        .duel-side b { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #fff; font-size: 0.9rem; }
+        .duel-side small { font-size: 0.7rem; color: var(--muted); }
+        .duel-pts { font-size: 1.6rem; font-weight: 900; color: #fff; line-height: 1.1; }
+        .duel-vs-mid { font-weight: 900; color: var(--faint); font-size: 0.85rem; }
+        .duel-count { font-size: 3.4rem; font-weight: 900; color: var(--brass-hi); line-height: 1; margin: 4px 0; }
+        .duel-rewards { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 8px 0 2px; }
+        .duel-rw { display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.06); font-size: 0.8rem; font-weight: 700; color: var(--ivory-2); }
+        .duel-rw.tok { color: #f3cf74; }
+        .duel-rw .ico, .duel-rw .coin { width: 16px; height: 16px; }
+
+        /* Oyun içi: kırmızı/mavi skor çubuğu */
+        #duel-hud { position: static; pointer-events: none; width: calc(var(--bw, 100vw) - 20px); max-width: 96vw; }
+        #top-ui.dh-spec > :not(#duel-hud) { display: none !important; }
+        .duel-paused { margin: -4px 0 8px; font-size: 0.78rem; color: #f0a39a; text-align: center; }
+        .dh-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: #111; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.45); }
+        #dh-blue, #dh-red { display: block; height: 100%; width: 50%; transition: width 0.45s ease; }
+        #dh-blue { background: linear-gradient(180deg, #7aa5f5, var(--duel-blue-lo)); }
+        #dh-red { background: linear-gradient(180deg, #e07a6e, var(--duel-red-lo)); }
+        html[dir="rtl"] .dh-bar { flex-direction: row-reverse; }
+        .dh-row { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; }
+        .dh-side { display: inline-flex; align-items: center; gap: 5px; min-width: 0; max-width: 50%; padding: 2px 8px; border-radius: 999px;
+            background: rgba(11, 12, 15, 0.72); font-size: 0.72rem; color: var(--ivory-2); }
+        .dh-side b { color: #fff; font-size: 0.85rem; }
+        .dh-side.me b { color: #a9c4fa; }
+        .dh-side.opp b { color: #f0a39a; }
+        .dh-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dh-hearts { display: inline-flex; gap: 1px; flex-shrink: 0; }
+        .dh-heart { width: 12px; height: 12px; fill: rgba(255, 255, 255, 0.16); }
+        .dh-heart.on { fill: #ef5b6b; }
+        html[dir="rtl"] .dh-row { flex-direction: row-reverse; }
+        #spectate-bar { position: absolute; z-index: 6; left: 50%; transform: translateX(-50%); bottom: calc(var(--bt, 6px) + 18px); display: flex; align-items: center; gap: 10px;
+            padding: 8px 8px 8px 14px; border-radius: 14px; background: rgba(11, 12, 15, 0.86); border: 1px solid var(--wood-line); color: var(--ivory); max-width: 94vw; }
+        #spectate-bar .sp-eye .ico { width: 22px; height: 22px; color: #f0a39a; }
+        #spectate-bar .sp-text { display: flex; flex-direction: column; text-align: start; line-height: 1.2; white-space: nowrap; }
+        #spectate-bar .sp-text b { font-size: 0.85rem; }
+        #spectate-bar .sp-text small { font-size: 0.7rem; color: var(--muted); }
+        .sp-leave { display: inline-flex; align-items: center; gap: 4px; padding: 7px 10px; border-radius: 10px; border: 1px solid var(--wood-line); background: rgba(255, 255, 255, 0.06);
+            color: var(--ivory-2); font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+        .sp-leave .ico { width: 15px; height: 15px; }
+            /* ===================== TEK EKRANA SIĞAN PENCERELER (ana menüyle aynı görünüm) ===================== */
+        .ui-layer.vivid > .glass-panel {
+            display: flex !important; flex-direction: column !important;
+            width: min(400px, calc(100vw - 20px)) !important; max-width: none !important;
+            max-height: calc(100% - 20px) !important; overflow-x: hidden !important; overflow-y: auto !important;
+            padding: 16px 16px 14px !important; border-radius: 14px !important;
+        }
+        .ui-layer.vivid > .glass-panel > * { flex-shrink: 0; }
+        .ui-layer.vivid > .glass-panel > h2, .ui-layer.vivid > .glass-panel > .duel-title { font-size: clamp(1.45rem, 6.4vw, 1.75rem) !important; line-height: 1.15 !important; margin: 2px 0 4px !important; }
+        #market-modal > .glass-panel { display: block !important; overflow-y: auto !important; }
+        #market-modal > .glass-panel > h2 { margin-bottom: 4px !important; }
+        .pg-box { flex: 1 1 auto !important; min-height: 0 !important; overflow: hidden !important; margin-bottom: 0 !important; }
+        .pg-hide { display: none !important; }
+        .pg-bar { display: none; align-items: center; justify-content: center; gap: 14px; margin: 8px 0 2px; flex-shrink: 0; }
+        .pg-bar.on { display: flex; }
+        .pg-btn { width: 40px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--rule);
+            background: rgba(255, 255, 255, 0.04); color: var(--ivory-2); cursor: pointer; }
+        .pg-btn:disabled { opacity: 0.28; cursor: default; }
+        .pg-btn .ico { width: 18px; height: 18px; }
+        .pg-num { direction: ltr; unicode-bidi: isolate; min-width: 52px; text-align: center; font-size: 0.8rem; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+        html[dir="rtl"] .pg-btn .ico { transform: scaleX(-1); }
+        /* Kapat düğmeleri: alta sabit, ana menüdeki ikincil düğmeyle aynı */
+        .ui-layer.vivid > .glass-panel > .btn:last-child, .ui-layer.vivid > .glass-panel > .flex:last-child { margin-top: 10px !important; }
+        .ui-layer.vivid .glass-panel .space-y-2 > * + * { margin-top: 6px !important; }
+        /* Ayarlar */
+        #settings-modal #settings-tabs { margin-top: 6px !important; }
+        #settings-modal #settings-list { margin-top: 10px !important; margin-bottom: 0 !important; }
+        #settings-modal .setting-row { padding-top: 8px !important; padding-bottom: 8px !important; }
+        .set-tut { display: flex; align-items: center; gap: 10px; text-align: start; }
+        .set-tut .ico { width: 22px; height: 22px; color: #34d399; flex-shrink: 0; }
+        /* Nasıl oynanır: sayfa sayfa okunur */
+        #how-to-play-modal .glass-panel > div { margin-bottom: 0 !important; padding: 12px 14px !important; }
+        #how-to-play-modal .glass-panel > h2 { margin-bottom: 8px !important; }
+        /* Başarımlar, istatistik, modlar, bulmacalar, seviye yolu */
+        #ach-modal #ach-list, #mode-modal #mode-list, #levels-modal #levels-grid, #level-modal #lr-list, #stats-modal #stats-body { margin-bottom: 0 !important; }
+        #levels-modal .glass-panel > p.text-xs { margin-bottom: 8px !important; }
+        #level-modal .glass-panel > p.text-xs { margin-bottom: 8px !important; }
+        #stats-modal .stat-grid { margin-bottom: 6px; }
+        #ach-modal .ach-item { padding-top: 8px !important; padding-bottom: 8px !important; }
+        /* Skor tablosu */
+        #lb-modal .glass-panel > h2 { margin-bottom: 8px !important; }
+        #lb-modal #lb-body { flex: 1 1 auto; min-height: 0; }
+        #lb-modal #lb-me { flex-shrink: 0; }
+
+        /* Hesap: Profil / Arkadaşlar sekmeleri */
+        #acc-modal.acc-tabbed #acc-body { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; margin-bottom: 0 !important; }
+        #acc-modal.acc-tabbed #acc-body > * { flex-shrink: 0; }
+        #acc-modal.acc-tabbed #acc-body > #fr-box { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; margin: 0; padding: 0; border: 0; }
+        #acc-modal.acc-tabbed #acc-body > #fr-box.acc-tab-hide, .acc-tab-hide { display: none !important; }
+        #acc-modal.acc-tabbed .glass-panel > h2 { margin-bottom: 8px !important; }
+        #acc-modal.acc-tabbed #close-acc-btn { margin-top: 10px !important; }
+        .acc-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 12px; }
+        .acc-tabs button { position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 6px; border-radius: 12px;
+            border: 1px solid var(--rule); background: rgba(255, 255, 255, 0.035); color: var(--ivory-2); font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+        .acc-tabs button .ico { width: 18px; height: 18px; color: var(--brass-hi); }
+        .acc-tabs button.on { background: rgba(201, 163, 90, 0.16); border-color: rgba(201, 163, 90, 0.6); color: #fff; }
+        .fr-badge { position: absolute; top: -6px; inset-inline-end: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
+            background: var(--oxblood); color: #fff; font-size: 0.68rem; font-style: normal; font-weight: 800; }
+        #friends-start-btn { position: relative; }
+        #acc-duelrec { justify-content: center; margin: 10px 0 0; }
+        .fr-top { flex-shrink: 0; }
+        .fr-list { margin-top: 2px; }
+        .fr-list > .fr-sub:first-child { margin-top: 8px; }
+
+        /* Oyun bitti ekranı: ana menüdeki gibi kutucuklar */
+        #game-over-screen > .glass-panel { padding: 14px 16px 12px !important; }
+        #game-over-screen #over-title { font-size: clamp(1.6rem, 7vw, 2rem) !important; margin-bottom: 0 !important; }
+        #game-over-screen .over-xp { margin: 4px 0 6px !important; }
+        #game-over-screen #death-reason { margin-bottom: 8px !important; }
+        #game-over-screen .over-tiles { display: grid !important; grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 6px !important; }
+        #game-over-screen .over-tiles > .btn.pg-hide { display: none !important; }
+        #game-over-screen .over-tiles > .btn { display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px;
+            padding: 6px 3px !important; border-radius: 12px !important; border: 1px solid var(--rule) !important; background: rgba(255, 255, 255, 0.035) !important;
+            font-size: clamp(0.6rem, 2.9vw, 0.68rem) !important; font-weight: 600 !important; color: var(--ivory-2) !important; line-height: 1.15 !important; }
+        #game-over-screen .over-tiles > .btn .ico { width: 18px !important; height: 18px !important; margin: 0 !important; color: var(--brass-hi); }
+        #game-over-screen .over-tiles > .btn .lbl { white-space: normal; text-align: center; }
+        #game-over-screen #lb-over-btn { border-color: rgba(201, 163, 90, 0.55) !important; color: var(--brass-hi) !important; }
+
+        @media (max-height: 600px) {
+            #game-over-screen > .glass-panel { padding: 10px 14px 10px !important; }
+            #game-over-screen #over-title { font-size: 1.45rem !important; }
+            #game-over-screen .text-xl { font-size: 1.05rem !important; }
+            #game-over-screen p.text-slate-400.text-xs { display: none !important; }
+            #game-over-screen #new-record { font-size: 0.95rem !important; margin: 0 !important; }
+            #game-over-screen .over-xp { padding: 6px 10px !important; }
+            #game-over-screen #restart-btn { padding-top: 9px !important; padding-bottom: 9px !important; }
+            #game-over-screen .over-tiles > .btn { min-height: 44px; }
+            .onl-sub { margin-bottom: 8px; }
+            .onl-mode { padding: 7px 9px; }
+            .onl-mode-text small { font-size: 0.68rem; }
+            .onl-tile { min-height: 48px; padding: 6px 4px; }
+            #onl-rec { margin-top: 6px; }
+            .onl-soon { display: none; }
+        }
+
+        /* Onay penceresi */
+        .cf-panel { width: min(340px, calc(100vw - 32px)) !important; text-align: center; }
+        .ui-layer h2.cf-title { font-size: 1.35rem !important; color: #fff !important; text-transform: none !important; margin: 2px 0 6px !important; }
+        .cf-text { color: var(--muted); font-size: 0.9rem; margin: 0 0 14px; }
+        .cf-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .cf-actions .btn { margin: 0 !important; text-transform: none !important; white-space: nowrap; font-size: 1rem !important; padding-left: 6px !important; padding-right: 6px !important; }
+
+        /* Online menüsü */
+        .ui-layer h2.onl-title { text-transform: none !important; color: #fff !important; }
+        .onl-sub { color: var(--muted); font-size: 0.82rem; margin: 0 0 12px; }
+        .onl-modes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .onl-mode { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 10px; border-radius: 12px; text-align: start; cursor: pointer;
+            border: 1px solid var(--rule); background: rgba(255, 255, 255, 0.035); color: var(--ivory-2); }
+        .onl-mode.on { border-color: rgba(201, 163, 90, 0.7); background: rgba(201, 163, 90, 0.12); color: #fff; }
+        .onl-mode-icon { width: 38px; height: 38px; flex-shrink: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgba(91, 141, 239, 0.35) 0 50%, rgba(208, 87, 74, 0.35) 50% 100%); }
+        .onl-mode-icon .ico { width: 22px; height: 22px; color: #fff; }
+        .onl-mode-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+        .onl-mode-text b { font-size: 0.95rem; color: #fff; }
+        .onl-mode-text small { font-size: 0.72rem; color: var(--muted); line-height: 1.3; }
+        .onl-mode-text small { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        @media (max-height: 700px) { #onl-rec, .onl-soon { display: none !important; } .onl-sub { margin-bottom: 8px; } }
+        .onl-hearts { display: flex; flex-wrap: wrap; justify-content: center; width: 38px; gap: 1px; flex-shrink: 0; }
+        .onl-hearts .dh-heart { width: 11px; height: 11px; }
+        .onl-soon { padding: 9px; border-radius: 12px; border: 1px dashed var(--rule); color: var(--faint); font-size: 0.78rem; text-align: center; }
+        #onl-find { margin: 0 !important; }
+        .onl-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+        .onl-tile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 58px; padding: 8px 4px; border-radius: 12px;
+            border: 1px solid var(--rule); background: rgba(255, 255, 255, 0.035); color: var(--ivory-2); font-size: 0.72rem; font-weight: 600; line-height: 1.15; cursor: pointer; }
+        .onl-tile .ico { width: 20px; height: 20px; color: var(--brass-hi); }
+        .onl-tile:hover, .onl-mode:hover { background: rgba(255, 255, 255, 0.07); }
+        #onl-rec { margin: 10px 0 0; }
+        .duel-kicker { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); margin: 0; }
+        #duel-btn .ico { color: var(--brass-hi); }
+
+        /* Düello skor tablosu */
+        .dlb-list { display: flex; flex-direction: column; gap: 5px; }
+        .dlb-row { cursor: default; }
+        .dlb-vs { display: block; font-size: 0.68rem; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .dlb-res { flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 800; }
+        .dlb-res .ico { width: 13px; height: 13px; }
+        .dlb-res.w { background: rgba(79, 191, 114, 0.18); color: #8fc39c; }
+        .dlb-res.l { background: rgba(208, 87, 74, 0.18); color: #f0a39a; }
+        .dlb-res.d { background: rgba(255, 255, 255, 0.08); color: var(--ivory-2); }
+        #dlb-tabs { margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -7824,10 +8081,12 @@
 
         function updateBubbles(dt, moveDist, pcx, pcy) {
             // Etki süreleri
-            if (effects.shield > 0) effects.shield = Math.max(0, effects.shield - dt);
+            // Zaman yavaşlatıcı açıkken kalkan ve çarpan süreleri de yarı hızda azalır
+            const fxDt = effects.slow > 0 ? dt * 0.5 : dt;
+            if (effects.shield > 0) effects.shield = Math.max(0, effects.shield - fxDt);
             if (effects.slow > 0) effects.slow = Math.max(0, effects.slow - dt);
             if (effects.multTime > 0) {
-                effects.multTime = Math.max(0, effects.multTime - dt);
+                effects.multTime = Math.max(0, effects.multTime - fxDt);
                 if (effects.multTime === 0) effects.mult = 1;
             }
 
@@ -8947,7 +9206,7 @@
             if (deathFx.t >= fxDur(deathFx.id)) {
                 deathFx = null;
                 draw();
-                gameOverScreen.style.display = 'flex';
+                if (!duelAfterDeathFx()) gameOverScreen.style.display = 'flex';
                 return;
             }
             requestAnimationFrame(deathLoop);
@@ -15110,6 +15369,7 @@
                 batch.delete(F.doc(db, 'profiles', user.uid));
                 for (const m of ['classic', 'timeAttack', 'dodge', 'puzzle']) batch.delete(F.doc(db, 'leaderboard', m, 'scores', user.uid));
                 await batch.commit();
+                if (typeof onDeleteAllData === 'function') await onDeleteAllData();   // arkadaş listesi, istekler ve çevrimiçi durumu
                 await U.deleteUser(user);
                 accNotice = 'deleted';
             } catch (e) {
@@ -15137,7 +15397,7 @@
                 add(`<div class="text-xs text-slate-400">Yükleniyor…</div>`);
             } else if (ACC.state === 'ready') {
                 const r = add(`<div><div class="text-xs text-slate-400">Oyuncu adı</div><div class="font-bold text-white text-sm" translate="no">${accEsc(ACC.profile.username)}</div></div>`);
-                btn(r, 'market-btn equip', 'Çıkış Yap', accSignOut);
+                btn(r, 'market-btn equip', 'Çıkış Yap', () => askConfirm({ title: 'Çıkış yap', text: 'Hesabından çıkış yapmak istediğine emin misin?', yes: 'Çıkış yap', no: 'Vazgeç' }).then(ok => { if (ok) accSignOut(); }));
             } else if (ACC.state === 'needName') {
                 const r = add(`<div class="font-bold text-white text-sm">Kullanıcı adı seçilmedi</div>`);
                 btn(r, 'market-btn equip', 'İsim seç', openAccount);
@@ -16995,7 +17255,7 @@
 
 
         // ===================== GİZLİLİK POLİTİKASI =====================
-        const PRIVACY = {"tr": "<h3>Kısaca</h3>\n<p>Diagonaut'u hesap açmadan oynayabilirsin. Hesap açmazsan ilerlemen sadece kendi cihazında, tarayıcının hafızasında durur ve bize hiçbir şey gönderilmez. Reklam yok; verilerin satılmaz ve reklam için kullanılmaz.</p>\n<h3>Kim sorumlu?</h3>\n<p>Diagonaut'u Muhammed Kürşad Topkara (Kursuvat) geliştiriyor ve bu sayfadaki verilerden o sorumlu. Sorular ve talepler için: <a href=\"https://github.com/Kursuvat\" target=\"_blank\" rel=\"noopener\">github.com/Kursuvat</a></p>\n<h3>Hangi verileri topluyoruz?</h3>\n<ul>\n<li><b>Hesap bilgileri:</b> Hesap açarsan e-posta adresin giriş için kullanılır. Google ile girersen Google adını ve profil fotoğrafını da giriş sistemine iletir; bunları oyunda göstermiyoruz.</li>\n<li><b>Kullanıcı adı:</b> Kendi seçtiğin isim.</li>\n<li><b>Oyun ilerlemesi (bulut kayıt):</b> Tokenler, kozmetikler, seviye, rekorlar, başarımlar ve istatistikler. Sadece sen görebilirsin.</li>\n<li><b>Herkese açık profil ve skor tablosu:</b> Kullanıcı adın, seviyen, rekorların, başarım ve oyun sayın, kullandığın kozmetikler ve rekor koşundaki boss sayıları diğer oyunculara görünür.</li>\n</ul>\n<p>E-posta adresin ve gerçek adın <b>asla</b> başka oyunculara gösterilmez.</p>\n<h3>Veriler nerede tutuluyor?</h3>\n<p>Hesap, bulut kayıt ve skor tablosu Google'ın Firebase hizmetinde saklanır. Oyunun dosyaları GitHub Pages üzerinden yüklenir. Bu hizmetler, sayfayı sana ulaştırmak için teknik olarak IP adresin gibi bilgileri işleyebilir.</p>\n<h3>Ne için kullanıyoruz?</h3>\n<p>Sadece giriş yapabilmen, ilerlemenin cihazlar arasında korunması ve skor tablosu için. Analiz, reklam ya da takip araçları kullanmıyoruz.</p>\n<h3>Verilerini silme</h3>\n<p><b>Ayarlar → Hesap → Hesabı sil</b> ile hesabın, kullanıcı adın, bulut kaydın, profilin ve skor tablosundaki satırların kalıcı olarak silinir. Cihazındaki ilerlemeyi <b>Ayarlar → Kayıt</b> kısmından ya da tarayıcı verilerini temizleyerek silebilirsin.</p>\n<h3>Hakların</h3>\n<p>6698 sayılı KVKK kapsamında verilerinin işlenip işlenmediğini öğrenme, düzeltilmesini ya da silinmesini isteme gibi hakların var. Bunun için yukarıdaki iletişim adresinden ulaşabilirsin.</p>\n<h3>Çocuklar</h3>\n<p>Hesap açmak isteğe bağlıdır. Reşit değilsen hesap açmadan önce ailenden izin almanı rica ederiz.</p>\n<h3>Değişiklikler</h3>\n<p>Bu metin güncellenirse yeni hâli burada yayınlanır.</p>\n<p class=\"pv-date\">Son güncelleme: 7 Ekim 2026</p>", "en": "<h3>In short</h3>\n<p>You can play Diagonaut without an account. If you don't create one, your progress stays only on your own device, in your browser's storage, and nothing is sent to us. There are no ads, and your data is never sold or used for advertising.</p>\n<h3>Who is responsible?</h3>\n<p>Diagonaut is developed by Muhammed Kürşad Topkara (Kursuvat), who is responsible for the data described here. For questions and requests: <a href=\"https://github.com/Kursuvat\" target=\"_blank\" rel=\"noopener\">github.com/Kursuvat</a></p>\n<h3>What we collect</h3>\n<ul>\n<li><b>Account details:</b> If you create an account, your email address is used to sign in. If you sign in with Google, Google also passes your name and profile photo to the sign-in system; we don't show them in the game.</li>\n<li><b>Username:</b> The name you choose.</li>\n<li><b>Game progress (cloud save):</b> Tokens, cosmetics, level, records, achievements and stats. Only you can see it.</li>\n<li><b>Public profile and leaderboard:</b> Your username, level, records, achievement and game counts, equipped cosmetics, and the bosses defeated in your record run are visible to other players.</li>\n</ul>\n<p>Your email address and real name are <b>never</b> shown to other players.</p>\n<h3>Where it's stored</h3>\n<p>Accounts, cloud saves and the leaderboard are stored in Google's Firebase service. The game's files are served by GitHub Pages. To deliver the page to you, these services may technically process information such as your IP address.</p>\n<h3>What we use it for</h3>\n<p>Only to let you sign in, keep your progress across devices, and run the leaderboard. We don't use analytics, advertising or tracking tools.</p>\n<h3>Deleting your data</h3>\n<p><b>Settings → Account → Delete account</b> permanently deletes your account, username, cloud save, profile and leaderboard entries. You can delete the progress on your device in <b>Settings → Save</b> or by clearing your browser data.</p>\n<h3>Your rights</h3>\n<p>You have the right to know whether your data is processed and to ask for it to be corrected or deleted. You can reach us at the contact address above.</p>\n<h3>Children</h3>\n<p>Creating an account is optional. If you're under the age of majority, please ask a parent before creating one.</p>\n<h3>Changes</h3>\n<p>If this policy changes, the new version will be published here.</p>\n<p class=\"pv-date\">Last updated: October 7, 2026</p>"};
+        const PRIVACY = {"tr": "<h3>Kısaca</h3>\n<p>Diagonaut'u hesap açmadan oynayabilirsin. Hesap açmazsan ilerlemen sadece kendi cihazında, tarayıcının hafızasında durur ve bize hiçbir şey gönderilmez. Reklam yok; verilerin satılmaz ve reklam için kullanılmaz.</p>\n<h3>Kim sorumlu?</h3>\n<p>Diagonaut'u Muhammed Kürşad Topkara (Kursuvat) geliştiriyor ve bu sayfadaki verilerden o sorumlu. Sorular ve talepler için: <a href=\"https://github.com/Kursuvat\" target=\"_blank\" rel=\"noopener\">github.com/Kursuvat</a></p>\n<h3>Hangi verileri topluyoruz?</h3>\n<ul>\n<li><b>Hesap bilgileri:</b> Hesap açarsan e-posta adresin giriş için kullanılır. Google ile girersen Google adını ve profil fotoğrafını da giriş sistemine iletir; bunları oyunda göstermiyoruz.</li>\n<li><b>Kullanıcı adı:</b> Kendi seçtiğin isim.</li>\n<li><b>Oyun ilerlemesi (bulut kayıt):</b> Tokenler, kozmetikler, seviye, rekorlar, başarımlar ve istatistikler. Sadece sen görebilirsin.</li>\n<li><b>Herkese açık profil ve skor tablosu:</b> Kullanıcı adın, seviyen, rekorların, başarım ve oyun sayın, kullandığın kozmetikler ve rekor koşundaki boss sayıları diğer oyunculara görünür.</li>\n<li><b>Arkadaşlar ve düello:</b> Arkadaş listen, arkadaşlık isteklerin ve çevrimiçi durumun (çevrimiçi, oyunda, düelloda) arkadaşlarına görünür. Düello sırasında skorun, canların ve tahtan rakibine canlı olarak gönderilir. Düello skor tablosuna giren koşularında kullanıcı adın, skorun, kozmetiklerin, rakibinin adı ve maç sonucu herkese görünür.</li>\n</ul>\n<p>E-posta adresin ve gerçek adın <b>asla</b> başka oyunculara gösterilmez.</p>\n<h3>Veriler nerede tutuluyor?</h3>\n<p>Hesap, bulut kayıt, skor tablosu, arkadaşlar ve düello verileri Google'ın Firebase hizmetinde saklanır. Oyunun dosyaları GitHub Pages üzerinden yüklenir. Bu hizmetler, sayfayı sana ulaştırmak için teknik olarak IP adresin gibi bilgileri işleyebilir.</p>\n<h3>Ne için kullanıyoruz?</h3>\n<p>Sadece giriş yapabilmen, ilerlemenin cihazlar arasında korunması, skor tablosu, arkadaşlar ve düello için. Analiz, reklam ya da takip araçları kullanmıyoruz.</p>\n<h3>Verilerini silme</h3>\n<p><b>Ayarlar → Hesap → Hesabı sil</b> ile hesabın, kullanıcı adın, bulut kaydın, profilin, arkadaş listen ve skor tablolarındaki (düello dahil) satırların kalıcı olarak silinir. Cihazındaki ilerlemeyi <b>Ayarlar → Kayıt</b> kısmından ya da tarayıcı verilerini temizleyerek silebilirsin.</p>\n<h3>Hakların</h3>\n<p>6698 sayılı KVKK kapsamında verilerinin işlenip işlenmediğini öğrenme, düzeltilmesini ya da silinmesini isteme gibi hakların var. Bunun için yukarıdaki iletişim adresinden ulaşabilirsin.</p>\n<h3>Çocuklar</h3>\n<p>Hesap açmak isteğe bağlıdır. Reşit değilsen hesap açmadan önce ailenden izin almanı rica ederiz.</p>\n<h3>Değişiklikler</h3>\n<p>Bu metin güncellenirse yeni hâli burada yayınlanır.</p>\n<p class=\"pv-date\">Son güncelleme: 8 Ekim 2026</p>", "en": "<h3>In short</h3>\n<p>You can play Diagonaut without an account. If you don't create one, your progress stays only on your own device, in your browser's storage, and nothing is sent to us. There are no ads, and your data is never sold or used for advertising.</p>\n<h3>Who is responsible?</h3>\n<p>Diagonaut is developed by Muhammed Kürşad Topkara (Kursuvat), who is responsible for the data described here. For questions and requests: <a href=\"https://github.com/Kursuvat\" target=\"_blank\" rel=\"noopener\">github.com/Kursuvat</a></p>\n<h3>What we collect</h3>\n<ul>\n<li><b>Account details:</b> If you create an account, your email address is used to sign in. If you sign in with Google, Google also passes your name and profile photo to the sign-in system; we don't show them in the game.</li>\n<li><b>Username:</b> The name you choose.</li>\n<li><b>Game progress (cloud save):</b> Tokens, cosmetics, level, records, achievements and stats. Only you can see it.</li>\n<li><b>Public profile and leaderboard:</b> Your username, level, records, achievement and game counts, equipped cosmetics, and the bosses defeated in your record run are visible to other players.</li>\n<li><b>Friends and duels:</b> Your friend list, friend requests and online status (online, in a match, in a duel) are visible to your friends. During a duel, your score, lives and board are sent live to your opponent. For runs that make the duel leaderboard, your username, score, cosmetics, your opponent's name and the result are visible to everyone.</li>\n</ul>\n<p>Your email address and real name are <b>never</b> shown to other players.</p>\n<h3>Where it's stored</h3>\n<p>Accounts, cloud saves, the leaderboard, friends and duel data are stored in Google's Firebase service. The game's files are served by GitHub Pages. To deliver the page to you, these services may technically process information such as your IP address.</p>\n<h3>What we use it for</h3>\n<p>Only to let you sign in, keep your progress across devices, and run the leaderboard, friends and duels. We don't use analytics, advertising or tracking tools.</p>\n<h3>Deleting your data</h3>\n<p><b>Settings → Account → Delete account</b> permanently deletes your account, username, cloud save, profile, friend list and leaderboard entries (including duels). You can delete the progress on your device in <b>Settings → Save</b> or by clearing your browser data.</p>\n<h3>Your rights</h3>\n<p>You have the right to know whether your data is processed and to ask for it to be corrected or deleted. You can reach us at the contact address above.</p>\n<h3>Children</h3>\n<p>Creating an account is optional. If you're under the age of majority, please ask a parent before creating one.</p>\n<h3>Changes</h3>\n<p>If this policy changes, the new version will be published here.</p>\n<p class=\"pv-date\">Last updated: October 8, 2026</p>"};
         const pvModal = document.createElement('div');
         pvModal.id = 'privacy-modal';
         pvModal.className = 'ui-layer interactive vivid';
@@ -29054,6 +29314,1881 @@
         const _ruTokApplyLanguage = applyLanguage;
         applyLanguage = function () { const r = _ruTokApplyLanguage.apply(this, arguments); fixMarketTokenUnit(); return r; };
 
+        // ===================== ARKADAŞLAR VE DÜELLO (Firebase Realtime Database) =====================
+        // Arkadaş listesi, çevrimiçi durumu, davetler, eşleşme ve canlı maç verisi Realtime Database'de.
+        // Firestore sadece kullanıcı adından hesap kimliğini bulmak ve oyuncu görünüşünü okumak için kullanılır.
+        // Realtime Database kurulmamışsa ya da bağlanamazsa oyunun geri kalanı hiç etkilenmez.
+        const RTDB_URL = 'https://diagonaut-default-rtdb.europe-west1.firebasedatabase.app';
+        const DUEL_LIVES = 3;              // düelloda her oyuncunun canı
+        const DUEL_DIFF = 'medium';        // düelloda herkes aynı zorlukta oynar (taş sıklığı ve boss canı)
+        const DUEL_WIN_TOKENS = 50;        // kazanana verilen token
+        const DUEL_STALE_MS = 25000;       // bu kadar süre haber gelmezse rakip maçtan çıkmış sayılır
+        const DUEL_INVITE_MS = 40000;      // arkadaş daveti bu süre içinde cevaplanmazsa düşer
+        const FRIEND_MAX = 100;
+
+        ICON_PATHS.swords = '<path d="M3 3l3 .7 8.8 8.8M3 3l.7 3 8.8 8.8M10.8 16.8l6-6M14.8 14.8 19 19M19.2 20.6l1.4-1.4"/><path transform="matrix(-1 0 0 1 24 0)" d="M3 3l3 .7 8.8 8.8M3 3l.7 3 8.8 8.8M10.8 16.8l6-6M14.8 14.8 19 19M19.2 20.6l1.4-1.4"/>';
+        ICON_PATHS.users = '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 19.5c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4M17.5 13.8c2.3.7 4 2.7 4 5.7"/>';
+        ICON_PATHS.userPlus = '<circle cx="10" cy="8" r="3.5"/><path d="M3.5 19.5c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M19 8v6M16 11h6"/>';
+
+        const ON = {
+            R: null, db: null, uid: null, name: null, loading: false, failed: false,
+            offset: 0, connected: false, activity: 'menu',
+            friends: {}, status: {}, reqIn: {}, reqOut: {}, invites: {},
+            unsubs: [], statusUnsubs: {}, looks: {}, lookLoading: {},
+            msg: '', msgKind: '', busy: false, armedRemove: null
+        };
+        function onNow() { return Date.now() + ON.offset; }
+        function onRef(path) { return path ? ON.R.ref(ON.db, path) : ON.R.ref(ON.db); }
+        function onReady() { return !!(ON.R && ON.db && ON.uid && ACC.state === 'ready'); }
+        function myLook() {
+            const e = save.equipped;
+            return { piece: String(e.piece), pawn: String(e.pawn), hat: String(e.hat), face: String(e.face), cape: String(e.cape), aura: String(e.aura) };
+        }
+
+        // ---------- Bağlantı ----------
+        async function onStart() {
+            if (ON.loading || !ACC.fb || !ACC.user || !ACC.profile) return;
+            const uid = ACC.user.uid;
+            ON.loading = true;
+            try {
+                if (!ON.R) ON.R = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-database.js`);
+                if (!ON.db) ON.db = ON.R.getDatabase(ACC.fb.auth.app, RTDB_URL);
+            } catch (e) {
+                console.warn('Realtime Database yüklenemedi:', e);
+                ON.loading = false; ON.failed = true; friendsRender(); return;
+            }
+            ON.loading = false;
+            if (!ACC.user || ACC.user.uid !== uid || ACC.state !== 'ready') return;
+            const R = ON.R;
+            ON.uid = uid; ON.name = ACC.profile.username; ON.failed = false;
+            ON.friends = {}; ON.reqIn = {}; ON.reqOut = {}; ON.invites = {}; ON.status = {};
+            const fail = e => { console.warn('Realtime Database:', e && e.message); ON.failed = true; friendsRender(); };
+            ON.unsubs.push(R.onValue(onRef('.info/serverTimeOffset'), s => { ON.offset = Number(s.val()) || 0; }));
+            ON.unsubs.push(R.onValue(onRef('.info/connected'), s => {
+                ON.connected = !!s.val();
+                if (ON.connected) onWriteStatus(true);
+                friendsRender();
+            }));
+            ON.unsubs.push(R.onValue(onRef('friends/' + uid), s => { ON.friends = s.val() || {}; ON.failed = false; onSyncStatusListeners(); friendsRender(); }, fail));
+            ON.unsubs.push(R.onValue(onRef('requests/' + uid), s => { ON.reqIn = s.val() || {}; friendsRender(); }, fail));
+            ON.unsubs.push(R.onValue(onRef('sent/' + uid), s => { ON.reqOut = s.val() || {}; friendsRender(); }, fail));
+            ON.unsubs.push(R.onValue(onRef('invites/' + uid), s => { ON.invites = s.val() || {}; duelCheckInvites(); }, fail));
+            friendsRender();
+        }
+
+        function onStop() {
+            for (const u of ON.unsubs) { try { u(); } catch (e) {} }
+            ON.unsubs = [];
+            for (const k in ON.statusUnsubs) { try { ON.statusUnsubs[k](); } catch (e) {} }
+            ON.statusUnsubs = {};
+            if (DUEL.phase !== 'idle') duelAbort();
+            ON.uid = null; ON.name = null; ON.friends = {}; ON.reqIn = {}; ON.reqOut = {}; ON.invites = {}; ON.status = {};
+            ON.msg = ''; ON.armedRemove = null;
+        }
+
+        async function onWriteStatus(withDisconnect) {
+            if (!ON.R || !ON.uid || !ON.connected) return;
+            const ref = onRef('status/' + ON.uid);
+            try {
+                if (withDisconnect) await ON.R.onDisconnect(ref).remove();
+                await ON.R.set(ref, { n: ON.name, s: ON.activity, t: ON.R.serverTimestamp() });
+            } catch (e) {}
+        }
+        function onSetActivity(a) {
+            if (ON.activity === a) return;
+            ON.activity = a;
+            onWriteStatus(false);
+        }
+
+        function onSyncStatusListeners() {
+            const R = ON.R;
+            for (const fuid in ON.statusUnsubs) if (!ON.friends[fuid]) { try { ON.statusUnsubs[fuid](); } catch (e) {} delete ON.statusUnsubs[fuid]; delete ON.status[fuid]; }
+            for (const fuid in ON.friends) {
+                if (ON.statusUnsubs[fuid]) continue;
+                ON.statusUnsubs[fuid] = R.onValue(onRef('status/' + fuid), s => { ON.status[fuid] = s.val(); friendsRender(); }, () => {});
+                onLoadLook(fuid);
+            }
+        }
+
+        // Arkadaşın görünüşü (avatar için) herkese açık profilinden bir kez okunur
+        async function onLoadLook(fuid) {
+            if (ON.looks[fuid] || ON.lookLoading[fuid] || !ACC.fb) return;
+            ON.lookLoading[fuid] = true;
+            try {
+                const { F, db } = ACC.fb;
+                const snap = await F.getDoc(F.doc(db, 'profiles', fuid));
+                ON.looks[fuid] = (snap.exists() && snap.data().look) || {};
+                friendsRender();
+            } catch (e) { ON.looks[fuid] = {}; }
+        }
+
+        // ---------- Arkadaşlık işlemleri ----------
+        function friendMsg(text, kind) { ON.msg = text; ON.msgKind = kind || 'err'; const t = document.querySelector('#fr-box .fr-top'); if (t) t.dataset.k = ''; friendsRender(); }
+
+        async function friendAdd(raw) {
+            if (!onReady() || ON.busy) return;
+            const name = String(raw || '').trim();
+            if (!USERNAME_RE.test(name)) { friendMsg('Geçerli bir kullanıcı adı yaz.'); return; }
+            const lower = name.toLowerCase();
+            if (lower === String(ACC.profile.usernameLower || ACC.profile.username).toLowerCase()) { friendMsg('Kendini arkadaş olarak ekleyemezsin.'); return; }
+            if (Object.keys(ON.friends).length >= FRIEND_MAX) { friendMsg('Arkadaş listen dolu.'); return; }
+            ON.busy = true; friendMsg('', '');
+            try {
+                const { F, db } = ACC.fb;
+                const snap = await F.getDoc(F.doc(db, 'usernames', lower));
+                if (!snap.exists()) { ON.busy = false; friendMsg('Bu isimde bir oyuncu bulunamadı.'); return; }
+                const fuid = snap.data().uid;
+                if (ON.friends[fuid]) { ON.busy = false; friendMsg('Bu oyuncu zaten arkadaşın.'); return; }
+                if (ON.reqOut[fuid]) { ON.busy = false; friendMsg('Bu oyuncuya zaten istek gönderdin.'); return; }
+                if (ON.reqIn[fuid]) { ON.busy = false; await friendAccept(fuid); return; }
+                let realName = name;
+                try { const p = await F.getDoc(F.doc(db, 'profiles', fuid)); if (p.exists() && p.data().username) realName = p.data().username; } catch (e) {}
+                const R = ON.R, ts = R.serverTimestamp();
+                await R.update(onRef(''), {
+                    [`requests/${fuid}/${ON.uid}`]: { n: ON.name, t: ts },
+                    [`sent/${ON.uid}/${fuid}`]: { n: realName, t: ts }
+                });
+                ON.busy = false;
+                const inp = document.getElementById('fr-input'); if (inp) inp.value = '';
+                friendMsg('Arkadaşlık isteği gönderildi.', 'ok');
+            } catch (e) {
+                console.warn('Arkadaş eklenemedi:', e);
+                ON.busy = false;
+                friendMsg('Bağlantı kurulamadı. İnternetini kontrol et.');
+            }
+        }
+
+        async function friendAccept(fuid) {
+            if (!onReady()) return;
+            const req = ON.reqIn[fuid]; if (!req) return;
+            const R = ON.R, ts = R.serverTimestamp();
+            try {
+                await R.update(onRef(''), {
+                    [`friends/${ON.uid}/${fuid}`]: { n: String(req.n || '?').slice(0, 16), t: ts },
+                    [`friends/${fuid}/${ON.uid}`]: { n: ON.name, t: ts },
+                    [`requests/${ON.uid}/${fuid}`]: null,
+                    [`sent/${fuid}/${ON.uid}`]: null
+                });
+                friendMsg('Artık arkadaşsınız.', 'ok');
+            } catch (e) { console.warn(e); friendMsg('Bağlantı kurulamadı. İnternetini kontrol et.'); }
+        }
+        async function friendDecline(fuid) {
+            if (!onReady()) return;
+            try { await ON.R.update(onRef(''), { [`requests/${ON.uid}/${fuid}`]: null, [`sent/${fuid}/${ON.uid}`]: null }); } catch (e) {}
+        }
+        async function friendCancel(fuid) {
+            if (!onReady()) return;
+            try { await ON.R.update(onRef(''), { [`requests/${fuid}/${ON.uid}`]: null, [`sent/${ON.uid}/${fuid}`]: null }); } catch (e) {}
+        }
+        async function friendRemove(fuid) {
+            if (!onReady()) return;
+            try { await ON.R.update(onRef(''), { [`friends/${ON.uid}/${fuid}`]: null, [`friends/${fuid}/${ON.uid}`]: null }); } catch (e) {}
+        }
+
+        // Hesap silinirken: arkadaş listesi (iki taraftan), istekler, davetler ve çevrimiçi durumu silinir
+        async function onDeleteAllData() {
+            if (!ON.R || !ON.uid) return;
+            const uid = ON.uid, upd = {};
+            upd['status/' + uid] = null;
+            for (const f in ON.friends) { upd[`friends/${uid}/${f}`] = null; upd[`friends/${f}/${uid}`] = null; }
+            for (const f in ON.reqIn) { upd[`requests/${uid}/${f}`] = null; upd[`sent/${f}/${uid}`] = null; }
+            for (const f in ON.reqOut) { upd[`sent/${uid}/${f}`] = null; upd[`requests/${f}/${uid}`] = null; }
+            for (const f in ON.invites) upd[`invites/${uid}/${f}`] = null;
+            try {
+                await ON.R.onDisconnect(onRef('status/' + uid)).cancel();
+                await Promise.race([ON.R.update(onRef(''), upd), new Promise(r => setTimeout(r, 4000))]);
+            } catch (e) { console.warn('Arkadaş verileri silinemedi:', e); }
+            onStop();
+        }
+
+        function friendState(fuid) {
+            const st = ON.status[fuid];
+            if (!st) return 'off';
+            return st.s === 'duel' ? 'duel' : st.s === 'play' ? 'play' : 'menu';
+        }
+        const FRIEND_STATE_TEXT = { menu: 'Çevrimiçi', play: 'Oyunda', duel: 'Düelloda', off: 'Çevrimdışı' };
+
+        // ---------- Hesap penceresindeki Arkadaşlar sekmesi ----------
+        function friendsRender() {
+            if (accModal.style.display !== 'flex' || ACC.state !== 'ready') return;
+            if (!document.getElementById('acc-card-slot')) return;
+            let box = document.getElementById('fr-box');
+            const typed = (document.getElementById('fr-input') || {}).value || '';
+            const hadFocus = document.activeElement && document.activeElement.id === 'fr-input';
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'fr-box';
+                box.className = 'fr-box';
+                box.innerHTML = `<div class="fr-top"></div><div id="fr-list" class="fr-list"></div>`;
+                accBody.appendChild(box);
+            }
+            const topEl = box.querySelector('.fr-top'), list = box.querySelector('#fr-list');
+            let top = '', rows = '';
+            if (ON.failed && !ON.uid) {
+                top = `<p class="fr-note">Arkadaşlar ve düello şu an kullanılamıyor.</p>`;
+            } else if (!ON.uid) {
+                top = `<p class="fr-note">Yükleniyor…</p>`;
+            } else {
+                top = `<div class="fr-add"><input id="fr-input" class="acc-input" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" translate="no">
+                    <button id="fr-add-btn" class="fr-btn fr-main" ${ON.busy ? 'disabled' : ''}>${ico('userPlus')}<span>Ekle</span></button></div>`;
+                if (ON.msg) top += `<p class="fr-msg ${ON.msgKind === 'ok' ? 'ok' : ''}">${ON.msg}</p>`;
+                const reqIn = Object.entries(ON.reqIn);
+                if (reqIn.length) {
+                    rows += `<div class="fr-sub">Gelen istekler</div>`;
+                    for (const [fuid, r] of reqIn) rows += `<div class="fr-row" data-uid="${accEsc(fuid)}"><span class="fr-name" translate="no">${accEsc(r.n || '?')}</span>
+                        <button class="fr-btn fr-main" data-act="accept">Kabul et</button><button class="fr-btn" data-act="decline">Reddet</button></div>`;
+                }
+                const friends = Object.entries(ON.friends).map(([fuid, f]) => ({ fuid, name: (ON.status[fuid] && ON.status[fuid].n) || f.n || '?', state: friendState(fuid) }));
+                const order = { menu: 0, play: 1, duel: 2, off: 3 };
+                friends.sort((a, b) => order[a.state] - order[b.state] || a.name.localeCompare(b.name));
+                rows += `<div class="fr-sub">Arkadaş listesi</div>`;
+                if (!friends.length) rows += `<p class="fr-note">Henüz arkadaşın yok. Kullanıcı adını yazarak birini ekle.</p>`;
+                for (const f of friends) {
+                    const armed = ON.armedRemove === f.fuid;
+                    const canDuel = f.state === 'menu' && DUEL.phase === 'idle';
+                    rows += `<div class="fr-row" data-uid="${accEsc(f.fuid)}"><canvas class="fr-av" aria-hidden="true"></canvas>
+                        <span class="fr-mid"><span class="fr-name" translate="no">${accEsc(f.name)}</span><span class="fr-state ${f.state}"><i></i><span>${FRIEND_STATE_TEXT[f.state]}</span></span></span>
+                        <button class="fr-btn fr-duel" data-act="duel" ${canDuel ? '' : 'disabled'} aria-label="Düelloya çağır">${ico('swords')}<span>Düello</span></button>
+                        <button class="fr-btn fr-x ${armed ? 'armed' : ''}" data-act="remove" aria-label="Arkadaşlıktan çıkar">${armed ? '<span>Sil?</span>' : ico('mult')}</button></div>`;
+                }
+                const reqOut = Object.entries(ON.reqOut);
+                if (reqOut.length) {
+                    rows += `<div class="fr-sub">Gönderilen istekler</div>`;
+                    for (const [fuid, r] of reqOut) rows += `<div class="fr-row" data-uid="${accEsc(fuid)}"><span class="fr-name" translate="no">${accEsc(r.n || '?')}</span>
+                        <span class="fr-wait">Bekliyor</span><button class="fr-btn" data-act="cancel">İptal</button></div>`;
+                }
+            }
+            // Yazı kutusu yeniden çizilmesin (klavye kapanmasın) diye üst kısım sadece değişince güncellenir
+            const topKey = top.replace(/value="[^"]*"/, '');
+            if (topEl.dataset.k !== topKey) { topEl.innerHTML = top; topEl.dataset.k = topKey; }
+            list.innerHTML = rows;
+            const inp = document.getElementById('fr-input');
+            if (inp) {
+                inp.placeholder = T('Kullanıcı adı');
+                if (inp.value !== typed && typed) inp.value = typed;
+                inp.oninput = () => { inp.value = inp.value.replace(/[^A-Za-z0-9_]/g, ''); if (ON.msg) { ON.msg = ''; const m = box.querySelector('.fr-msg'); if (m) m.remove(); topEl.dataset.k = ''; } };
+                inp.onkeydown = e => { if (e.key === 'Escape') return; if (e.key === 'Enter') friendAdd(inp.value); e.stopPropagation(); };
+                if (hadFocus && document.activeElement !== inp) inp.focus();
+            }
+            const addBtn = document.getElementById('fr-add-btn');
+            if (addBtn) addBtn.onclick = () => friendAdd((document.getElementById('fr-input') || {}).value);
+            list.querySelectorAll('.fr-row').forEach(row => {
+                const fuid = row.dataset.uid;
+                const cv = row.querySelector('canvas');
+                if (cv) drawLookAvatar(cv, ON.looks[fuid], 30, 34);
+                row.querySelectorAll('button[data-act]').forEach(b => {
+                    b.onclick = () => {
+                        const act = b.dataset.act;
+                        if (act !== 'remove') ON.armedRemove = null;
+                        if (act === 'accept') friendAccept(fuid);
+                        else if (act === 'decline') friendDecline(fuid);
+                        else if (act === 'cancel') friendCancel(fuid);
+                        else if (act === 'duel') duelInviteFriend(fuid);
+                        else if (act === 'remove') {
+                            if (ON.armedRemove === fuid) { ON.armedRemove = null; friendRemove(fuid); }
+                            else { ON.armedRemove = fuid; friendsRender(); }
+                        }
+                    };
+                });
+            });
+            if (typeof accTabsApply === 'function') accTabsApply();
+            if (typeof PG_SPECS !== 'undefined' && PG_SPECS.friends) pgSchedule(PG_SPECS.friends);
+        }
+
+        // ===================== DÜELLO =====================
+        const DUEL = {
+            phase: 'idle',      // idle | search | invite | lobby | vs | playing | spectate | done
+            id: null, k: 'r', a: null, b: null, me: null, opp: null, seed: 0,
+            names: {}, looks: {}, ready: {}, st: 0,
+            lives: DUEL_LIVES, lv: DUEL_LIVES, spawnK: 0,
+            myDone: false, myFinal: 0, forfeit: false, oppP: null, oppLeft: false, oppQuit: false, winner: null,
+            frames: [], playT: 0, lastPush: 0, lastSent: '', xpDone: false, rewarded: false, startedAt: 0,
+            unsubs: [], timers: [], searchMatch: null, inviteFrom: null, endNote: ''
+        };
+        function duelListen(path, cb) {
+            const u = ON.R.onValue(onRef(path), s => cb(s.val()), () => {});
+            DUEL.unsubs.push(u);
+        }
+        function duelEvery(fn, ms) { DUEL.timers.push(setInterval(fn, ms)); }
+        function duelClearNet() {
+            for (const u of DUEL.unsubs) { try { u(); } catch (e) {} }
+            DUEL.unsubs = [];
+            for (const t of DUEL.timers) clearInterval(t);
+            DUEL.timers = [];
+        }
+        function duelResetState() {
+            duelClearNet();
+            Object.assign(DUEL, {
+                phase: 'idle', id: null, k: 'r', a: null, b: null, me: null, opp: null, seed: 0, names: {}, looks: {}, ready: {}, st: 0,
+                lives: DUEL_LIVES, lv: DUEL_LIVES, spawnK: 0, myDone: false, myFinal: 0, forfeit: false, oppP: null, oppLeft: false, oppQuit: false, winner: null,
+                frames: [], playT: 0, lastPush: 0, lastSent: '', xpDone: false, rewarded: false, startedAt: 0, searchMatch: null, endNote: '',
+                retries: 0, pendingResult: false
+            });
+            duelHud.style.display = 'none';
+            spectateBar.style.display = 'none';
+            topUi.classList.remove('dh-spec');
+        }
+
+        // Taş sırası için tohumlu rastgele sayı: her doğuşun kendi dizisi var, biri farklı giderse ötekiler bozulmaz
+        function duelRng(seed, k) {
+            let a = (seed ^ Math.imul(k + 1, 0x9E3779B1)) >>> 0;
+            const next = () => {
+                a = (a + 0x6D2B79F5) | 0;
+                let t = Math.imul(a ^ (a >>> 15), 1 | a);
+                t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+                return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+            };
+            next(); next();
+            return next;
+        }
+
+        // ---------- Düello penceresi ----------
+        const duelModal = document.createElement('div');
+        duelModal.id = 'duel-modal';
+        duelModal.className = 'ui-layer interactive vivid';
+        duelModal.style.cssText = 'display: none; background: rgba(11, 12, 15, 0.82); z-index: 40;';
+        duelModal.innerHTML = `<div class="glass-panel duel-panel"><div id="duel-body"></div></div>`;
+        document.body.appendChild(duelModal);
+        const duelBody = document.getElementById('duel-body');
+
+        function duelAvatarHTML(side) { return `<canvas class="duel-av ${side}" aria-hidden="true"></canvas>`; }
+        function duelPaintAvatars() {
+            duelBody.querySelectorAll('canvas.duel-av').forEach(cv => {
+                const look = cv.classList.contains('me') ? myLook() : (DUEL.looks[DUEL.opp] || ON.looks[DUEL.opp] || {});
+                drawLookAvatar(cv, look, 52, 59);
+            });
+        }
+        function duelShow(html, after) {
+            duelBody.innerHTML = html;
+            duelModal.style.display = 'flex';
+            duelPaintAvatars();
+            if (after) after();
+        }
+        function duelHide() { duelModal.style.display = 'none'; duelBody.innerHTML = ''; }
+        function duelBtn(id, text, cls) { return `<button id="${id}" class="btn ${cls || ''} w-full">${text}</button>`; }
+        function duelOn(id, fn) { const el = document.getElementById(id); if (el) el.onclick = fn; }
+
+        function duelMessage(title, text) {
+            duelShow(`<h2 class="duel-title">${title}</h2>${text ? `<p class="duel-text">${text}</p>` : ''}${duelBtn('duel-ok', 'Tamam', 'btn-secondary')}`,
+                () => duelOn('duel-ok', () => { duelHide(); if (DUEL.phase === 'idle') friendsRender(); }));
+        }
+
+        const DUEL_MODES = [3, 5];          // düello türleri: can sayısı
+        function duelRules(lv) { return `${lv} can, aynı taş sırası. Canı biten rakibini izler. İkisinin de canı bitince skoru yüksek olan kazanır.`; }
+        function duelModeName(lv) { return lv === 5 ? 'Uzun Düello' : 'Düello'; }
+        function duelSearchingUI(title, sub) {
+            duelShow(`<div class="duel-spin" aria-hidden="true">${ico('swords')}</div>
+                <h2 class="duel-title">${title}</h2>
+                <div class="duel-sub">${sub || ''}</div>
+                <p class="duel-text">${duelRules(DUEL.lv)}</p>
+                ${duelBtn('duel-cancel', 'İptal', 'btn-secondary')}`, () => duelOn('duel-cancel', duelCancelLobby));
+        }
+
+        // ---------- Ana menüdeki Düello düğmesi ----------
+        function openDuel() {
+            if (ACC.state !== 'ready') {
+                openAccount();
+                const note = document.createElement('p');
+                note.className = 'acc-info';
+                note.textContent = 'Düello oynamak için giriş yap.';
+                accBody.prepend(note);
+                return;
+            }
+            if (!onReady()) {
+                if (ON.failed) duelMessage('Düello', 'Arkadaşlar ve düello şu an kullanılamıyor.');
+                else { duelMessage('Düello', 'Bağlanıyor… Birkaç saniye sonra tekrar dene.'); onStart(); }
+                return;
+            }
+            if (DUEL.phase === 'waiting') { showToast('Önceki düellonun sonucu bekleniyor', '', 'swords'); return; }
+            if (DUEL.phase !== 'idle') return;
+            duelSearch(save.settings.duelLives === 5 ? 5 : 3);
+        }
+
+        // ---------- Rastgele eşleşme ----------
+        // Tek bir bekleme noktası var: boşsa oraya geçip beklersin, doluysa oradaki oyuncuyla eşleşirsin (işlem atomik).
+        function duelSearchAgain(lv, n) { duelSearch(lv, n); }
+        async function duelSearch(lv, retries) {
+            const R = ON.R, uid = ON.uid;
+            lv = lv === 5 ? 5 : 3;
+            const Q = 'mm/w' + lv;
+            duelResetState();
+            DUEL.retries = retries || 0;
+            DUEL.lv = lv;
+            DUEL.phase = 'search';
+            duelSearchingUI('Rakip aranıyor', '');
+            try {
+                const id = R.push(onRef('matches')).key;
+                const seed = (Math.random() * 4294967296) >>> 0;
+                await R.set(onRef('matches/' + id), { a: uid, k: 'r', lv, seed, t: R.serverTimestamp(), n: { [uid]: ON.name }, lk: { [uid]: myLook() }, r: { [uid]: true } });
+                if (DUEL.phase !== 'search') { R.remove(onRef('matches/' + id)).catch(() => {}); return; }
+                DUEL.searchMatch = id;
+                let claimed = null;
+                await R.runTransaction(onRef(Q), cur => {
+                    const now = onNow();
+                    if (cur && cur.u && cur.u !== uid && cur.m && now - (Number(cur.t) || 0) < 20000) { claimed = cur; return null; }
+                    claimed = null;
+                    return { u: uid, n: ON.name, t: now, m: id };
+                });
+                if (DUEL.phase !== 'search') return;
+                if (claimed) {
+                    R.remove(onRef('matches/' + id)).catch(() => {});
+                    DUEL.searchMatch = null;
+                    try {
+                        await R.update(onRef('matches/' + claimed.m), { b: uid, ['n/' + uid]: ON.name, ['lk/' + uid]: myLook(), ['r/' + uid]: true });
+                        await duelOpenMatch(claimed.m);
+                    } catch (e) {
+                        // Bekleyen oyuncu tam o anda vazgeçti: aramaya devam et
+                        if (DUEL.phase === 'search' && (DUEL.retries || 0) < 3) { const n = (DUEL.retries || 0) + 1; duelResetState(); DUEL.retries = n; duelSearchAgain(lv, n); return; }
+                        throw e;
+                    }
+                    // Bekleyen oyuncu birkaç saniye içinde başlatmazsa (sekmeyi kapatmış olabilir) vazgeç
+                    const mid = claimed.m;
+                    setTimeout(() => {
+                        if (DUEL.id === mid && DUEL.phase === 'lobby' && !DUEL.st) {
+                            R.set(onRef(`matches/${mid}/c`), 'gone').catch(() => {});
+                            const n = (DUEL.retries || 0) + 1;
+                            duelResetState();
+                            if (n <= 3) { DUEL.retries = n; duelSearchAgain(lv, n); }
+                            else duelMessage('Rakip bulunamadı', 'Eşleştiğin oyuncu cevap vermedi. Tekrar dene.');
+                        }
+                    }, 10000);
+                } else {
+                    await duelOpenMatch(id);
+                    // Beklerken bekleme kaydını tazele (eski kayıtlar 20 sn sonra geçersiz sayılır)
+                    duelEvery(() => {
+                        if (DUEL.phase !== 'search' && DUEL.phase !== 'lobby') return;
+                        if (DUEL.b) return;
+                        R.runTransaction(onRef(Q), cur => {
+                            if (cur && cur.u === uid && cur.m === id) { cur.t = onNow(); return cur; }
+                            if (!cur) return { u: uid, n: ON.name, t: onNow(), m: id };
+                            if (cur.u !== uid && onNow() - (Number(cur.t) || 0) >= 20000) return { u: uid, n: ON.name, t: onNow(), m: id };
+                            return undefined;
+                        }).catch(() => {});
+                    }, 6000);
+                }
+            } catch (e) {
+                console.warn('Eşleşme hatası:', e);
+                duelResetState();
+                duelMessage('Düello', 'Bağlantı kurulamadı. İnternetini kontrol et.');
+            }
+        }
+
+        // ---------- Arkadaşı davet etme ----------
+        async function duelInviteFriend(fuid, lv) {
+            if (!onReady() || DUEL.phase !== 'idle') return;
+            lv = lv === 5 || lv === 3 ? lv : (save.settings.duelLives === 5 ? 5 : 3);
+            const R = ON.R, uid = ON.uid;
+            const fname = (ON.status[fuid] && ON.status[fuid].n) || (ON.friends[fuid] && ON.friends[fuid].n) || '?';
+            duelResetState();
+            DUEL.lv = lv;
+            DUEL.phase = 'invite';
+            DUEL.opp = fuid;
+            DUEL.names[fuid] = fname;
+            duelSearchingUI('Davet gönderildi', `<span translate="no">${accEsc(fname)}</span>`);
+            try {
+                const id = R.push(onRef('matches')).key;
+                const seed = (Math.random() * 4294967296) >>> 0;
+                await R.set(onRef('matches/' + id), { a: uid, b: fuid, k: 'f', lv, seed, t: R.serverTimestamp(), n: { [uid]: ON.name, [fuid]: fname }, lk: { [uid]: myLook() }, r: { [uid]: true } });
+                if (DUEL.phase !== 'invite') { R.set(onRef(`matches/${id}/c`), 'cancel').catch(() => {}); return; }
+                await duelOpenMatch(id);
+                DUEL.phase = 'invite';
+                await R.set(onRef(`invites/${fuid}/${uid}`), { n: ON.name, m: id, lv, t: R.serverTimestamp() });
+                if (DUEL.phase !== 'invite' && DUEL.id !== id) { R.remove(onRef(`invites/${fuid}/${uid}`)).catch(() => {}); return; }
+                setTimeout(() => {
+                    if (DUEL.id === id && !DUEL.st && (DUEL.phase === 'invite' || DUEL.phase === 'lobby')) {
+                        R.set(onRef(`matches/${id}/c`), 'timeout').catch(() => {});
+                        R.remove(onRef(`invites/${fuid}/${uid}`)).catch(() => {});
+                        duelResetState();
+                        duelMessage('Cevap gelmedi', 'Arkadaşın davete zamanında cevap vermedi.');
+                    }
+                }, DUEL_INVITE_MS);
+            } catch (e) {
+                console.warn('Davet gönderilemedi:', e);
+                duelResetState();
+                duelMessage('Düello', 'Davet gönderilemedi. Arkadaşının listesinde olduğundan emin ol.');
+            }
+        }
+
+        // Bekleme ekranında İptal
+        function duelCancelLobby() {
+            const R = ON.R, uid = ON.uid, id = DUEL.id || DUEL.searchMatch, phase = DUEL.phase;
+            if (R && uid) {
+                if (phase === 'search' || (phase === 'lobby' && DUEL.k === 'r' && !DUEL.b)) {
+                    R.runTransaction(onRef('mm/w' + DUEL.lv), cur => (cur && cur.u === uid) ? null : undefined).catch(() => {});
+                    if (id) R.remove(onRef('matches/' + id)).catch(() => {});
+                } else if (id) {
+                    R.set(onRef(`matches/${id}/c`), 'cancel').catch(() => {});
+                    if (DUEL.k === 'f' && DUEL.a === uid && DUEL.opp) R.remove(onRef(`invites/${DUEL.opp}/${uid}`)).catch(() => {});
+                }
+            }
+            duelResetState();
+            duelHide();
+        }
+
+        // ---------- Gelen davetler ----------
+        const duelDismissed = new Set();
+        function duelCheckInvites() {
+            const now = onNow();
+            // Gösterilen davet geri çekildiyse pencereyi kapat
+            if (DUEL.inviteFrom && !ON.invites[DUEL.inviteFrom] && duelModal.style.display === 'flex' && duelBody.querySelector('#duel-accept')) {
+                DUEL.inviteFrom = null;
+                duelMessage('Davet iptal edildi', 'Arkadaşın daveti geri çekti.');
+                return;
+            }
+            for (const [from, inv] of Object.entries(ON.invites)) {
+                if (!inv || now - (Number(inv.t) || 0) > DUEL_INVITE_MS + 5000) { if (ON.R) ON.R.remove(onRef(`invites/${ON.uid}/${from}`)).catch(() => {}); continue; }
+            }
+            if (DUEL.phase === 'invite' && DUEL.opp && ON.invites[DUEL.opp] && !DUEL.st && ON.uid > DUEL.opp && !duelDismissed.has(ON.invites[DUEL.opp].m)) {
+                const from = DUEL.opp, inv = ON.invites[from];
+                duelClearNet();
+                if (DUEL.id) ON.R.set(onRef(`matches/${DUEL.id}/c`), 'cancel').catch(() => {});
+                ON.R.remove(onRef(`invites/${from}/${ON.uid}`)).catch(() => {});
+                duelAcceptInvite(from, inv);
+                return;
+            }
+            if (DUEL.phase !== 'idle' || DUEL.inviteFrom) return;
+            if (gameState !== 'START' && gameState !== 'GAMEOVER') return;
+            if (typeof dlbModal !== 'undefined' && dlbModal.style.display === 'flex') dlbModal.style.display = 'none';
+            const list = Object.entries(ON.invites).filter(([from, inv]) => inv && inv.m && !duelDismissed.has(inv.m) && now - (Number(inv.t) || 0) <= DUEL_INVITE_MS)
+                .sort((x, y) => (Number(y[1].t) || 0) - (Number(x[1].t) || 0));
+            if (!list.length) return;
+            const [from, inv] = list[0];
+            DUEL.inviteFrom = from;
+            playSound('warn');
+            vibrate([40, 30, 40]);
+            duelShow(`<div class="duel-spin still" aria-hidden="true">${ico('swords')}</div>
+                <div class="duel-sub big"><span translate="no">${accEsc(inv.n || '?')}</span></div>
+                <h2 class="duel-title">Seni düelloya çağırıyor</h2>
+                <p class="duel-text">${duelRules(Number(inv.lv) === 5 ? 5 : 3)}</p>
+                <div class="duel-actions">${duelBtn('duel-accept', 'Kabul et')}${duelBtn('duel-decline', 'Reddet', 'btn-secondary')}</div>`, () => {
+                duelOn('duel-accept', () => duelAcceptInvite(from, inv));
+                duelOn('duel-decline', () => duelDeclineInvite(from, inv));
+            });
+        }
+        setInterval(() => { if (ON.uid) duelCheckInvites(); }, 3000);
+
+        async function duelAcceptInvite(from, inv) {
+            const R = ON.R, uid = ON.uid;
+            duelDismissed.add(inv.m);
+            DUEL.inviteFrom = null;
+            R.remove(onRef(`invites/${uid}/${from}`)).catch(() => {});
+            duelResetState();
+            DUEL.phase = 'lobby';
+            duelSearchingUI('Düello başlıyor', `<span translate="no">${accEsc(inv.n || '?')}</span>`);
+            try {
+                await R.update(onRef('matches/' + inv.m), { ['r/' + uid]: true, ['lk/' + uid]: myLook() });
+                await duelOpenMatch(inv.m);
+            } catch (e) {
+                console.warn('Davet kabul edilemedi:', e);
+                duelResetState();
+                duelMessage('Düello', 'Bu davet artık geçerli değil.');
+            }
+        }
+        function duelDeclineInvite(from, inv) {
+            const R = ON.R, uid = ON.uid;
+            duelDismissed.add(inv.m);
+            DUEL.inviteFrom = null;
+            R.remove(onRef(`invites/${uid}/${from}`)).catch(() => {});
+            R.set(onRef(`matches/${inv.m}/c`), 'decline').catch(() => {});
+            duelHide();
+            setTimeout(duelCheckInvites, 300);
+        }
+
+        // ---------- Maç kaydını dinleme ----------
+        async function duelOpenMatch(id) {
+            const R = ON.R, uid = ON.uid, base = 'matches/' + id;
+            const snap = await R.get(onRef(base));
+            const m = snap.val();
+            if (!m) throw new Error('match missing');
+            if (m.c) throw new Error('match closed');
+            DUEL.lv = Number(m.lv) === 5 ? 5 : 3;
+            DUEL.id = id; DUEL.k = m.k || 'r'; DUEL.a = m.a; DUEL.b = m.b || null; DUEL.me = uid; DUEL.seed = Number(m.seed) >>> 0;
+            DUEL.opp = m.a === uid ? (m.b || null) : m.a;
+            DUEL.names = Object.assign({}, DUEL.names, m.n || {});
+            DUEL.looks = Object.assign({}, m.lk || {});
+            if (DUEL.phase !== 'invite') DUEL.phase = 'lobby';
+            duelListen(base + '/b', v => {
+                if (!v || DUEL.b === v) return;
+                DUEL.b = v;
+                if (DUEL.a === uid) DUEL.opp = v;
+                duelMaybeStart();
+            });
+            duelListen(base + '/n', v => { if (v) DUEL.names = Object.assign({}, DUEL.names, v); duelHudUpdate(); });
+            duelListen(base + '/lk', v => { if (v) DUEL.looks = Object.assign({}, DUEL.looks, v); });
+            duelListen(base + '/r', v => { DUEL.ready = v || {}; duelMaybeStart(); });
+            duelListen(base + '/c', v => {
+                if (!v || DUEL.st || DUEL.phase === 'idle') return;
+                const name = DUEL.names[DUEL.opp] || '';
+                const declined = v === 'decline';
+                duelResetState();
+                if (declined) duelMessage('Davet reddedildi', `<span translate="no">${accEsc(name)}</span>`);
+                else duelMessage('Düello iptal edildi', 'Rakibin vazgeçti.');
+            });
+            duelListen(base + '/st', v => {
+                if (!v || DUEL.st) return;
+                DUEL.st = Number(v);
+                duelStartVs();
+            });
+            duelListen(base + '/w', v => { if (v && !DUEL.winner) { DUEL.winner = v; duelOnWinner(); } });
+            duelListen(base + '/l', v => {
+                if (v && DUEL.opp && v[DUEL.opp] && !DUEL.oppQuit) { DUEL.oppQuit = true; duelEvaluate(); }
+            });
+        }
+
+        // İki oyuncu da hazırsa maçı kuran oyuncu başlangıç zamanını yazar (sunucu saatine göre 3,5 sn sonra)
+        function duelMaybeStart() {
+            if (!DUEL.id || DUEL.st || !DUEL.a || !DUEL.b) return;
+            if (!DUEL.ready[DUEL.a] || !DUEL.ready[DUEL.b]) return;
+            if (DUEL.a !== ON.uid) return;
+            if (DUEL.k === 'r') ON.R.runTransaction(onRef('mm/w' + DUEL.lv), cur => (cur && cur.u === ON.uid) ? null : undefined).catch(() => {});
+            ON.R.set(onRef(`matches/${DUEL.id}/st`), onNow() + 3500).catch(() => {});
+        }
+
+        // ---------- Karşılaşma ekranı ve geri sayım ----------
+        function duelStartVs() {
+            DUEL.phase = 'vs';
+            DUEL.opp = DUEL.a === ON.uid ? DUEL.b : DUEL.a;
+            if (DUEL.opp) onLoadLook(DUEL.opp);
+            for (const id of Object.keys(MENU_CLOSE)) { const el = document.getElementById(id); if (el && el.id !== 'duel-modal') el.style.display = 'none'; }
+            if (settingsModal.style.display === 'flex') settingsModal.style.display = 'none';
+            const oppName = DUEL.names[DUEL.opp] || '?';
+            duelShow(`<h2 class="duel-title">${duelModeName(DUEL.lv)}</h2>
+                <div class="duel-vs">
+                    <div class="duel-side me">${duelAvatarHTML('me')}<b translate="no">${accEsc(ON.name)}</b><small>Sen</small></div>
+                    <div class="duel-vs-mid">VS</div>
+                    <div class="duel-side opp">${duelAvatarHTML('opp')}<b translate="no">${accEsc(oppName)}</b><small>Rakip</small></div>
+                </div>
+                <div id="duel-count" class="duel-count">3</div>
+                <p class="duel-text">${duelRules(DUEL.lv)}</p>`);
+            playSound('whoosh');
+            let lastShown = null;
+            const tick = () => {
+                if (DUEL.phase !== 'vs') return;
+                const left = DUEL.st - onNow();
+                if (left <= 0) { duelHide(); duelBegin(); return; }
+                const n = Math.min(3, Math.ceil(left / 1000));
+                if (n !== lastShown) {
+                    lastShown = n;
+                    const el = document.getElementById('duel-count'); if (el) el.textContent = n;
+                    playSound('tick');
+                }
+                requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+            duelPaintAvatars();
+        }
+
+        // ---------- Maçın başlaması ----------
+        function duelBegin() {
+            const uid = ON.uid, base = 'matches/' + DUEL.id;
+            DUEL.phase = 'playing';
+            DUEL.lives = DUEL.lv; DUEL.spawnK = 0; DUEL.myDone = false; DUEL.myFinal = 0; DUEL.forfeit = false;
+            DUEL.frames = []; DUEL.xpDone = false; DUEL.rewarded = false; DUEL.startedAt = onNow(); DUEL.endNote = '';
+            if (startScreen.style.display !== 'none') { /* menüden başlıyor */ }
+            const prevMode = gameMode;
+            gameMode = 'duel';
+            try { resetGame(); } finally { gameMode = prevMode; }
+            // Düello: Klasik kuralları, boss'lar açık, herkes aynı zorlukta, maça yedek canla başlama yok
+            matchStats.mode = 'duel';
+            matchStats.diff = DUEL_DIFF;
+            nextBossScore = BOSS_FIRST_SCORE;
+            effects.extraLife = false;
+            bestAtStart = 0; recordAnnounced = true;
+            gameOverScreen.style.display = 'none';
+            duelHud.style.display = 'block';
+            spectateBar.style.display = 'none';
+            duelHudUpdate();
+            onSetActivity('duel');
+            duelPushNow();
+            duelListen(`${base}/p/${DUEL.opp}`, v => { DUEL.oppP = v; duelHudUpdate(); duelEvaluate(); });
+            duelListen(`${base}/f/${DUEL.opp}`, v => { if (v && DUEL.phase === 'spectate') duelAddFrame(v); });
+            // Skor ve can: değişince hemen, değilse 2 sn'de bir (bağlı olduğunu göstermek için)
+            duelEvery(() => {
+                if (DUEL.phase !== 'playing' && DUEL.phase !== 'spectate' && DUEL.phase !== 'waiting') return;
+                const sig = `${score}|${DUEL.lives}|${DUEL.myDone}`;
+                const now = Date.now();
+                if (sig !== DUEL.lastSent || now - DUEL.lastPush > 2000) duelPushNow();
+            }, 250);
+            // Rakip benim canım bitti diye beni izliyorsa ona tahtamı gönder
+            duelEvery(() => {
+                if (DUEL.phase !== 'playing' || gameState === 'GAMEOVER') return;
+                if (!DUEL.oppP || !DUEL.oppP.d) return;
+                ON.R.set(onRef(`${base}/f/${uid}`), duelFrame()).catch(() => {});
+            }, 150);
+            // Rakip uzun süre haber vermezse maçtan çıkmış sayılır
+            duelEvery(() => {
+                if (DUEL.winner || DUEL.oppLeft) return;
+                const p = DUEL.oppP;
+                if (p && p.d) return;
+                const last = p && p.h ? Number(p.h) : DUEL.startedAt;
+                if (onNow() - last > DUEL_STALE_MS) { DUEL.oppLeft = true; duelEvaluate(); }
+            }, 1000);
+        }
+
+        function duelPushNow() {
+            if (!ON.R || !DUEL.id || !ON.uid) return;
+            DUEL.lastPush = Date.now();
+            DUEL.lastSent = `${score}|${DUEL.lives}|${DUEL.myDone}`;
+            const s = DUEL.myDone ? DUEL.myFinal : score;
+            ON.R.set(onRef(`matches/${DUEL.id}/p/${ON.uid}`), { s: Math.floor(s) || 0, l: DUEL.lives, d: !!DUEL.myDone, h: ON.R.serverTimestamp() }).catch(() => {});
+        }
+
+        // ---------- Sonuç ----------
+        function duelEvaluate() {
+            if (!DUEL.id || DUEL.winner || !ON.R) return;
+            if (DUEL.phase !== 'playing' && DUEL.phase !== 'spectate' && DUEL.phase !== 'waiting') return;
+            let cand = null;
+            if (DUEL.forfeit) cand = DUEL.opp;
+            else if (DUEL.oppQuit || (DUEL.oppLeft && !(DUEL.oppP && DUEL.oppP.d))) cand = ON.uid;
+            else if (DUEL.myDone && ((DUEL.oppP && DUEL.oppP.d) || DUEL.oppLeft)) {
+                const mine = DUEL.myFinal, theirs = Number(DUEL.oppP && DUEL.oppP.s) || 0;
+                cand = mine > theirs ? ON.uid : theirs > mine ? DUEL.opp : 'draw';
+            }
+            if (!cand) return;
+            ON.R.runTransaction(onRef(`matches/${DUEL.id}/w`), cur => (cur === null || cur === undefined) ? cand : undefined, { applyLocally: false }).catch(() => {});
+        }
+
+        function duelOnWinner() {
+            if (DUEL.phase === 'playing' && gameState !== 'GAMEOVER') {
+                // Maç ben oynarken bitti (rakip çıktı ya da bağlantım koptu)
+                if (DUEL.winner === ON.uid) DUEL.endNote = 'Rakip maçtan çıktı.';
+                else if (DUEL.winner !== 'draw') DUEL.endNote = 'Bağlantın koptu.';
+                DUEL.myDone = true; DUEL.myFinal = score;
+                gameState = 'GAMEOVER';
+                touchControls.style.display = 'none';
+                pauseBtn.style.display = 'none';
+                if (settingsModal.style.display === 'flex') settingsModal.style.display = 'none';
+                cancelCountdown();
+                duelPushNow();
+                duelGrantXp();
+                duelShowResult();
+                return;
+            }
+            if (DUEL.phase === 'spectate') { duelStopSpectate(); duelShowResult(); return; }
+            if (DUEL.phase === 'waiting') {
+                // Bu arada normal bir maç oynanıyorsa sonuç maç bitince gösterilir
+                if (gameState === 'PLAYING' || gameState === 'PAUSED' || gameState === 'COUNTDOWN') { DUEL.pendingResult = true; return; }
+                duelShowResult();
+                return;
+            }
+            if (DUEL.phase === 'playing' && deathFx) return;   // elenme efekti bitince sonuç açılır
+            if (DUEL.phase === 'playing' || DUEL.phase === 'done') duelShowResult();
+        }
+
+        function duelGrantXp() {
+            if (DUEL.xpDone) return 0;
+            DUEL.xpDone = true;
+            const raw = Math.max(0, DUEL.myFinal) * diffOf(DUEL_DIFF).xp + (save.xpCarry || 0);
+            const gained = Math.floor(raw + 1e-9);
+            save.xpCarry = Math.max(0, raw - gained);
+            const { ups } = grantXp(gained);
+            DUEL.xpGained = gained;
+            if (ups.length) {
+                const tokens = ups.reduce((a, u) => a + u.tokens, 0);
+                showToast(`Seviye ${save.level}`, `+${tokens} ${coinIco()}`, 'arrowUp');
+                for (const u of ups) if (u.chest) showToast(CHESTS[u.chest].name, '', 'gift');
+                playSound('achieve');
+            }
+            writeSave();
+            return gained;
+        }
+
+        function duelShowResult() {
+            if (DUEL.rewarded && duelModal.style.display === 'flex') return;
+            const prev = DUEL.phase;
+            DUEL.phase = 'done';
+            duelClearNet();
+            onSetActivity('menu');
+            spectateBar.style.display = 'none';
+            topUi.classList.remove('dh-spec');
+            duelHud.style.display = (prev === 'playing' || prev === 'spectate' || prev === 'done') && matchStats.mode === 'duel' ? 'block' : 'none';
+            const uid = ON.uid, w = DUEL.winner;
+            const win = w === uid, draw = w === 'draw';
+            if (!DUEL.rewarded) {
+                DUEL.rewarded = true;
+                if (win) { save.stats.duelW = (save.stats.duelW || 0) + 1; addTokens(DUEL_WIN_TOKENS); }
+                else if (draw) save.stats.duelD = (save.stats.duelD || 0) + 1;
+                else save.stats.duelL = (save.stats.duelL || 0) + 1;
+                writeSave();
+                updateTokenUI();
+                playSound(win ? 'win' : 'death');
+                if (ON.R && DUEL.id) ON.R.remove(onRef(`matches/${DUEL.id}/f/${uid}`)).catch(() => {});
+            }
+            if (!DUEL.xpDone) duelGrantXp();
+            const oppName = DUEL.names[DUEL.opp] || '?';
+            const theirs = Number(DUEL.oppP && DUEL.oppP.s) || 0;
+            const title = win ? 'Kazandın!' : draw ? 'Berabere' : 'Kaybettin';
+            const cls = win ? 'win' : draw ? 'draw' : 'lose';
+            let note = DUEL.endNote;
+            if (!note && DUEL.forfeit) note = 'Maçtan çıktın.';
+            if (!note && win && (DUEL.oppQuit || (DUEL.oppLeft && !(DUEL.oppP && DUEL.oppP.d)))) note = 'Rakip maçtan çıktı.';
+            const again = DUEL.k === 'f' && ON.friends[DUEL.opp]
+                ? duelBtn('duel-again', 'Tekrar davet et') : duelBtn('duel-again', 'Yeni rakip bul');
+            duelShow(`<p class="duel-kicker">${duelModeName(DUEL.lv)}</p><h2 class="duel-title ${cls}">${title}</h2>
+                ${note ? `<p class="duel-text">${note}</p>` : ''}
+                <div class="duel-score">
+                    <div class="duel-side me ${win ? 'top' : ''}">${duelAvatarHTML('me')}<b translate="no">${accEsc(ON.name || '')}</b><span class="duel-pts">${DUEL.myFinal}</span></div>
+                    <div class="duel-vs-mid">VS</div>
+                    <div class="duel-side opp ${!win && !draw ? 'top' : ''}">${duelAvatarHTML('opp')}<b translate="no">${accEsc(oppName)}</b><span class="duel-pts">${theirs}</span></div>
+                </div>
+                <div class="duel-rewards">
+                    ${win ? `<span class="duel-rw tok">${coinIco()}<span>+${DUEL_WIN_TOKENS} token</span></span>` : ''}
+                    <span class="duel-rw">${ico('arrowUp')}<span>+${DUEL.xpGained || 0} XP</span></span>
+                    ${matchTokens > 0 ? `<span class="duel-rw tok">${coinIco()}<span>Bu maçta: +${matchTokens}</span></span>` : ''}
+                </div>
+                <div class="fr-record small"><span>Düello</span><b class="fr-w">${save.stats.duelW || 0}</b><small>Galibiyet</small><b class="fr-l">${save.stats.duelL || 0}</b><small>Mağlubiyet</small><b>${save.stats.duelD || 0}</b><small>Beraberlik</small></div>
+                <div class="duel-actions col">${again}${duelBtn('duel-menu', 'Ana menü', 'btn-secondary')}</div>`, () => {
+                const oppId = DUEL.opp, kind = DUEL.k, lvNow = DUEL.lv;
+                duelOn('duel-menu', () => { duelHide(); duelResetState(); showMainMenu(); });
+                duelOn('duel-again', () => {
+                    duelHide(); duelResetState(); showMainMenu();
+                    if (kind === 'f' && ON.friends[oppId]) duelInviteFriend(oppId, lvNow); else duelSearch(lvNow);
+                });
+            });
+        }
+
+        // Oyuncu bütün canlarını kaybetti
+        function duelFinalDeath(reason, cause) {
+            gameState = 'GAMEOVER';
+            touchControls.style.display = 'none';
+            pauseBtn.style.display = 'none';
+            playSound('death');
+            vibrate(200);
+            DUEL.myDone = true;
+            DUEL.myFinal = Math.floor(score) || 0;
+            duelPushNow();
+            duelHudUpdate();
+            duelGrantXp();
+            duelEvaluate();
+            if (cause) startDeathEffect();
+            else duelAfterMyRun();
+        }
+        // Elenme efekti bitti: sonuç belliyse göster, değilse rakibi izle
+        function duelAfterDeathFx() {
+            if (!DUEL.myDone || DUEL.phase === 'idle') return false;
+            duelAfterMyRun();
+            return true;
+        }
+        function duelAfterMyRun() {
+            if (DUEL.winner) { duelShowResult(); return; }
+            if (DUEL.phase !== 'playing') return;
+            duelStartSpectate();
+        }
+
+        // Maçtan çıkmak (duraklatma menüsünden): maçı kaybedersin
+        function duelForfeit() {
+            DUEL.forfeit = true;
+            DUEL.myDone = true;
+            DUEL.myFinal = Math.floor(score) || 0;
+            DUEL.endNote = 'Maçtan çıktın.';
+            gameState = 'GAMEOVER';
+            touchControls.style.display = 'none';
+            pauseBtn.style.display = 'none';
+            if (ON.R && DUEL.id) ON.R.set(onRef(`matches/${DUEL.id}/l/${ON.uid}`), true).catch(() => {});
+            duelPushNow();
+            duelGrantXp();
+            duelEvaluate();
+            if (!DUEL.winner) { DUEL.winner = DUEL.opp; }
+            duelShowResult();
+        }
+
+        // Oturum kapanırken ya da beklenmedik bir durumda düelloyu bırak
+        function duelAbort() {
+            if (DUEL.phase === 'playing' && gameState !== 'GAMEOVER') {
+                if (ON.R && DUEL.id) ON.R.set(onRef(`matches/${DUEL.id}/l/${ON.uid}`), true).catch(() => {});
+            }
+            if (DUEL.phase === 'search' || DUEL.phase === 'invite' || DUEL.phase === 'lobby') duelCancelLobby();
+            duelStopSpectate();
+            duelResetState();
+            duelHide();
+        }
+
+        // ---------- Üstteki kırmızı/mavi çubuk ----------
+        const duelHud = document.createElement('div');
+        duelHud.id = 'duel-hud';
+        duelHud.style.display = 'none';
+        duelHud.innerHTML = `<div class="dh-bar"><span id="dh-blue"></span><span id="dh-red"></span></div>
+            <div class="dh-row"><span class="dh-side me"><span id="dh-hearts-me" class="dh-hearts"></span><span id="dh-name-me" class="dh-name" translate="no"></span><b id="dh-score-me">0</b></span>
+            <span class="dh-side opp"><b id="dh-score-opp">0</b><span id="dh-name-opp" class="dh-name" translate="no"></span><span id="dh-hearts-opp" class="dh-hearts"></span></span></div>`;
+        (function placeDuelHud() {
+            const hud = document.getElementById('hud');
+            if (hud && hud.parentNode === topUi) hud.insertAdjacentElement('afterend', duelHud);
+            else document.getElementById('game-container').appendChild(duelHud);
+        })();
+        const spectateBar = document.createElement('div');
+        spectateBar.id = 'spectate-bar';
+        spectateBar.className = 'interactive';
+        spectateBar.style.display = 'none';
+        spectateBar.innerHTML = `<span class="sp-eye">${ico('eye')}</span><span class="sp-text"><b>Rakibini izliyorsun</b><small id="sp-sub">Senin canın bitti</small></span><button id="sp-leave" class="sp-leave">${ico('home')}<span>Menü</span></button>`;
+        document.getElementById('game-container').appendChild(spectateBar);
+        // İzlemeyi bırakıp menüye dönmek: maç sonucu gelince menüde gösterilir
+        document.getElementById('sp-leave').addEventListener('click', () => {
+            if (DUEL.phase !== 'spectate') return;
+            duelStopSpectate();
+            DUEL.phase = 'waiting';
+            duelHud.style.display = 'none';
+            showMainMenuDuel();
+            onSetActivity('menu');
+            showToast('Sonuç gelince burada gösterilecek', '', 'swords');
+        });
+
+        const HEART_SVG = on => `<svg viewBox="0 0 24 24" class="dh-heart${on ? ' on' : ''}" aria-hidden="true"><path d="M12 20.5s-8-4.6-8-10.6A4.6 4.6 0 0 1 12 7a4.6 4.6 0 0 1 8 2.9c0 6-8 10.6-8 10.6z"/></svg>`;
+        let dhLast = '';
+        function duelHudUpdate() {
+            if (duelHud.style.display === 'none' || !DUEL.id) return;
+            const mine = DUEL.myDone ? DUEL.myFinal : (DUEL.phase === 'playing' ? Math.floor(score) || 0 : DUEL.myFinal);
+            const p = DUEL.oppP || {};
+            const theirs = Number(p.s) || 0;
+            const myLives = DUEL.myDone ? 0 : DUEL.lives;
+            const oppLives = p.d ? 0 : (p.l === undefined ? DUEL.lv : Number(p.l));
+            const sig = [mine, theirs, myLives, oppLives, DUEL.lv, DUEL.names[DUEL.opp], ON.name].join('|');
+            if (sig === dhLast) return;
+            dhLast = sig;
+            const total = mine + theirs;
+            const pct = total > 0 ? Math.max(6, Math.min(94, mine / total * 100)) : 50;
+            document.getElementById('dh-blue').style.width = pct + '%';
+            document.getElementById('dh-red').style.width = (100 - pct) + '%';
+            document.getElementById('dh-score-me').textContent = mine;
+            document.getElementById('dh-score-opp').textContent = theirs;
+            document.getElementById('dh-name-me').textContent = ON.name || '';
+            document.getElementById('dh-name-opp').textContent = DUEL.names[DUEL.opp] || '';
+            const hearts = n => { let h = ''; for (let i = 0; i < DUEL.lv; i++) h += HEART_SVG(i < n); return h; };
+            document.getElementById('dh-hearts-me').innerHTML = hearts(myLives);
+            document.getElementById('dh-hearts-opp').innerHTML = hearts(oppLives);
+        }
+        // Skor değiştikçe çubuğu güncelle
+        const onScoreChangedDuel = onScoreChanged;
+        onScoreChanged = function () { const r = onScoreChangedDuel.apply(this, arguments); if (DUEL.phase === 'playing') duelHudUpdate(); return r; };
+
+        // ---------- İzleme: rakibin tahtası ----------
+        const TYPE_CODE = { pawn: 'p', bishop: 'b', knight: 'n', rook: 'r' };
+        const CODE_TYPE = { p: 'pawn', b: 'bishop', n: 'knight', r: 'rook' };
+        const r1 = v => Math.round(v * 10) / 10;
+        function duelFrame() {
+            const f = {
+                t: Math.round(gameTime), bs: r1(boardScroll), s: Math.floor(score) || 0, l: DUEL.lives,
+                p: [r1(player.x), r1(player.y), player.targetCol, player.isEating ? 1 : 0],
+                d: [Math.round(player.dangerTimerRed || 0), Math.round(player.dangerTimerYellow || 0), Math.round(player.dangerTimerGreen || 0)],
+                fx: [Math.round(effects.shield || 0), Math.round(effects.slow || 0), effects.mult || 1],
+                e: enemies.map(e => {
+                    const o = { i: e.id, k: TYPE_CODE[e.type] || 'p', x: r1(e.x), y: r1(e.y), c: e.col };
+                    if (e.protectorId) o.g = e.protectorId;
+                    if (e.acc) o.a = e.acc.kind + ':' + e.acc.id;
+                    if (e.hopLift) o.h = r1(e.hopLift);
+                    return o;
+                }),
+                b: bubbles.map(b => ({ k: b.type, x: r1(b.x), y: r1(b.y), ph: Math.round(b.phase || 0) })),
+                w: rookWarnings.map(w => ({ c: w.col, t: Math.round(w.t) })),
+                z: bossZones.map(z => ({ c: z.cells.map(c => c.col * 100 + c.row), t: Math.round(z.t), wa: z.warn, ac: z.active, rgb: z.rgb }))
+            };
+            if (boss) {
+                const bo = { ty: boss.type, hp: boss.hp, mh: boss.maxHp, x: r1(boss.x), y: r1(boss.y), hy: r1(boss.homeY), hf: Math.round(boss.hitFlash || 0) };
+                if (boss.introT !== undefined) bo.it = Math.round(boss.introT);
+                if (boss.slamT !== undefined) bo.sl = Math.round(boss.slamT);
+                f.bo = bo;
+            }
+            return f;
+        }
+
+        function duelAddFrame(f) {
+            const fr = DUEL.frames;
+            if (fr.length && f.t <= fr[fr.length - 1].t) {
+                if (f.t < fr[fr.length - 1].t - 2000) fr.length = 0;   // rakip yeniden başladı gibi: tamponu sıfırla
+                else return;
+            }
+            f.at = performance.now();
+            fr.push(f);
+            if (fr.length > 40) fr.splice(0, fr.length - 40);
+        }
+
+        let spectateRAF = null, spectateLast = 0;
+        function duelStartSpectate() {
+            DUEL.phase = 'spectate';
+            gameState = 'SPECTATE';
+            topUi.classList.add('dh-spec');
+            topUi.style.display = 'flex';
+            tokenHud.style.display = 'none';
+            bossBar.style.display = 'none';
+            spectateBar.style.display = 'flex';
+            DUEL.playT = 0;
+            duelPushNow();   // d: true -> rakip tahtasını göndermeye başlar
+            duelHudUpdate();
+            spectateLast = 0;
+            cancelAnimationFrame(spectateRAF);
+            spectateRAF = requestAnimationFrame(duelSpectateLoop);
+        }
+        function duelStopSpectate() {
+            cancelAnimationFrame(spectateRAF);
+            spectateRAF = null;
+            spectateBar.style.display = 'none';
+            topUi.classList.remove('dh-spec');
+            if (gameState === 'SPECTATE') gameState = 'GAMEOVER';
+        }
+
+        const lerp = (a, b, k) => a + (b - a) * k;
+        function duelSpectateLoop(now) {
+            if (DUEL.phase !== 'spectate') return;
+            spectateRAF = requestAnimationFrame(duelSpectateLoop);
+            const dt = spectateLast ? Math.min(100, now - spectateLast) : 16;
+            spectateLast = now;
+            const fr = DUEL.frames;
+            if (!fr.length) {
+                // Henüz görüntü gelmedi: tahtayı boş göster
+                enemies = []; bubbles = []; rookWarnings = []; bossZones = []; boss = null;
+                particles = []; floatingTexts = []; trail = []; bolts = []; petPos = null; deathFx = null; hidePlayer = true;
+                drawScene();
+                return;
+            }
+            // Gelen görüntülerin biraz gerisinden oynat: ağdaki gecikmeler titreme yapmasın
+            const latest = fr[fr.length - 1];
+            const target = latest.t - 220;
+            if (!DUEL.playT || Math.abs(DUEL.playT - target) > 900) DUEL.playT = target;
+            else DUEL.playT += dt + (target - DUEL.playT) * 0.08;
+            DUEL.playT = Math.min(DUEL.playT, latest.t);
+            let i1 = fr.findIndex(f => f.t >= DUEL.playT);
+            if (i1 < 0) i1 = fr.length - 1;
+            const f1 = fr[i1], f0 = fr[Math.max(0, i1 - 1)];
+            const k = f1.t > f0.t ? Math.max(0, Math.min(1, (DUEL.playT - f0.t) / (f1.t - f0.t))) : 1;
+            duelApplyFrame(f0, f1, k);
+            const eq = save.equipped;
+            const look = DUEL.looks[DUEL.opp] || {};
+            save.equipped = Object.assign({}, eq, {
+                piece: look.piece || SHOP.piece.items[0].id, pawn: look.pawn || SHOP.pawn.items[0].id,
+                hat: look.hat || SHOP.hat.items[0].id, face: look.face || SHOP.face.items[0].id,
+                cape: look.cape || SHOP.cape.items[0].id, aura: look.aura || SHOP.aura.items[0].id, trail: SHOP.trail.items[0].id
+            });
+            try { drawScene(); } finally { save.equipped = eq; }
+        }
+
+        function duelApplyFrame(f0, f1, k) {
+            const bs = lerp(f0.bs, f1.bs, k);
+            boardScroll = bs;
+            bgOffsetY = ((bs % (TS * 2)) + TS * 2) % (TS * 2);
+            gameTime = lerp(f0.t, f1.t, k);
+            const p0 = f0.p, p1 = f1.p;
+            player.x = lerp(p0[0], p1[0], k); player.y = lerp(p0[1], p1[1], k);
+            player.targetCol = p1[2]; player.targetRow = player.y / TS; player.isEating = !!p1[3];
+            player.dangerTimerRed = f1.d[0]; player.dangerTimerYellow = f1.d[1]; player.dangerTimerGreen = f1.d[2];
+            player.inDangerRed = f1.d[0] > 0; player.inDangerYellow = f1.d[1] > 0; player.inDangerGreen = f1.d[2] > 0; player.inDangerBoss = false;
+            effects = { shield: f1.fx[0], slow: f1.fx[1], multTime: f1.fx[2] > 1 ? 1 : 0, mult: f1.fx[2] || 1, extraLife: false };
+            const prev = {};
+            for (const e of (f0.e || [])) prev[e.i] = e;
+            const shift = bs - f1.bs;   // f1'den bu yana tahtanın kayması
+            enemies = (f1.e || []).map(e => {
+                const a = prev[e.i];
+                const x = a ? lerp(a.x, e.x, k) : e.x, y = a ? lerp(a.y, e.y, k) : e.y + shift;
+                const o = { id: e.i, type: CODE_TYPE[e.k] || 'pawn', col: e.c, x, y, spawnCol: e.c, spawnedY: y };
+                if (e.g) o.protectorId = e.g;
+                if (e.a) { const [kind, id] = String(e.a).split(':'); o.acc = { kind, id }; }
+                if (e.h) o.hopLift = e.h;
+                return o;
+            });
+            bubbles = (f1.b || []).map(b => ({ type: b.k, x: b.x, y: b.y + shift, phase: b.ph || 0 }));
+            rookWarnings = (f1.w || []).map(w => ({ col: w.c, t: w.t }));
+            bossZones = (f1.z || []).map(z => ({ cells: (z.c || []).map(v => ({ col: Math.floor(v / 100), row: v % 100 })), t: z.t, warn: z.wa, active: z.ac, rgb: z.rgb }));
+            if (f1.bo && BOSS_STATS[f1.bo.ty]) {
+                const b0 = f0.bo && f0.bo.ty === f1.bo.ty ? f0.bo : f1.bo, b1 = f1.bo;
+                boss = { type: b1.ty, stats: BOSS_STATS[b1.ty], hp: b1.hp, maxHp: b1.mh, x: lerp(b0.x, b1.x, k), y: lerp(b0.y, b1.y, k), homeY: b1.hy, hitFlash: b1.hf, targetCol: Math.round(b1.x / TS) };
+                if (b1.it !== undefined) boss.introT = b1.it;
+                if (b1.sl !== undefined) boss.slamT = b1.sl;
+            } else boss = null;
+            score = f1.s;
+            particles = []; floatingTexts = []; trail = []; bolts = []; xFalls = [];
+            petPos = null; guardCapture = null; deathFx = null; hidePlayer = false;
+        }
+
+        // ---------- Oyuna bağlanan noktalar ----------
+        // Düelloda normal taş doğuşları aynı tohumla: iki oyuncu da aynı taşları aynı yerlerde görür
+        const spawnEnemyDuel = spawnEnemy;
+        spawnEnemy = function () {
+            if (DUEL.phase !== 'playing' || matchStats.mode !== 'duel' || arguments.length) return spawnEnemyDuel.apply(this, arguments);
+            const rnd = Math.random;
+            Math.random = duelRng(DUEL.seed, DUEL.spawnK++);
+            try { return spawnEnemyDuel.apply(this, arguments); } finally { Math.random = rnd; }
+        };
+        // Can baloncuğu sadece son candayken çıkar
+        const spawnBubbleDuel = spawnBubble;
+        spawnBubble = function () {
+            if (DUEL.phase !== 'playing' || matchStats.mode !== 'duel' || DUEL.lives <= 1) return spawnBubbleDuel.apply(this, arguments);
+            const had = effects.extraLife;
+            effects.extraLife = true;   // can baloncuğunu havuzdan çıkarır
+            try { return spawnBubbleDuel.apply(this, arguments); } finally { effects.extraLife = had; }
+        };
+        // Can baloncuğu düelloda bir can verir
+        const collectBubbleDuel = collectBubble;
+        collectBubble = function (b) {
+            const r = collectBubbleDuel.apply(this, arguments);
+            if (DUEL.phase === 'playing' && matchStats.mode === 'duel' && b && b.type === 'life') {
+                effects.extraLife = false;
+                DUEL.lives = Math.min(DUEL.lv, DUEL.lives + 1);
+                duelHudUpdate();
+                duelPushNow();
+            }
+            return r;
+        };
+        // Düelloda 3 can: son can gidince oyuncu rakibini izler
+        const handleDeathDuel = handleDeath;
+        handleDeath = function (reason, cause) {
+            if (DUEL.phase !== 'playing' || matchStats.mode !== 'duel' || effects.extraLife || tutorial.active) return handleDeathDuel.apply(this, arguments);
+            if (DUEL.lives > 1) {
+                DUEL.lives--;
+                effects.shield = Math.max(effects.shield, 3000);
+                player.dangerTimerRed = 0; player.dangerTimerYellow = 0; player.dangerTimerGreen = 0; player.dangerTimerBoss = 0;
+                floatingTexts.push({ x: player.x + TS / 2, y: player.y, text: DUEL.lives === 1 ? 'SON CAN!' : 'BİR CAN GİTTİ!', life: 1.4, rgb: '248, 113, 113' });
+                createParticles(player.x + TS / 2, player.y + TS / 2, '#f87171');
+                playSound('warn');
+                vibrate([60, 40, 60]);
+                duelHudUpdate();
+                duelPushNow();
+                return false;
+            }
+            DUEL.lives = 0;
+            duelFinalDeath(reason, cause);
+            return true;
+        };
+        // Duraklatma menüsünden "Maçtan çık" düelloda maçı bırakmak demek
+        const endGameDuel = endGame;
+        endGame = function () {
+            if (DUEL.phase === 'playing' && matchStats.mode === 'duel') { duelForfeit(); return; }
+            const r = endGameDuel.apply(this, arguments);
+            onSetActivity('menu');
+            if (DUEL.phase === 'waiting' && DUEL.pendingResult) { DUEL.pendingResult = false; setTimeout(() => { if (DUEL.phase === 'waiting') duelShowResult(); }, 1500); }
+            return r;
+        };
+        const resetGameDuel = resetGame;
+        resetGame = function () {
+            if (DUEL.phase !== 'playing' && DUEL.phase !== 'vs' && DUEL.phase !== 'idle' && DUEL.phase !== 'waiting') duelAbort();
+            if (DUEL.phase === 'idle' || DUEL.phase === 'waiting') { duelHud.style.display = 'none'; onSetActivity('play'); }
+            return resetGameDuel.apply(this, arguments);
+        };
+        const showMainMenuDuel = showMainMenu;
+        showMainMenu = function () {
+            if (DUEL.phase === 'spectate' || DUEL.phase === 'playing') duelAbort();
+            if (DUEL.phase === 'done') duelResetState();
+            duelHud.style.display = 'none';
+            spectateBar.style.display = 'none';
+            const r = showMainMenuDuel.apply(this, arguments);
+            onSetActivity('menu');
+            setTimeout(duelCheckInvites, 400);
+            return r;
+        };
+        const DUEL_PAUSE_MAX = 20;   // düelloda duraklatma en fazla bu kadar saniye sürer
+        let duelPauseTimer = null;
+        const openSettingsDuel = openSettings;
+        openSettings = function () {
+            const r = openSettingsDuel.apply(this, arguments);
+            let note = document.getElementById('duel-paused');
+            clearInterval(duelPauseTimer);
+            if (DUEL.phase === 'playing' && matchStats.mode === 'duel' && quitMatchBtn.style.display !== 'none') {
+                quitMatchBtn.textContent = 'MAÇTAN ÇIK (KAYBEDERSİN)';
+                if (!note) {
+                    note = document.createElement('p');
+                    note.id = 'duel-paused';
+                    note.className = 'duel-paused';
+                    pausedNote.insertAdjacentElement('afterend', note);
+                }
+                note.style.display = 'block';
+                let left = DUEL_PAUSE_MAX;
+                const tick = () => {
+                    if (gameState !== 'PAUSED' || DUEL.phase !== 'playing' || settingsModal.style.display !== 'flex') { clearInterval(duelPauseTimer); return; }
+                    if (left <= 0) { clearInterval(duelPauseTimer); closeSettings(); return; }
+                    note.textContent = `Rakibin oynamaya devam ediyor. Oyun ${left} saniye içinde kendiliğinden devam eder.`;
+                    left--;
+                };
+                tick();
+                duelPauseTimer = setInterval(tick, 1000);
+            } else if (note) note.style.display = 'none';
+            return r;
+        };
+        const accSignOutDuel = accSignOut;
+        accSignOut = async function () {
+            if (ON.R && ON.uid) {
+                try { await Promise.race([ON.R.remove(onRef('status/' + ON.uid)), new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
+                try { ON.R.onDisconnect(onRef('status/' + ON.uid)).cancel(); } catch (e) {}
+            }
+            onStop();
+            return accSignOutDuel.apply(this, arguments);
+        };
+        const accRenderDuel = accRender;
+        accRender = function () {
+            const r = accRenderDuel.apply(this, arguments);
+            if (ACC.state === 'ready' && ACC.user && ACC.profile) {
+                if (ON.uid !== ACC.user.uid && !ON.loading) { if (ON.uid) onStop(); onStart(); }
+            } else if (ON.uid && (ACC.state === 'signedOut' || !ACC.user)) onStop();
+            if (accModal.style.display === 'flex' && ACC.state === 'ready') friendsRender();
+            return r;
+        };
+        const applyLanguageDuel = applyLanguage;
+        applyLanguage = function () {
+            const r = applyLanguageDuel.apply(this, arguments);
+            dhLast = '';
+            if (accModal.style.display === 'flex') friendsRender();
+            return r;
+        };
+
+        // Elenme efekti bitince maç sonu ekranı yerine düello devam eder
+        // (deathLoop içinde duelAfterDeathFx() çağrılır)
+
+        // ---------- Ana menüye Düello düğmesi ----------
+        (function addDuelButton() {
+            const start = document.getElementById('start-btn');
+            if (!start) return;
+            const row = document.createElement('div');
+            row.className = 'start-row';
+            start.parentNode.insertBefore(row, start);
+            row.appendChild(start);
+            const b = document.createElement('button');
+            b.id = 'duel-btn';
+            b.className = 'btn';
+            b.setAttribute('aria-label', 'Düello');
+            b.innerHTML = `${ico('swords')}<span>Düello</span>`;
+            b.addEventListener('click', () => openDuel());
+            row.appendChild(b);
+        })();
+
+        // ---------- Düello ve arkadaşlar: 15 dile çeviri (sıra: en, fil, ru, fr, de, es, it, pt, id, az, zh, ja, ko, ar, ary) ----------
+        (function duelI18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {
+                "Geçerli bir kullanıcı adı yaz.": ["Enter a valid username.", "Maglagay ng tamang username.", "Введите корректное имя пользователя.", "Saisis un nom d'utilisateur valide.", "Gib einen gültigen Benutzernamen ein.", "Escribe un nombre de usuario válido.", "Inserisci un nome utente valido.", "Escreve um nome de utilizador válido.", "Masukkan nama pengguna yang valid.", "Düzgün istifadəçi adı yaz.", "请输入有效的用户名。", "有効なユーザー名を入力してください。", "올바른 사용자 이름을 입력하세요.", "اكتب اسم مستخدم صالحًا.", "كتب سمية مستخدم صحيحة."],
+                "Kendini arkadaş olarak ekleyemezsin.": ["You can't add yourself as a friend.", "Hindi mo puwedeng i-add ang sarili mo bilang kaibigan.", "Нельзя добавить в друзья самого себя.", "Tu ne peux pas t'ajouter toi-même en ami.", "Du kannst dich nicht selbst als Freund hinzufügen.", "No puedes agregarte a ti mismo como amigo.", "Non puoi aggiungere te stesso come amico.", "Não te podes adicionar a ti próprio como amigo.", "Kamu tidak bisa menambahkan dirimu sendiri sebagai teman.", "Özünü dost kimi əlavə edə bilməzsən.", "不能添加自己为好友。", "自分自身をフレンドに追加することはできません。", "자기 자신을 친구로 추가할 수 없어요.", "لا يمكنك إضافة نفسك كصديق.", "ما تقدرش تزيد راسك كصاحب."],
+                "Arkadaş listen dolu.": ["Your friend list is full.", "Puno na ang listahan ng mga kaibigan mo.", "Список друзей заполнен.", "Ta liste d'amis est pleine.", "Deine Freundesliste ist voll.", "Tu lista de amigos está llena.", "La tua lista amici è piena.", "A tua lista de amigos está cheia.", "Daftar temanmu sudah penuh.", "Dost siyahın doludur.", "你的好友列表已满。", "フレンドリストがいっぱいです。", "친구 목록이 가득 찼어요.", "قائمة أصدقائك ممتلئة.", "لائحة صحابك عامرة."],
+                "Bu isimde bir oyuncu bulunamadı.": ["No player found with that name.", "Walang player na may ganyang pangalan.", "Игрок с таким именем не найден.", "Aucun joueur trouvé avec ce nom.", "Kein Spieler mit diesem Namen gefunden.", "No se encontró ningún jugador con ese nombre.", "Nessun giocatore trovato con questo nome.", "Não foi encontrado nenhum jogador com esse nome.", "Tidak ada pemain dengan nama itu.", "Bu adda oyunçu tapılmadı.", "找不到这个名字的玩家。", "その名前のプレイヤーは見つかりません。", "그 이름의 플레이어를 찾을 수 없어요.", "لم يُعثر على لاعب بهذا الاسم.", "ما لقينا حتى لاعب بهاد السمية."],
+                "Bu oyuncu zaten arkadaşın.": ["This player is already your friend.", "Kaibigan mo na ang player na ito.", "Этот игрок уже у вас в друзьях.", "Ce joueur est déjà ton ami.", "Dieser Spieler ist schon dein Freund.", "Este jugador ya es tu amigo.", "Questo giocatore è già tuo amico.", "Este jogador já é teu amigo.", "Pemain ini sudah menjadi temanmu.", "Bu oyunçu artıq dostundur.", "这位玩家已经是你的好友。", "このプレイヤーはすでにフレンドです。", "이미 친구인 플레이어예요.", "هذا اللاعب صديقك بالفعل.", "هاد اللاعب راه صاحبك من قبل."],
+                "Bu oyuncuya zaten istek gönderdin.": ["You already sent this player a request.", "Nakapagpadala ka na ng request sa player na ito.", "Вы уже отправили запрос этому игроку.", "Tu as déjà envoyé une demande à ce joueur.", "Du hast diesem Spieler schon eine Anfrage geschickt.", "Ya le enviaste una solicitud a este jugador.", "Hai già inviato una richiesta a questo giocatore.", "Já enviaste um pedido a este jogador.", "Kamu sudah mengirim permintaan ke pemain ini.", "Bu oyunçuya artıq sorğu göndərmisən.", "你已经向这位玩家发送过请求。", "このプレイヤーにはすでに申請を送っています。", "이 플레이어에게 이미 요청을 보냈어요.", "لقد أرسلت طلبًا إلى هذا اللاعب بالفعل.", "راك صيفطتي طلب لهاد اللاعب من قبل."],
+                "Arkadaşlık isteği gönderildi.": ["Friend request sent.", "Naipadala ang friend request.", "Запрос в друзья отправлен.", "Demande d'ami envoyée.", "Freundschaftsanfrage gesendet.", "Solicitud de amistad enviada.", "Richiesta di amicizia inviata.", "Pedido de amizade enviado.", "Permintaan pertemanan terkirim.", "Dostluq sorğusu göndərildi.", "好友请求已发送。", "フレンド申請を送りました。", "친구 요청을 보냈어요.", "تم إرسال طلب الصداقة.", "تصيفط طلب الصداقة."],
+                "Artık arkadaşsınız.": ["You're now friends.", "Magkaibigan na kayo.", "Теперь вы друзья.", "Vous êtes maintenant amis.", "Ihr seid jetzt befreundet.", "Ya son amigos.", "Ora siete amici.", "Agora são amigos.", "Sekarang kalian berteman.", "Artıq dostsunuz.", "你们已成为好友。", "フレンドになりました。", "이제 친구가 되었어요.", "أصبحتما صديقين الآن.", "دابا وليتو صحاب."],
+                "Çevrimiçi": ["Online", "Online", "В сети", "En ligne", "Online", "En línea", "Online", "Online", "Online", "Onlayn", "在线", "オンライン", "온라인", "متصل", "متصل"],
+                "Oyunda": ["In a match", "Naglalaro", "В игре", "En partie", "Im Spiel", "Jugando", "In partita", "A jogar", "Sedang bermain", "Oyunda", "游戏中", "プレイ中", "게임 중", "في مباراة", "كيلعب"],
+                "Düelloda": ["In a duel", "Nasa duelo", "В дуэли", "En duel", "Im Duell", "En duelo", "In duello", "Em duelo", "Sedang duel", "Dueldə", "决斗中", "決闘中", "결투 중", "في مبارزة", "فمبارزة"],
+                "Çevrimdışı": ["Offline", "Offline", "Не в сети", "Hors ligne", "Offline", "Desconectado", "Offline", "Offline", "Offline", "Oflayn", "离线", "オフライン", "오프라인", "غير متصل", "ماشي متصل"],
+                "Düello": ["Duel", "Duelo", "Дуэль", "Duel", "Duell", "Duelo", "Duello", "Duelo", "Duel", "Duel", "决斗", "決闘", "결투", "مبارزة", "مبارزة"],
+                "Galibiyet": ["Wins", "Panalo", "Победы", "Victoires", "Siege", "Victorias", "Vittorie", "Vitórias", "Menang", "Qələbə", "胜", "勝ち", "승", "فوز", "ربح"],
+                "Mağlubiyet": ["Losses", "Talo", "Поражения", "Défaites", "Niederlagen", "Derrotas", "Sconfitte", "Derrotas", "Kalah", "Məğlubiyyət", "负", "負け", "패", "خسارة", "خسارة"],
+                "Beraberlik": ["Draws", "Tabla", "Ничьи", "Nuls", "Unentschieden", "Empates", "Pareggi", "Empates", "Seri", "Heç-heçə", "平", "引き分け", "무", "تعادل", "تعادل"],
+                "Arkadaşlar": ["Friends", "Mga Kaibigan", "Друзья", "Amis", "Freunde", "Amigos", "Amici", "Amigos", "Teman", "Dostlar", "好友", "フレンド", "친구", "الأصدقاء", "الصحاب"],
+                "Arkadaşlar ve düello şu an kullanılamıyor.": ["Friends and duels are unavailable right now.", "Hindi magagamit ang mga kaibigan at duelo ngayon.", "Друзья и дуэли сейчас недоступны.", "Les amis et les duels sont indisponibles pour le moment.", "Freunde und Duelle sind gerade nicht verfügbar.", "Los amigos y los duelos no están disponibles ahora.", "Amici e duelli non sono disponibili al momento.", "Os amigos e os duelos não estão disponíveis de momento.", "Teman dan duel sedang tidak tersedia.", "Dostlar və duel hazırda əlçatan deyil.", "好友和决斗功能暂时无法使用。", "フレンドと決闘は現在利用できません。", "지금은 친구와 결투 기능을 사용할 수 없어요.", "الأصدقاء والمبارزات غير متاحة حاليًا.", "الصحاب والمبارزة ما خدامينش دابا."],
+                "Ekle": ["Add", "Idagdag", "Добавить", "Ajouter", "Hinzufügen", "Agregar", "Aggiungi", "Adicionar", "Tambah", "Əlavə et", "添加", "追加", "추가", "إضافة", "زيد"],
+                "Gelen istekler": ["Incoming requests", "Mga papasok na request", "Входящие запросы", "Demandes reçues", "Eingehende Anfragen", "Solicitudes recibidas", "Richieste ricevute", "Pedidos recebidos", "Permintaan masuk", "Gələn sorğular", "收到的请求", "届いた申請", "받은 요청", "الطلبات الواردة", "الطلبات اللي جاوك"],
+                "Kabul et": ["Accept", "Tanggapin", "Принять", "Accepter", "Annehmen", "Aceptar", "Accetta", "Aceitar", "Terima", "Qəbul et", "接受", "承認", "수락", "قبول", "قبل"],
+                "Reddet": ["Decline", "Tanggihan", "Отклонить", "Refuser", "Ablehnen", "Rechazar", "Rifiuta", "Recusar", "Tolak", "Rədd et", "拒绝", "拒否", "거절", "رفض", "رفض"],
+                "Arkadaş listesi": ["Friend list", "Listahan ng kaibigan", "Список друзей", "Liste d'amis", "Freundesliste", "Lista de amigos", "Lista amici", "Lista de amigos", "Daftar teman", "Dost siyahısı", "好友列表", "フレンドリスト", "친구 목록", "قائمة الأصدقاء", "لائحة الصحاب"],
+                "Henüz arkadaşın yok. Kullanıcı adını yazarak birini ekle.": ["No friends yet. Type a username to add someone.", "Wala ka pang kaibigan. I-type ang username para mag-add ng kaibigan.", "У вас пока нет друзей. Введите имя пользователя, чтобы добавить кого-нибудь.", "Pas encore d'amis. Tape un nom d'utilisateur pour en ajouter un.", "Noch keine Freunde. Gib einen Benutzernamen ein, um jemanden hinzuzufügen.", "Aún no tienes amigos. Escribe un nombre de usuario para agregar a alguien.", "Ancora nessun amico. Scrivi un nome utente per aggiungere qualcuno.", "Ainda não tens amigos. Escreve um nome de utilizador para adicionar alguém.", "Belum ada teman. Ketik nama pengguna untuk menambahkan seseorang.", "Hələ dostun yoxdur. Kimisə əlavə etmək üçün istifadəçi adını yaz.", "还没有好友。输入用户名来添加好友。", "まだフレンドがいません。ユーザー名を入力して追加しよう。", "아직 친구가 없어요. 사용자 이름을 입력해 친구를 추가하세요.", "لا أصدقاء بعد. اكتب اسم مستخدم لإضافة أحد.", "باقي ما عندك صحاب. كتب سمية المستخدم باش تزيد شي واحد."],
+                "Sil?": ["Remove?", "Alisin?", "Удалить?", "Retirer ?", "Entfernen?", "¿Quitar?", "Rimuovere?", "Remover?", "Hapus?", "Silinsin?", "删除？", "削除？", "삭제할까요?", "حذف؟", "نمسحو؟"],
+                "Arkadaşlıktan çıkar": ["Remove friend", "Alisin sa mga kaibigan", "Удалить из друзей", "Retirer des amis", "Als Freund entfernen", "Quitar de amigos", "Rimuovi dagli amici", "Remover dos amigos", "Hapus dari teman", "Dostluqdan çıxar", "删除好友", "フレンドから削除", "친구 삭제", "إزالة من الأصدقاء", "حيدو من الصحاب"],
+                "Gönderilen istekler": ["Sent requests", "Mga naipadalang request", "Отправленные запросы", "Demandes envoyées", "Gesendete Anfragen", "Solicitudes enviadas", "Richieste inviate", "Pedidos enviados", "Permintaan terkirim", "Göndərilən sorğular", "已发送的请求", "送った申請", "보낸 요청", "الطلبات المرسلة", "الطلبات اللي صيفطتي"],
+                "Bekliyor": ["Pending", "Naghihintay", "Ожидает", "En attente", "Ausstehend", "Pendiente", "In attesa", "Pendente", "Menunggu", "Gözləyir", "等待中", "承認待ち", "대기 중", "قيد الانتظار", "كيتسنى"],
+                "İptal": ["Cancel", "Kanselahin", "Отмена", "Annuler", "Abbrechen", "Cancelar", "Annulla", "Cancelar", "Batal", "Ləğv et", "取消", "キャンセル", "취소", "إلغاء", "لغي"],
+                "Kullanıcı adı": ["Username", "Username", "Имя пользователя", "Nom d'utilisateur", "Benutzername", "Nombre de usuario", "Nome utente", "Nome de utilizador", "Nama pengguna", "İstifadəçi adı", "用户名", "ユーザー名", "사용자 이름", "اسم المستخدم", "سمية المستخدم"],
+                "Tamam": ["OK", "OK", "ОК", "OK", "OK", "Aceptar", "OK", "OK", "OK", "Oldu", "好的", "OK", "확인", "حسنًا", "واخا"],
+                "{0} can, aynı taş sırası. Canı biten rakibini izler. İkisinin de canı bitince skoru yüksek olan kazanır.": ["{0} lives, same pieces. Out of lives? Watch your opponent. When you're both out, the higher score wins.", "{0} buhay, parehong mga piyesa. Kapag naubos ang buhay mo, panoorin ang kalaban. Kapag pareho nang ubos, panalo ang mas mataas ang score.", "Жизней: {0}, одинаковые фигуры. Жизни кончились — смотрите за соперником. Когда жизни кончатся у обоих, побеждает больший счёт.", "{0} vies, mêmes pièces. Plus de vies ? Regarde ton adversaire. Quand vous n'en avez plus tous les deux, le meilleur score gagne.", "{0} Leben, gleiche Figuren. Keine Leben mehr? Dann schau deinem Gegner zu. Wenn beide raus sind, gewinnt die höhere Punktzahl.", "{0} vidas, las mismas piezas. ¿Sin vidas? Mira a tu rival. Cuando ambos se quedan sin vidas, gana la puntuación más alta.", "{0} vite, stessi pezzi. Finite le vite? Guarda il tuo avversario. Quando finiscono a entrambi, vince il punteggio più alto.", "{0} vidas, as mesmas peças. Sem vidas? Vê o teu adversário. Quando ambos ficam sem vidas, ganha a pontuação mais alta.", "{0} nyawa, bidak yang sama. Nyawa habis? Tonton lawanmu. Saat nyawa keduanya habis, skor tertinggi yang menang.", "{0} can, eyni daşlar. Canın bitsə, rəqibinə baxırsan. İkinizin də canı bitəndə xalı çox olan qalib gəlir.", "{0} 条命，棋子相同。命用完后可以观看对手。双方的命都用完后，分数高者获胜。", "ライフ{0}つ、同じ駒。ライフがなくなったら相手を観戦。両方のライフがなくなると、スコアが高い方の勝ち。", "목숨 {0}개, 같은 기물. 목숨이 다 떨어지면 상대를 관전해요. 둘 다 목숨이 떨어지면 점수가 높은 쪽이 이겨요.", "{0} أرواح، والقطع نفسها. إذا نفدت أرواحك تشاهد خصمك. عندما تنفد أرواح كليكما يفوز صاحب النتيجة الأعلى.", "{0} ديال الأرواح، نفس الحجر. إلا سالاو أرواحك كتفرج فخصمك. ملي يساليو أرواحكم بجوج، اللي عندو سكور كبر هو اللي كيربح."],
+                "Düello oynamak için giriş yap.": ["Sign in to play duels.", "Mag-sign in para maglaro ng duelo.", "Войдите, чтобы играть в дуэли.", "Connecte-toi pour jouer en duel.", "Melde dich an, um Duelle zu spielen.", "Inicia sesión para jugar duelos.", "Accedi per giocare i duelli.", "Inicia sessão para jogar duelos.", "Masuk untuk bermain duel.", "Duel oynamaq üçün daxil ol.", "登录后即可进行决斗。", "決闘をプレイするにはログインしてください。", "결투를 하려면 로그인하세요.", "سجّل الدخول لتلعب المبارزات.", "دخل لحسابك باش تلعب المبارزة."],
+                "Bağlanıyor… Birkaç saniye sonra tekrar dene.": ["Connecting… Try again in a few seconds.", "Kumokonekta… Subukan ulit pagkalipas ng ilang segundo.", "Подключение… Попробуйте снова через несколько секунд.", "Connexion… Réessaie dans quelques secondes.", "Verbinde… Versuch es in ein paar Sekunden noch mal.", "Conectando… Inténtalo de nuevo en unos segundos.", "Connessione… Riprova tra qualche secondo.", "A ligar… Tenta novamente daqui a uns segundos.", "Menghubungkan… Coba lagi dalam beberapa detik.", "Qoşulur… Bir neçə saniyədən sonra yenidən yoxla.", "正在连接… 请几秒后再试。", "接続中… 数秒後にもう一度お試しください。", "연결 중… 몇 초 뒤에 다시 시도하세요.", "جارٍ الاتصال… حاول مجددًا بعد بضع ثوانٍ.", "كيتصل… عاود جرب من بعد شي ثواني."],
+                "Rakip aranıyor": ["Finding an opponent", "Naghahanap ng kalaban", "Поиск соперника", "Recherche d'un adversaire", "Gegner wird gesucht", "Buscando rival", "Ricerca avversario", "À procura de adversário", "Mencari lawan", "Rəqib axtarılır", "正在寻找对手", "対戦相手を探しています", "상대를 찾는 중", "جارٍ البحث عن خصم", "كنقلبو على خصم"],
+                "Rakip bulunamadı": ["No opponent found", "Walang nahanap na kalaban", "Соперник не найден", "Aucun adversaire trouvé", "Kein Gegner gefunden", "No se encontró rival", "Nessun avversario trovato", "Nenhum adversário encontrado", "Lawan tidak ditemukan", "Rəqib tapılmadı", "未找到对手", "対戦相手が見つかりません", "상대를 찾지 못했어요", "لم يُعثر على خصم", "ما لقيناش خصم"],
+                "Eşleştiğin oyuncu cevap vermedi. Tekrar dene.": ["The matched player didn't respond. Try again.", "Hindi sumagot ang nakatapat mong player. Subukan ulit.", "Найденный игрок не ответил. Попробуйте снова.", "Le joueur trouvé n'a pas répondu. Réessaie.", "Der gefundene Spieler hat nicht reagiert. Versuch es noch mal.", "El jugador encontrado no respondió. Inténtalo de nuevo.", "Il giocatore trovato non ha risposto. Riprova.", "O jogador encontrado não respondeu. Tenta novamente.", "Pemain yang dipasangkan tidak merespons. Coba lagi.", "Tapılan oyunçu cavab vermədi. Yenidən yoxla.", "匹配到的玩家没有回应。请再试一次。", "マッチしたプレイヤーが応答しませんでした。もう一度お試しください。", "매칭된 플레이어가 응답하지 않았어요. 다시 시도하세요.", "اللاعب الذي تمت مطابقتك معه لم يستجب. حاول مجددًا.", "اللاعب اللي تلاقيتي معاه ما جاوبش. عاود جرب."],
+                "Davet gönderildi": ["Invite sent", "Naipadala ang imbitasyon", "Приглашение отправлено", "Invitation envoyée", "Einladung gesendet", "Invitación enviada", "Invito inviato", "Convite enviado", "Undangan terkirim", "Dəvət göndərildi", "邀请已发送", "招待を送りました", "초대를 보냈어요", "تم إرسال الدعوة", "تصيفطات الدعوة"],
+                "Cevap gelmedi": ["No answer", "Walang sagot", "Нет ответа", "Pas de réponse", "Keine Antwort", "Sin respuesta", "Nessuna risposta", "Sem resposta", "Tidak ada jawaban", "Cavab gəlmədi", "没有回应", "応答なし", "응답 없음", "لا رد", "ما كاين جواب"],
+                "Arkadaşın davete zamanında cevap vermedi.": ["Your friend didn't answer the invite in time.", "Hindi sumagot ang kaibigan mo sa imbitasyon sa tamang oras.", "Друг не ответил на приглашение вовремя.", "Ton ami n'a pas répondu à temps.", "Dein Freund hat nicht rechtzeitig geantwortet.", "Tu amigo no respondió a tiempo.", "Il tuo amico non ha risposto in tempo.", "O teu amigo não respondeu a tempo.", "Temanmu tidak menjawab undangan tepat waktu.", "Dostun dəvətə vaxtında cavab vermədi.", "好友没有及时回应邀请。", "フレンドが時間内に招待に応答しませんでした。", "친구가 제시간에 초대에 응답하지 않았어요.", "لم يرد صديقك على الدعوة في الوقت المحدد.", "صاحبك ما جاوبش على الدعوة فالوقت."],
+                "Davet gönderilemedi. Arkadaşının listesinde olduğundan emin ol.": ["Couldn't send the invite. Make sure you're on your friend's list.", "Hindi maipadala ang imbitasyon. Siguraduhing nasa listahan ka ng kaibigan mo.", "Не удалось отправить приглашение. Убедитесь, что вы есть в списке друзей этого игрока.", "Impossible d'envoyer l'invitation. Vérifie que tu es dans la liste d'amis de ce joueur.", "Einladung konnte nicht gesendet werden. Stell sicher, dass du auf der Freundesliste dieses Spielers bist.", "No se pudo enviar la invitación. Asegúrate de estar en la lista de amigos de ese jugador.", "Impossibile inviare l'invito. Assicurati di essere nella lista amici di quel giocatore.", "Não foi possível enviar o convite. Confirma que estás na lista de amigos desse jogador.", "Undangan gagal dikirim. Pastikan kamu ada di daftar teman pemain itu.", "Dəvət göndərilmədi. Həmin oyunçunun dost siyahısında olduğuna əmin ol.", "邀请发送失败。请确认你在对方的好友列表中。", "招待を送れませんでした。相手のフレンドリストに入っているか確認してください。", "초대를 보내지 못했어요. 상대의 친구 목록에 있는지 확인하세요.", "تعذّر إرسال الدعوة. تأكد أنك في قائمة أصدقاء ذلك اللاعب.", "ما قدرناش نصيفطو الدعوة. تأكد بلي راك فلائحة صحاب داك اللاعب."],
+                "Davet iptal edildi": ["Invite canceled", "Kinansela ang imbitasyon", "Приглашение отменено", "Invitation annulée", "Einladung zurückgezogen", "Invitación cancelada", "Invito annullato", "Convite cancelado", "Undangan dibatalkan", "Dəvət ləğv edildi", "邀请已取消", "招待が取り消されました", "초대가 취소됐어요", "أُلغيت الدعوة", "تلغات الدعوة"],
+                "Arkadaşın daveti geri çekti.": ["Your friend withdrew the invite.", "Binawi ng kaibigan mo ang imbitasyon.", "Друг отозвал приглашение.", "Ton ami a retiré l'invitation.", "Dein Freund hat die Einladung zurückgezogen.", "Tu amigo retiró la invitación.", "Il tuo amico ha ritirato l'invito.", "O teu amigo retirou o convite.", "Temanmu menarik undangannya.", "Dostun dəvəti geri götürdü.", "好友撤回了邀请。", "フレンドが招待を取り消しました。", "친구가 초대를 취소했어요.", "سحب صديقك الدعوة.", "صاحبك رجع الدعوة."],
+                "Seni düelloya çağırıyor": ["Challenges you to a duel", "Hinahamon ka sa duelo", "Вызывает вас на дуэль", "Te défie en duel", "Fordert dich zum Duell heraus", "Te reta a un duelo", "Ti sfida a duello", "Desafia-te para um duelo", "Menantangmu duel", "Səni duelə çağırır", "向你发起决斗", "あなたに決闘を申し込んでいます", "당신에게 결투를 신청했어요", "يدعوك إلى مبارزة", "كيعيط ليك لمبارزة"],
+                "Düello başlıyor": ["Duel starting", "Magsisimula na ang duelo", "Дуэль начинается", "Le duel commence", "Duell beginnt", "Empieza el duelo", "Il duello sta per iniziare", "O duelo vai começar", "Duel dimulai", "Duel başlayır", "决斗即将开始", "決闘開始", "결투 시작", "المبارزة تبدأ", "المبارزة غادي تبدا"],
+                "Bu davet artık geçerli değil.": ["This invite is no longer valid.", "Hindi na valid ang imbitasyong ito.", "Это приглашение больше недействительно.", "Cette invitation n'est plus valide.", "Diese Einladung ist nicht mehr gültig.", "Esta invitación ya no es válida.", "Questo invito non è più valido.", "Este convite já não é válido.", "Undangan ini sudah tidak berlaku.", "Bu dəvət artıq keçərli deyil.", "这个邀请已失效。", "この招待はもう無効です。", "이 초대는 더 이상 유효하지 않아요.", "هذه الدعوة لم تعد صالحة.", "هاد الدعوة ما بقاتش صالحة."],
+                "Davet reddedildi": ["Invite declined", "Tinanggihan ang imbitasyon", "Приглашение отклонено", "Invitation refusée", "Einladung abgelehnt", "Invitación rechazada", "Invito rifiutato", "Convite recusado", "Undangan ditolak", "Dəvət rədd edildi", "邀请被拒绝", "招待が断られました", "초대가 거절됐어요", "رُفضت الدعوة", "ترفضات الدعوة"],
+                "Düello iptal edildi": ["Duel canceled", "Kinansela ang duelo", "Дуэль отменена", "Duel annulé", "Duell abgebrochen", "Duelo cancelado", "Duello annullato", "Duelo cancelado", "Duel dibatalkan", "Duel ləğv edildi", "决斗已取消", "決闘は中止されました", "결투가 취소됐어요", "أُلغيت المبارزة", "تلغات المبارزة"],
+                "Rakibin vazgeçti.": ["Your opponent backed out.", "Umatras ang kalaban mo.", "Соперник передумал.", "Ton adversaire s'est désisté.", "Dein Gegner hat einen Rückzieher gemacht.", "Tu rival se echó atrás.", "Il tuo avversario si è tirato indietro.", "O teu adversário desistiu.", "Lawanmu mundur.", "Rəqibin fikrindən daşındı.", "对手放弃了。", "相手が取りやめました。", "상대가 포기했어요.", "تراجع خصمك.", "خصمك تراجع."],
+                "Sen": ["You", "Ikaw", "Вы", "Toi", "Du", "Tú", "Tu", "Tu", "Kamu", "Sən", "你", "あなた", "나", "أنت", "نتا"],
+                "Rakip": ["Opponent", "Kalaban", "Соперник", "Adversaire", "Gegner", "Rival", "Avversario", "Adversário", "Lawan", "Rəqib", "对手", "相手", "상대", "الخصم", "الخصم"],
+                "Rakip maçtan çıktı.": ["Your opponent left the match.", "Umalis ang kalaban sa laro.", "Соперник покинул матч.", "Ton adversaire a quitté le match.", "Dein Gegner hat das Spiel verlassen.", "Tu rival abandonó la partida.", "Il tuo avversario ha abbandonato la partita.", "O teu adversário saiu da partida.", "Lawanmu keluar dari pertandingan.", "Rəqib matçdan çıxdı.", "对手离开了比赛。", "相手が試合から抜けました。", "상대가 경기를 나갔어요.", "غادر خصمك المباراة.", "خصمك خرج من الماتش."],
+                "Bağlantın koptu.": ["You lost connection.", "Naputol ang koneksyon mo.", "Соединение потеряно.", "Connexion perdue.", "Verbindung verloren.", "Perdiste la conexión.", "Connessione persa.", "Perdeste a ligação.", "Koneksimu terputus.", "Bağlantın kəsildi.", "你的连接已断开。", "接続が切れました。", "연결이 끊겼어요.", "انقطع اتصالك.", "تقطع عليك الاتصال."],
+                "Maçtan çıktın.": ["You left the match.", "Umalis ka sa laro.", "Вы покинули матч.", "Tu as quitté le match.", "Du hast das Spiel verlassen.", "Abandonaste la partida.", "Hai abbandonato la partita.", "Saíste da partida.", "Kamu keluar dari pertandingan.", "Matçdan çıxdın.", "你离开了比赛。", "試合から抜けました。", "경기를 나갔어요.", "غادرت المباراة.", "خرجتي من الماتش."],
+                "Kazandın!": ["You win!", "Panalo ka!", "Победа!", "Victoire !", "Gewonnen!", "¡Ganaste!", "Hai vinto!", "Ganhaste!", "Kamu menang!", "Qazandın!", "你赢了！", "勝利！", "승리!", "فزت!", "ربحتي!"],
+                "Berabere": ["Draw", "Tabla", "Ничья", "Match nul", "Unentschieden", "Empate", "Pareggio", "Empate", "Seri", "Heç-heçə", "平局", "引き分け", "무승부", "تعادل", "تعادل"],
+                "Kaybettin": ["You lose", "Talo ka", "Поражение", "Défaite", "Verloren", "Perdiste", "Hai perso", "Perdeste", "Kamu kalah", "Uduzdun", "你输了", "敗北", "패배", "خسرت", "خسرتي"],
+                "Tekrar davet et": ["Invite again", "Imbitahan ulit", "Пригласить снова", "Réinviter", "Erneut einladen", "Invitar de nuevo", "Invita di nuovo", "Convidar novamente", "Undang lagi", "Yenidən dəvət et", "再次邀请", "もう一度招待", "다시 초대", "ادعُه مجددًا", "عيط ليه عاوتاني"],
+                "Yeni rakip bul": ["Find a new opponent", "Maghanap ng bagong kalaban", "Найти нового соперника", "Trouver un nouvel adversaire", "Neuen Gegner suchen", "Buscar otro rival", "Trova un nuovo avversario", "Procurar novo adversário", "Cari lawan baru", "Yeni rəqib tap", "寻找新对手", "新しい相手を探す", "새 상대 찾기", "ابحث عن خصم جديد", "قلب على خصم جديد"],
+                "Ana menü": ["Main menu", "Main menu", "Главное меню", "Menu principal", "Hauptmenü", "Menú principal", "Menu principale", "Menu principal", "Menu utama", "Əsas menyu", "主菜单", "メインメニュー", "메인 메뉴", "القائمة الرئيسية", "القائمة الرئيسية"],
+                "+{0} token": ["+{0} tokens", "+{0} token", "+{0} токенов", "+{0} jetons", "+{0} Token", "+{0} fichas", "+{0} gettoni", "+{0} fichas", "+{0} token", "+{0} token", "+{0} 代币", "+{0} トークン", "+{0} 토큰", "+{0} توكن", "+{0} توكن"],
+                "Bu maçta: +{0}": ["This match: +{0}", "Sa larong ito: +{0}", "За этот матч: +{0}", "Ce match : +{0}", "Dieses Spiel: +{0}", "Esta partida: +{0}", "Questa partita: +{0}", "Nesta partida: +{0}", "Pertandingan ini: +{0}", "Bu matçda: +{0}", "本局：+{0}", "この試合：+{0}", "이번 경기: +{0}", "في هذه المباراة: +{0}", "فهاد الماتش: +{0}"],
+                "Rakibini izliyorsun": ["Watching your opponent", "Pinapanood mo ang kalaban", "Вы наблюдаете за соперником", "Tu regardes ton adversaire", "Du schaust deinem Gegner zu", "Estás mirando a tu rival", "Stai guardando il tuo avversario", "Estás a ver o teu adversário", "Kamu sedang menonton lawan", "Rəqibinə baxırsan", "正在观看对手", "相手を観戦中", "상대를 관전 중", "أنت تشاهد خصمك", "راك كتفرج فخصمك"],
+                "Senin canın bitti": ["You're out of lives", "Ubos na ang buhay mo", "Ваши жизни закончились", "Tu n'as plus de vies", "Deine Leben sind aufgebraucht", "Te quedaste sin vidas", "Hai finito le vite", "Ficaste sem vidas", "Nyawamu habis", "Canın bitdi", "你的命已用完", "ライフがなくなりました", "목숨이 다 떨어졌어요", "نفدت أرواحك", "سالاو أرواحك"],
+                "Menü": ["Menu", "Menu", "Меню", "Menu", "Menü", "Menú", "Menu", "Menu", "Menu", "Menyu", "菜单", "メニュー", "메뉴", "القائمة", "القائمة"],
+                "Sonuç gelince burada gösterilecek": ["You'll see the result here when it's in", "Makikita mo rito ang resulta kapag handa na", "Результат появится здесь, когда матч закончится", "Le résultat s'affichera ici dès qu'il sera connu", "Das Ergebnis erscheint hier, sobald es feststeht", "Verás el resultado aquí cuando esté listo", "Vedrai il risultato qui appena è pronto", "Vais ver o resultado aqui quando estiver pronto", "Hasilnya akan muncul di sini setelah selesai", "Nəticə bəlli olanda burada göstəriləcək", "结果出来后会显示在这里", "結果が出たらここに表示されます", "결과가 나오면 여기에 표시돼요", "ستظهر النتيجة هنا عندما تُحسم", "النتيجة غادي تبان هنا ملي تكون واجدة"],
+                "Önceki düellonun sonucu bekleniyor": ["Waiting for your last duel's result", "Hinihintay pa ang resulta ng huling duelo mo", "Ожидается результат прошлой дуэли", "Résultat du dernier duel en attente", "Ergebnis des letzten Duells steht noch aus", "Esperando el resultado del duelo anterior", "In attesa del risultato del duello precedente", "À espera do resultado do duelo anterior", "Menunggu hasil duel sebelumnya", "Əvvəlki duelin nəticəsi gözlənilir", "正在等待上一场决斗的结果", "前回の決闘の結果を待っています", "지난 결투 결과를 기다리는 중", "بانتظار نتيجة المبارزة السابقة", "كنتسناو نتيجة المبارزة اللي فاتت"],
+                "SON CAN!": ["LAST LIFE!", "HULING BUHAY!", "ПОСЛЕДНЯЯ ЖИЗНЬ!", "DERNIÈRE VIE !", "LETZTES LEBEN!", "¡ÚLTIMA VIDA!", "ULTIMA VITA!", "ÚLTIMA VIDA!", "NYAWA TERAKHIR!", "SON CAN!", "最后一条命！", "ラストライフ！", "마지막 목숨!", "الروح الأخيرة!", "آخر روح!"],
+                "BİR CAN GİTTİ!": ["LIFE LOST!", "NABAWASAN NG BUHAY!", "МИНУС ЖИЗНЬ!", "UNE VIE EN MOINS !", "LEBEN VERLOREN!", "¡PERDISTE UNA VIDA!", "VITA PERSA!", "PERDESTE UMA VIDA!", "NYAWA BERKURANG!", "BİR CAN GETDİ!", "失去一条命！", "ライフを失った！", "목숨 하나 잃음!", "خسرت روحًا!", "مشات ليك روح!"],
+                "MAÇTAN ÇIK (KAYBEDERSİN)": ["LEAVE MATCH (YOU LOSE)", "UMALIS SA LARO (TALO KA)", "ПОКИНУТЬ МАТЧ (ПОРАЖЕНИЕ)", "QUITTER LE MATCH (DÉFAITE)", "SPIEL VERLASSEN (NIEDERLAGE)", "SALIR DE LA PARTIDA (PIERDES)", "ESCI DALLA PARTITA (PERDI)", "SAIR DA PARTIDA (PERDES)", "KELUAR DARI PERTANDINGAN (KALAH)", "MATÇDAN ÇIX (UDUZURSAN)", "退出比赛（判负）", "試合から抜ける（敗北）", "경기 나가기 (패배)", "غادر المباراة (تخسر)", "خرج من الماتش (غادي تخسر)"],
+                "Rakibin oynamaya devam ediyor.": ["Your opponent is still playing.", "Patuloy pang naglalaro ang kalaban mo.", "Соперник продолжает играть.", "Ton adversaire continue de jouer.", "Dein Gegner spielt weiter.", "Tu rival sigue jugando.", "Il tuo avversario sta ancora giocando.", "O teu adversário continua a jogar.", "Lawanmu masih bermain.", "Rəqibin oynamağa davam edir.", "对手仍在游戏中。", "相手はまだプレイ中です。", "상대는 아직 플레이 중이에요.", "خصمك ما زال يلعب.", "خصمك باقي كيلعب."],
+            };
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [k, vals] of Object.entries(ROWS)) {
+                ORDER.forEach((lang, i) => {
+                    const t = tables[lang] || I18N_MORE[lang];
+                    if (t && !(k in t)) t[k] = vals[i];
+                });
+            }
+        })();
+
+        // ===================== TEK EKRANA SIĞAN PENCERELER =====================
+        // Uzun listeler kaydırılmak yerine sayfalara bölünür: sığdığı kadarı gösterilir, altta ‹ 1 / 3 › çıkar.
+        // Kaydırarak (sağa/sola) da sayfa değiştirilebilir. Market bunun dışında, orada kaydırma kalıyor.
+        const PG_SPECS = {};
+        function pgSpec(key, q, opts) { PG_SPECS[key] = Object.assign({ key, q, sel: ':scope > *', stick: null, page: -1, el: null, bar: null, mo: null, pages: 1 }, opts || {}); }
+        function pgAttach(sp) {
+            const el = document.querySelector(sp.q);
+            if (!el) return null;
+            if (sp.el === el && sp.bar && sp.bar.isConnected) return el;
+            if (sp.mo) sp.mo.disconnect();
+            if (sp.bar && sp.bar.isConnected) sp.bar.remove();
+            sp.el = el;
+            el.classList.add('pg-box');
+            const bar = document.createElement('div');
+            bar.className = 'pg-bar';
+            bar.innerHTML = `<button class="pg-btn" data-d="-1" aria-label="Önceki sayfa">${ico('left')}</button><span class="pg-num"></span><button class="pg-btn" data-d="1" aria-label="Sonraki sayfa">${ico('right')}</button>`;
+            el.insertAdjacentElement('afterend', bar);
+            sp.bar = bar;
+            bar.querySelectorAll('.pg-btn').forEach(b => { b.onclick = () => pgGo(sp, Number(b.dataset.d)); });
+            sp.mo = new MutationObserver(() => pgSchedule(sp));
+            sp.mo.observe(el, { childList: true, subtree: true, characterData: true });
+            let sx = 0, sy = 0, st = 0;
+            el.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now(); }, { passive: true });
+            el.addEventListener('touchend', e => {
+                const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+                if (Date.now() - st < 600 && Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+                    const rtl = document.documentElement.dir === 'rtl';
+                    pgGo(sp, (dx < 0) !== rtl ? 1 : -1);
+                }
+            }, { passive: true });
+            const layer = el.closest('.ui-layer');
+            if (layer && !layer.__pgWatch) {
+                layer.__pgWatch = true;
+                let shown = getComputedStyle(layer).display !== 'none';
+                new MutationObserver(() => {
+                    const now = getComputedStyle(layer).display !== 'none';
+                    if (now && !shown) for (const s of Object.values(PG_SPECS)) if (s.el && layer.contains(s.el)) { s.page = -1; pgSchedule(s); }
+                    shown = now;
+                }).observe(layer, { attributes: true, attributeFilter: ['style'] });
+            }
+            return el;
+        }
+        function pgGo(sp, d) {
+            if (!sp.pages || sp.pages < 2) return;
+            const np = Math.max(0, Math.min(sp.pages - 1, sp.page + d));
+            if (np === sp.page) return;
+            sp.page = np;
+            pgLayout(sp);
+            playSound('tick');
+        }
+        function pgSchedule(sp) {
+            if (sp.raf) return;
+            sp.raf = requestAnimationFrame(() => { sp.raf = 0; pgAttach(sp); pgLayout(sp); });
+        }
+        function pgAll() { for (const sp of Object.values(PG_SPECS)) pgSchedule(sp); }
+        function pgLayout(sp) {
+            const el = sp.el;
+            if (!el || !el.isConnected || !sp.bar) return;
+            const layer = el.closest('.ui-layer');
+            if (layer && getComputedStyle(layer).display === 'none') return;
+            if (!el.getClientRects().length) return;
+            if (sp.mo) sp.mo.disconnect();
+            const items = Array.from(el.querySelectorAll(sp.sel));
+            for (const it of items) it.classList.remove('pg-hide');
+            // İç içe öğelerde (ör. istatistik ızgaraları) bütün öğeleri gizlenen kutu da gizlenir, boşluk kalmasın
+            const parents = new Set(items.map(it => it.parentElement).filter(x => x && x !== el));
+            for (const par of parents) par.classList.remove('pg-hide');
+            sp.bar.classList.remove('on');
+            el.style.height = '';
+            el.scrollTop = 0;
+            if (el.scrollHeight <= el.clientHeight + 2) {
+                sp.pages = 1; sp.page = 0;
+            } else {
+                sp.bar.classList.add('on');
+                // Kutunun yüksekliği sabitlenir: sayfalar arasında pencere boyu zıplamaz, ölçüm de doğru olur
+                el.style.height = el.clientHeight + 'px';
+                // Sayfaları ölçerek kur: öğeleri tek tek göster, kutu taşınca yeni sayfaya geç
+                const vis = items.filter(it => it.getClientRects().length);
+                const hideAll = () => { for (const it of items) it.classList.add('pg-hide'); for (const par of parents) par.classList.add('pg-hide'); };
+                const show = it => { it.classList.remove('pg-hide'); for (let q = it.parentElement; q && q !== el; q = q.parentElement) q.classList.remove('pg-hide'); };
+                const fits = () => el.scrollHeight <= el.clientHeight + 1;
+                const pages = [];
+                let i = 0;
+                while (i < vis.length) {
+                    hideAll();
+                    const cur = [];
+                    for (let j = i; j < vis.length; j++) {
+                        show(vis[j]);
+                        if (cur.length && !fits()) break;
+                        cur.push(vis[j]);
+                    }
+                    if (sp.stick && cur.length > 1 && i + cur.length < vis.length && cur[cur.length - 1].matches(sp.stick)) cur.pop();
+                    pages.push(cur);
+                    i += cur.length;
+                }
+                sp.pages = pages.length;
+                if (pages.length < 2) {
+                    for (const it of items) it.classList.remove('pg-hide');
+                    for (const par of parents) par.classList.remove('pg-hide');
+                    sp.bar.classList.remove('on'); sp.page = 0; el.style.height = '';
+                    if (sp.mo) sp.mo.observe(el, { childList: true, subtree: true, characterData: true });
+                    return;
+                }
+                if (sp.page < 0) {
+                    sp.page = 0;
+                    if (sp.start) { const target = sp.start(el); if (target) { const k = pages.findIndex(pg => pg.includes(target)); if (k >= 0) sp.page = k; } }
+                }
+                sp.page = Math.max(0, Math.min(pages.length - 1, sp.page));
+                hideAll();
+                for (const it of items) if (!vis.includes(it)) it.classList.remove('pg-hide');   // uygulamanın kendi gizledikleri olduğu gibi kalsın
+                const curPage = pages[sp.page];
+                curPage.forEach((it, k) => { if (!(k === 0 && it.tagName === 'HR')) show(it); });
+                sp.bar.querySelector('.pg-num').textContent = `${sp.page + 1} / ${pages.length}`;
+                const [prev, next] = sp.bar.querySelectorAll('.pg-btn');
+                prev.disabled = sp.page === 0;
+                next.disabled = sp.page >= pages.length - 1;
+            }
+            if (sp.mo) sp.mo.observe(el, { childList: true, subtree: true, characterData: true });
+        }
+        addEventListener('resize', () => { for (const sp of Object.values(PG_SPECS)) { sp.page = Math.max(0, sp.page); pgSchedule(sp); } });
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(pgAll);
+        setTimeout(pgAll, 0);
+
+        pgSpec('settings', '#settings-list', { sel: ':scope > :not(.toggle-grid), :scope > .toggle-grid > *', stick: '.setting-head' });
+        pgSpec('ach', '#ach-list', { stick: '.ach-group-title' });
+        pgSpec('stats', '#stats-body', { sel: ':scope > p, :scope > .stat-section, :scope > .stat-grid > *, :scope > div:not(.stat-grid):not(.stat-section)', stick: '.stat-section' });
+        pgSpec('htp', '#how-to-play-modal .glass-panel > div', { stick: 'p.text-center' });
+        pgSpec('mode', '#mode-list');
+        pgSpec('levels', '#levels-grid', { start: el => Array.from(el.children).filter(b => !b.disabled).pop() });
+        pgSpec('road', '#lr-list');
+        pgSpec('lb', '#lb-body', { sel: ':scope > .lb-list > *, :scope > p' });
+        pgSpec('friends', '#fr-list', { stick: '.fr-sub' });
+        pgSpec('dlb', '#dlb-list', { sel: ':scope > *' });
+
+        // ===================== ONAY PENCERESİ =====================
+        const confirmModal = document.createElement('div');
+        confirmModal.id = 'confirm-modal';
+        confirmModal.className = 'ui-layer interactive vivid';
+        confirmModal.style.cssText = 'display: none; background: rgba(11, 12, 15, 0.8); z-index: 70;';
+        confirmModal.innerHTML = `<div class="glass-panel cf-panel"><h2 id="cf-title" class="cf-title"></h2><p id="cf-text" class="cf-text"></p>
+            <div class="cf-actions"><button id="cf-no" class="btn btn-secondary w-full"></button><button id="cf-yes" class="btn w-full"></button></div></div>`;
+        document.body.appendChild(confirmModal);
+        let confirmResolve = null;
+        function askConfirm(o) {
+            if (confirmResolve) confirmResolve(false);
+            document.getElementById('cf-title').textContent = o.title || '';
+            document.getElementById('cf-text').textContent = o.text || '';
+            document.getElementById('cf-yes').textContent = o.yes || 'Evet';
+            document.getElementById('cf-no').textContent = o.no || 'Vazgeç';
+            confirmModal.style.display = 'flex';
+            return new Promise(res => { confirmResolve = res; });
+        }
+        function confirmDone(v) { confirmModal.style.display = 'none'; const r = confirmResolve; confirmResolve = null; if (r) r(v); }
+        document.getElementById('cf-yes').onclick = () => confirmDone(true);
+        document.getElementById('cf-no').onclick = () => confirmDone(false);
+        MENU_CLOSE['confirm-modal'] = 'cf-no';
+
+        // ===================== AYARLAR: REHBER =====================
+        const renderSettingsUI2 = renderSettings;
+        renderSettings = function () {
+            const r = renderSettingsUI2.apply(this, arguments);
+            if (settingsTab === 'general' && gameState !== 'PLAYING' && gameState !== 'PAUSED' && gameState !== 'COUNTDOWN' && gameState !== 'SPECTATE') {
+                const row = document.createElement('div');
+                row.className = 'setting-row';
+                row.innerHTML = `<div class="set-tut">${ico('cap')}<div><div class="font-bold text-white text-sm">Rehber</div><div class="text-xs text-slate-400">Oyunu 1 dakikada öğren</div></div></div>`;
+                const b = document.createElement('button');
+                b.className = 'market-btn equip';
+                b.textContent = 'Başlat';
+                b.onclick = () => { settingsModal.style.display = 'none'; if (gameState === 'GAMEOVER') showMainMenu(); startTutorial(); };
+                row.appendChild(b);
+                settingsList.appendChild(row);
+            }
+            return r;
+        };
+
+        // ===================== MARKET: HER AÇILIŞTA GELİŞTİRMELER =====================
+        const openMarketUI2 = openMarket;
+        openMarket = function (tab) {
+            if (typeof tab !== 'string') { marketTab = 'upgrades'; tab = 'upgrades'; }
+            const r = openMarketUI2.call(this, tab);
+            const reset = () => {
+                const panel = marketModal.querySelector('.glass-panel');
+                if (panel) panel.scrollTop = 0;
+                const tabs = document.getElementById('market-tabs');
+                if (tabs) tabs.scrollLeft = 0;
+            };
+            reset(); requestAnimationFrame(reset);
+            return r;
+        };
+
+        // ===================== ANA MENÜ =====================
+        // Rehber ayarlara taşındı; yerine Arkadaşlar kutucuğu
+        (function menuFriendsTile() {
+            const tut = document.getElementById('tutorial-start-btn');
+            if (!tut) return;
+            const b = document.createElement('button');
+            b.id = 'friends-start-btn';
+            b.className = tut.className;
+            b.setAttribute('style', tut.getAttribute('style') || '');
+            b.style.setProperty('--tc-soft', 'rgba(91, 141, 239, 0.16)');
+            b.style.setProperty('--tc-line', 'rgba(91, 141, 239, 0.5)');
+            b.innerHTML = `<span class="tile-icon" style="--tc-ic: #7aa5f5;">${ico('users')}</span><span>Arkadaşlar</span><i id="fr-badge" class="fr-badge" style="display:none"></i>`;
+            tut.before(b);
+            tut.style.display = 'none';
+            b.addEventListener('click', () => openAccount('friends'));
+        })();
+        function friendsBadgeUpdate() {
+            const el = document.getElementById('fr-badge');
+            if (!el) return;
+            const n = Object.keys(ON.reqIn || {}).length;
+            el.textContent = n;
+            el.style.display = n ? 'flex' : 'none';
+        }
+        setInterval(friendsBadgeUpdate, 2000);
+
+        // Boşluk tuşu: ana menüde oyunu başlatır
+        window.addEventListener('keydown', e => {
+            if (e.code !== 'Space' && e.key !== ' ') return;
+            if (gameState !== 'START' || e.repeat) return;
+            const tag = (document.activeElement && document.activeElement.tagName) || '';
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+            const open = Array.from(document.querySelectorAll('.ui-layer')).some(l => l.id !== 'start-screen' && l.id !== 'game-over-screen' && getComputedStyle(l).display !== 'none');
+            if (open || startScreen.style.display === 'none') return;
+            const splash = document.getElementById('splash');
+            if (splash && getComputedStyle(splash).display !== 'none') return;
+            e.preventDefault();
+            if (document.activeElement && document.activeElement !== document.body && document.activeElement.blur) document.activeElement.blur();
+            handleStartClick();
+        });
+
+        // ===================== OYUN BİTTİ EKRANI =====================
+        (function overScreen() {
+            const tut = document.getElementById('tutorial-over-btn');
+            if (!tut) return;
+            const grid = tut.parentNode;
+            grid.classList.add('over-tiles');
+            const lb = document.createElement('button');
+            lb.id = 'lb-over-btn';
+            lb.className = tut.className;
+            lb.innerHTML = `${ico('chart')}<span class="lbl">SKOR TABLOSU</span>`;
+            lb.addEventListener('click', () => openLeaderboard());
+            grid.insertBefore(lb, grid.firstChild);
+            tut.style.display = 'none';
+            tut.classList.add('pg-hide');
+        })();
+
+        // ===================== HESAP PENCERESİ: PROFİL / ARKADAŞLAR =====================
+        let accTab = 'profile';
+        const openAccountUI2 = openAccount;
+        openAccount = function (tab) {
+            accTab = tab === 'friends' ? 'friends' : 'profile';
+            const r = openAccountUI2.apply(this, arguments);
+            if (PG_SPECS.friends) PG_SPECS.friends.page = -1;
+            return r;
+        };
+        function accTabsApply() {
+            if (accModal.style.display !== 'flex' || ACC.state !== 'ready' || !document.getElementById('acc-card-slot')) {
+                accModal.classList.remove('acc-tabbed');
+                return;
+            }
+            accModal.classList.add('acc-tabbed');
+            const out = document.getElementById('acc-out');
+            if (out) out.remove();   // çıkış sadece Ayarlar → Hesap'ta
+            let tabs = document.getElementById('acc-tabs');
+            if (!tabs) {
+                tabs = document.createElement('div');
+                tabs.id = 'acc-tabs';
+                tabs.className = 'acc-tabs';
+                accBody.prepend(tabs);
+            } else if (tabs !== accBody.firstElementChild) accBody.prepend(tabs);
+            const n = Object.keys(ON.reqIn || {}).length;
+            const sig = accTab + '|' + n;
+            if (tabs.dataset.sig !== sig) {
+                tabs.dataset.sig = sig;
+                tabs.innerHTML = `<button data-t="profile" class="${accTab === 'profile' ? 'on' : ''}">${ico('user')}<span>Profil</span></button>
+                    <button data-t="friends" class="${accTab === 'friends' ? 'on' : ''}">${ico('users')}<span>Arkadaşlar</span>${n ? `<i class="fr-badge">${n}</i>` : ''}</button>`;
+                tabs.querySelectorAll('button').forEach(b => b.onclick = () => {
+                    if (accTab === b.dataset.t) return;
+                    accTab = b.dataset.t;
+                    if (PG_SPECS.friends) PG_SPECS.friends.page = -1;
+                    accTabsApply();
+                    if (accTab === 'friends') { friendsRender(); pgSchedule(PG_SPECS.friends); }
+                });
+            }
+            // Profil sekmesinde düello karnesi
+            let rec = document.getElementById('acc-duelrec');
+            if (!rec) {
+                rec = document.createElement('div');
+                rec.id = 'acc-duelrec';
+                rec.className = 'fr-record';
+                const cloud = document.getElementById('acc-cloud');
+                if (cloud) cloud.after(rec); else accBody.appendChild(rec);
+            }
+            const st = save.stats;
+            const recHTML = `<span>Düello</span><b class="fr-w">${st.duelW || 0}</b><small>Galibiyet</small><b class="fr-l">${st.duelL || 0}</b><small>Mağlubiyet</small><b>${st.duelD || 0}</b><small>Beraberlik</small>`;
+            if (rec.dataset.h !== recHTML) { rec.dataset.h = recHTML; rec.innerHTML = recHTML; }
+            for (const ch of accBody.children) {
+                if (ch === tabs) continue;
+                const isFriends = ch.id === 'fr-box';
+                ch.classList.toggle('acc-tab-hide', isFriends ? accTab !== 'friends' : accTab !== 'profile');
+            }
+            friendsBadgeUpdate();
+        }
+        const accRenderUI2 = accRender;
+        accRender = function () {
+            const fi = document.getElementById('fr-input');
+            const keepVal = fi ? fi.value : '', keepFocus = !!fi && document.activeElement === fi;
+            const r = accRenderUI2.apply(this, arguments);
+            const fi2 = document.getElementById('fr-input');
+            if (fi2 && fi2 !== fi) { if (keepVal) fi2.value = keepVal; if (keepFocus) fi2.focus(); }
+            if (accModal.style.display === 'flex' && ACC.state === 'ready' && !document.getElementById('fr-box')) friendsRender();
+            accTabsApply();
+            return r;
+        };
+        ICON_PATHS.user = '<circle cx="12" cy="8" r="3.8"/><path d="M4.5 20c0-4 3.4-6.6 7.5-6.6s7.5 2.6 7.5 6.6"/>';
+
+        // ===================== ONLINE MENÜSÜ =====================
+        const onlineModal = document.createElement('div');
+        onlineModal.id = 'online-modal';
+        onlineModal.className = 'ui-layer interactive vivid';
+        onlineModal.style.cssText = 'display: none; background: rgba(11, 12, 15, 0.82); z-index: 36;';
+        onlineModal.innerHTML = `<div class="glass-panel onl-panel">
+            <h2 class="onl-title">Online</h2>
+            <p class="onl-sub">Diğer oyuncularla canlı oyna</p>
+            <div id="onl-modes" class="onl-modes"></div>
+            <button id="onl-find" class="btn w-full">${ico('swords')}<span class="lbl">RAKİP BUL</span></button>
+            <div class="onl-tiles">
+                <button id="onl-friends" class="onl-tile">${ico('users')}<span>Arkadaşını davet et</span></button>
+                <button id="onl-lb" class="onl-tile">${ico('chart')}<span>Düello skor tablosu</span></button>
+            </div>
+            <div id="onl-rec" class="fr-record small"></div>
+            <button id="onl-close" class="btn btn-secondary w-full">KAPAT</button>
+        </div>`;
+        document.body.appendChild(onlineModal);
+        MENU_CLOSE['online-modal'] = 'onl-close';
+        const ONLINE_MODES = [
+            { lv: 3, name: 'Düello', desc: '3 can. Klasik kuralları, boss\'lar var. Kısa ve hızlı maçlar.' },
+            { lv: 5, name: 'Uzun Düello', desc: '5 can. Aynı kurallar, daha uzun maçlar ve daha fazla hata payı.' }
+        ];
+        function onlineSelected() { return save.settings.duelLives === 5 ? 5 : 3; }
+        function renderOnline() {
+            const box = document.getElementById('onl-modes');
+            const sel = onlineSelected();
+            box.innerHTML = '';
+            for (const m of ONLINE_MODES) {
+                const b = document.createElement('button');
+                b.className = 'onl-mode' + (m.lv === sel ? ' on' : '');
+                let hearts = '';
+                for (let i = 0; i < m.lv; i++) hearts += HEART_SVG(true);
+                b.innerHTML = `<span class="onl-mode-icon">${ico('swords')}</span><span class="onl-mode-text"><b>${m.name}</b><small>${m.desc}</small></span><span class="onl-hearts">${hearts}</span>`;
+                b.onclick = () => { save.settings.duelLives = m.lv; writeSave(); renderOnline(); };
+                box.appendChild(b);
+            }
+            const soon = document.createElement('div');
+            soon.className = 'onl-soon';
+            soon.textContent = 'Yeni online modlar yakında';
+            box.appendChild(soon);
+            const st = save.stats;
+            document.getElementById('onl-rec').innerHTML = `<span>Düello</span><b class="fr-w">${st.duelW || 0}</b><small>Galibiyet</small><b class="fr-l">${st.duelL || 0}</b><small>Mağlubiyet</small><b>${st.duelD || 0}</b><small>Beraberlik</small>`;
+        }
+        function openOnline() {
+            renderOnline();
+            onlineModal.style.display = 'flex';
+        }
+        document.getElementById('onl-close').onclick = () => { onlineModal.style.display = 'none'; };
+        document.getElementById('onl-find').onclick = () => {
+            if (!onReady()) { duelMessage('Düello', ON.failed ? 'Arkadaşlar ve düello şu an kullanılamıyor.' : 'Bağlanıyor… Birkaç saniye sonra tekrar dene.'); if (!ON.failed) onStart(); return; }
+            if (DUEL.phase === 'waiting') { showToast('Önceki düellonun sonucu bekleniyor', '', 'swords'); return; }
+            if (DUEL.phase !== 'idle') return;
+            onlineModal.style.display = 'none';
+            duelSearch(onlineSelected());
+        };
+        document.getElementById('onl-friends').onclick = () => { onlineModal.style.display = 'none'; openAccount('friends'); };
+        document.getElementById('onl-lb').onclick = () => openDuelLb(onlineSelected());
+        // Ana menüdeki Düello düğmesi artık online menüsünü açar
+        openDuel = function () {
+            if (ACC.state !== 'ready') {
+                openAccount();
+                const note = document.createElement('p');
+                note.className = 'acc-info';
+                note.textContent = 'Düello oynamak için giriş yap.';
+                accBody.prepend(note);
+                return;
+            }
+            if (!onReady() && !ON.failed) onStart();
+            openOnline();
+        };
+        (function relabelDuelBtn() {
+            const b = document.getElementById('duel-btn');
+            if (!b) return;
+            b.innerHTML = `${ico('swords')}<span>Online</span>`;
+            b.setAttribute('aria-label', 'Online');
+        })();
+
+        // ===================== DÜELLO SKOR TABLOSU =====================
+        // Her düello türü için en iyi 50 koşu; her oyuncu en fazla 3 koşuyla girer (kayıtlar uid_0, uid_1, uid_2)
+        const DLB_LIMIT = 50, DLB_SLOTS = 3;
+        const DLB = { lv: 3, cache: {} };
+        const dlbModal = document.createElement('div');
+        dlbModal.id = 'dlb-modal';
+        dlbModal.className = 'ui-layer interactive vivid';
+        dlbModal.style.cssText = 'display: none; background: rgba(11, 12, 15, 0.85); z-index: 45;';
+        dlbModal.innerHTML = `<div class="glass-panel dlb-panel">
+            <h2 class="onl-title">Düello Skor Tablosu</h2>
+            <p class="onl-sub">En iyi ${DLB_LIMIT} koşu. Her oyuncu en fazla ${DLB_SLOTS} koşuyla girer.</p>
+            <div id="dlb-tabs" class="lb-tabs"></div>
+            <div id="dlb-list" class="dlb-list"></div>
+            <button id="dlb-close" class="btn btn-secondary w-full">KAPAT</button>
+        </div>`;
+        document.body.appendChild(dlbModal);
+        MENU_CLOSE['dlb-modal'] = 'dlb-close';
+        document.getElementById('dlb-close').onclick = () => { dlbModal.style.display = 'none'; };
+        function openDuelLb(lv) {
+            DLB.lv = lv === 5 ? 5 : 3;
+            dlbModal.style.display = 'flex';
+            dlbRender();
+            dlbLoad(DLB.lv);
+        }
+        async function dlbLoad(lv, force) {
+            const c = DLB.cache[lv];
+            if (!force && c && (c.rows || c.error) && Date.now() - c.at < 30000) { dlbRender(); return; }
+            if (!ON.R || !ON.db) { DLB.cache[lv] = { error: true, at: Date.now() }; dlbRender(); return; }
+            DLB.cache[lv] = { loading: true, at: Date.now() };
+            dlbRender();
+            try {
+                const R = ON.R;
+                const snap = await R.get(R.query(onRef('dlb/' + lv), R.orderByChild('s'), R.limitToLast(DLB_LIMIT)));
+                const rows = [];
+                snap.forEach(ch => { const v = ch.val(); if (v && typeof v.s === 'number') rows.push(Object.assign({ key: ch.key }, v)); });
+                rows.sort((a, b) => b.s - a.s || (Number(a.t) || 0) - (Number(b.t) || 0));
+                rows.forEach((r, i) => { r.rank = i + 1; });
+                DLB.cache[lv] = { rows, at: Date.now() };
+            } catch (e) {
+                console.warn('Düello skor tablosu yüklenemedi:', e);
+                DLB.cache[lv] = { error: true, at: Date.now() };
+            }
+            if (dlbModal.style.display === 'flex' && DLB.lv === lv) dlbRender();
+        }
+        function dlbRender() {
+            const tabs = document.getElementById('dlb-tabs');
+            tabs.innerHTML = '';
+            for (const m of ONLINE_MODES) {
+                const b = document.createElement('button');
+                b.className = 'lb-tab' + (m.lv === DLB.lv ? ' on' : '');
+                b.textContent = m.name;
+                b.onclick = () => { if (DLB.lv === m.lv) return; DLB.lv = m.lv; if (PG_SPECS.dlb) PG_SPECS.dlb.page = -1; dlbRender(); dlbLoad(m.lv); };
+                tabs.appendChild(b);
+            }
+            const list = document.getElementById('dlb-list');
+            const c = DLB.cache[DLB.lv];
+            if (!c || c.loading) { list.innerHTML = `<p class="lb-msg">Yükleniyor…</p>`; return; }
+            if (c.error) { list.innerHTML = `<p class="lb-msg">Skor tablosu yüklenemedi.</p>`; return; }
+            if (!c.rows.length) { list.innerHTML = `<p class="lb-msg">Bu tabloda henüz kimse yok. İlk sen ol!</p>`; return; }
+            list.innerHTML = '';
+            const uid = ON.uid;
+            const RES = { 1: [ico('check'), 'w', 'Galibiyet'], 0: [ico('mult'), 'l', 'Mağlubiyet'], 2: ['=', 'd', 'Beraberlik'] };
+            for (const r of c.rows) {
+                const row = document.createElement('div');
+                row.className = 'lb-row dlb-row' + (r.u === uid ? ' me' : '') + (r.rank <= 3 ? ' top' + r.rank : '');
+                const res = RES[r.w] || null;
+                row.innerHTML = `<span class="lb-rank">${r.rank}</span><canvas class="lb-av" aria-hidden="true"></canvas>
+                    <span class="lb-mid"><span class="lb-name"><span translate="no">${accEsc(r.n || '?')}</span></span>${r.o ? `<small class="dlb-vs"><span>vs</span> <span translate="no">${accEsc(r.o)}</span></small>` : ''}</span>
+                    ${res ? `<span class="dlb-res ${res[1]}" title="${res[2]}">${res[0]}</span>` : ''}<b class="lb-score">${r.s}</b>`;
+                drawLookAvatar(row.querySelector('canvas'), r.lk, 30, 34);
+                list.appendChild(row);
+            }
+        }
+        async function dlbSubmit(lv, scoreVal, result, oppName) {
+            if (!ON.R || !ON.uid || !(scoreVal > 0)) return;
+            const R = ON.R, uid = ON.uid, base = 'dlb/' + lv + '/';
+            try {
+                const snaps = await Promise.all([0, 1, 2].map(i => R.get(onRef(base + uid + '_' + i))));
+                let slot = -1, low = Infinity;
+                snaps.forEach((sn, i) => {
+                    const v = sn.val();
+                    const sc = v && typeof v.s === 'number' ? v.s : -1;
+                    if (sc < low) { low = sc; slot = i; }
+                });
+                if (slot < 0 || scoreVal <= low) return;
+                await R.set(onRef(base + uid + '_' + slot), {
+                    u: uid, n: ON.name, s: Math.floor(scoreVal), w: result, o: String(oppName || '').slice(0, 16), lk: myLook(), t: R.serverTimestamp()
+                });
+                delete DLB.cache[lv];
+            } catch (e) { console.warn('Düello skoru gönderilemedi:', e); }
+        }
+        // Sonuç belli olunca koşuyu tabloya gönder (maçtan çıkılan koşular girmez)
+        const duelShowResultUI2 = duelShowResult;
+        duelShowResult = function () {
+            const first = !DUEL.rewarded;
+            const lv = DUEL.lv, sc = DUEL.myFinal, forfeit = DUEL.forfeit, w = DUEL.winner, me = ON.uid, opp = DUEL.names[DUEL.opp] || '';
+            const r = duelShowResultUI2.apply(this, arguments);
+            if (first && !forfeit) dlbSubmit(lv, sc, w === me ? 1 : w === 'draw' ? 2 : 0, opp);
+            if (first) {
+                // Sonuç ekranına düello skor tablosu düğmesi
+                const acts = duelBody.querySelector('.duel-actions');
+                if (acts && !document.getElementById('duel-dlb')) {
+                    const b = document.createElement('button');
+                    b.id = 'duel-dlb';
+                    b.className = 'btn btn-secondary w-full';
+                    b.innerHTML = `${ico('chart')}<span class="lbl">Düello skor tablosu</span>`;
+                    b.onclick = () => openDuelLb(lv);
+                    acts.insertBefore(b, acts.lastElementChild);
+                }
+            }
+            return r;
+        };
+        // Hesap silinirken düello tablosundaki koşular da silinir
+        const onDeleteAllDataUI2 = onDeleteAllData;
+        onDeleteAllData = async function () {
+            if (ON.R && ON.uid) {
+                const upd = {};
+                for (const lv of DUEL_MODES) for (let i = 0; i < DLB_SLOTS; i++) upd[`dlb/${lv}/${ON.uid}_${i}`] = null;
+                try { await Promise.race([ON.R.update(onRef(''), upd), new Promise(r => setTimeout(r, 3000))]); } catch (e) {}
+            }
+            return onDeleteAllDataUI2.apply(this, arguments);
+        };
+        // Davet edilen arkadaşın listesindeki "Düello" düğmesi online menüsünde seçili türle davet eder
+        const applyLanguageUI2 = applyLanguage;
+        applyLanguage = function () { const r = applyLanguageUI2.apply(this, arguments); pgAll(); return r; };
+
+        (function ui2I18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {
+                "Önceki sayfa": ["Previous page", "Nakaraang pahina", "Предыдущая страница", "Page précédente", "Vorherige Seite", "Página anterior", "Pagina precedente", "Página anterior", "Halaman sebelumnya", "Əvvəlki səhifə", "上一页", "前のページ", "이전 페이지", "الصفحة السابقة", "الصفحة اللي قبل"],
+                "Sonraki sayfa": ["Next page", "Susunod na pahina", "Следующая страница", "Page suivante", "Nächste Seite", "Página siguiente", "Pagina successiva", "Página seguinte", "Halaman berikutnya", "Növbəti səhifə", "下一页", "次のページ", "다음 페이지", "الصفحة التالية", "الصفحة اللي من بعد"],
+                "Vazgeç": ["Cancel", "Kanselahin", "Отмена", "Annuler", "Abbrechen", "Cancelar", "Annulla", "Cancelar", "Batal", "Ləğv et", "取消", "キャンセル", "취소", "إلغاء", "لغي"],
+                "Evet": ["Yes", "Oo", "Да", "Oui", "Ja", "Sí", "Sì", "Sim", "Ya", "Bəli", "是", "はい", "예", "نعم", "إيه"],
+                "Çıkış yap": ["Sign out", "Mag-sign out", "Выйти", "Se déconnecter", "Abmelden", "Cerrar sesión", "Esci", "Terminar sessão", "Keluar", "Çıxış et", "退出登录", "ログアウト", "로그아웃", "تسجيل الخروج", "خرج من الحساب"],
+                "Hesabından çıkış yapmak istediğine emin misin?": ["Are you sure you want to sign out?", "Sigurado ka bang gusto mong mag-sign out?", "Вы уверены, что хотите выйти из аккаунта?", "Veux-tu vraiment te déconnecter ?", "Willst du dich wirklich abmelden?", "¿Seguro que quieres cerrar sesión?", "Vuoi davvero uscire dall'account?", "Tens a certeza de que queres terminar sessão?", "Yakin ingin keluar dari akunmu?", "Hesabdan çıxmaq istədiyinə əminsən?", "确定要退出登录吗？", "本当にログアウトしますか？", "정말 로그아웃할까요?", "هل أنت متأكد أنك تريد تسجيل الخروج؟", "واش متأكد بغيتي تخرج من الحساب؟"],
+                "Oyunu 1 dakikada öğren": ["Learn the game in 1 minute", "Matutunan ang laro sa loob ng 1 minuto", "Освойте игру за 1 минуту", "Apprends le jeu en 1 minute", "Lerne das Spiel in 1 Minute", "Aprende a jugar en 1 minuto", "Impara il gioco in 1 minuto", "Aprende o jogo em 1 minuto", "Pelajari game ini dalam 1 menit", "Oyunu 1 dəqiqəyə öyrən", "1 分钟学会玩法", "1分でゲームを覚えよう", "1분 만에 게임 배우기", "تعلّم اللعبة في دقيقة واحدة", "تعلم اللعبة فدقيقة وحدة"],
+                "Başlat": ["Start", "Simulan", "Начать", "Lancer", "Starten", "Empezar", "Avvia", "Começar", "Mulai", "Başla", "开始", "スタート", "시작", "ابدأ", "بدا"],
+                "Profil": ["Profile", "Profile", "Профиль", "Profil", "Profil", "Perfil", "Profilo", "Perfil", "Profil", "Profil", "个人资料", "プロフィール", "프로필", "الملف الشخصي", "البروفايل"],
+                "SKOR TABLOSU": ["LEADERBOARD", "MGA NANGUNGUNA", "ТАБЛИЦА ЛИДЕРОВ", "CLASSEMENT", "BESTENLISTE", "CLASIFICACIÓN", "CLASSIFICA", "CLASSIFICAÇÃO", "PAPAN PERINGKAT", "REYTİNQ", "排行榜", "ランキング", "리더보드", "لوحة المتصدرين", "ترتيب السكور"],
+                "Online": ["Online", "Online", "Онлайн", "En ligne", "Online", "En línea", "Online", "Online", "Online", "Onlayn", "在线", "オンライン", "온라인", "أونلاين", "أونلاين"],
+                "Diğer oyuncularla canlı oyna": ["Play live against other players", "Maglaro nang live laban sa ibang players", "Играйте вживую с другими игроками", "Joue en direct contre d'autres joueurs", "Spiel live gegen andere Spieler", "Juega en directo contra otros jugadores", "Gioca dal vivo contro altri giocatori", "Joga em direto contra outros jogadores", "Main langsung melawan pemain lain", "Digər oyunçularla canlı oyna", "与其他玩家实时对战", "ほかのプレイヤーとリアルタイムで対戦", "다른 플레이어와 실시간 대결", "العب مباشرة ضد لاعبين آخرين", "لعب مباشرة ضد لاعبين آخرين"],
+                "RAKİP BUL": ["FIND OPPONENT", "MAGHANAP NG KALABAN", "НАЙТИ СОПЕРНИКА", "TROUVER UN ADVERSAIRE", "GEGNER SUCHEN", "BUSCAR RIVAL", "TROVA AVVERSARIO", "PROCURAR ADVERSÁRIO", "CARI LAWAN", "RƏQİB TAP", "寻找对手", "対戦相手を探す", "상대 찾기", "ابحث عن خصم", "قلب على خصم"],
+                "Arkadaşını davet et": ["Invite a friend", "Mag-imbita ng kaibigan", "Пригласить друга", "Inviter un ami", "Freund einladen", "Invitar a un amigo", "Invita un amico", "Convidar um amigo", "Undang teman", "Dostunu dəvət et", "邀请好友", "フレンドを招待", "친구 초대", "ادعُ صديقًا", "عيط لصاحبك"],
+                "Düello skor tablosu": ["Duel leaderboard", "Mga nangunguna sa duelo", "Таблица лидеров дуэлей", "Classement des duels", "Duell-Bestenliste", "Clasificación de duelos", "Classifica duelli", "Classificação de duelos", "Peringkat duel", "Duel reytinqi", "决斗排行榜", "決闘ランキング", "결투 리더보드", "متصدرو المبارزات", "ترتيب المبارزات"],
+                "Uzun Düello": ["Long Duel", "Mahabang Duelo", "Долгая дуэль", "Duel long", "Langes Duell", "Duelo largo", "Duello lungo", "Duelo longo", "Duel Panjang", "Uzun Duel", "长决斗", "ロング決闘", "롱 결투", "مبارزة طويلة", "مبارزة طويلة"],
+                "Yeni online modlar yakında": ["More online modes coming soon", "Marami pang online mode ang paparating", "Скоро появятся новые онлайн-режимы", "D'autres modes en ligne arrivent bientôt", "Weitere Online-Modi kommen bald", "Pronto habrá más modos en línea", "Altre modalità online in arrivo", "Mais modos online em breve", "Mode online lain segera hadir", "Yeni onlayn rejimlər tezliklə", "更多在线模式即将推出", "新しいオンラインモードは近日公開", "새 온라인 모드가 곧 나와요", "أوضاع أونلاين جديدة قريبًا", "أوضاع أونلاين جداد جايين قريب"],
+                "Düello Skor Tablosu": ["Duel Leaderboard", "Mga Nangunguna sa Duelo", "Таблица лидеров дуэлей", "Classement des duels", "Duell-Bestenliste", "Clasificación de duelos", "Classifica duelli", "Classificação de duelos", "Peringkat Duel", "Duel Reytinqi", "决斗排行榜", "決闘ランキング", "결투 리더보드", "متصدرو المبارزات", "ترتيب المبارزات"],
+                "En iyi {0} koşu. Her oyuncu en fazla {1} koşuyla girer.": ["Top {0} runs. Each player can appear with up to {1} runs.", "Nangungunang {0} na laro. Hanggang {1} laro lang bawat player.", "Лучшие {0} забегов. Каждый игрок может попасть сюда максимум с {1} забегами.", "Les {0} meilleures parties. Chaque joueur peut y figurer avec {1} parties maximum.", "Die besten {0} Läufe. Jeder Spieler kann mit höchstens {1} Läufen vertreten sein.", "Las {0} mejores partidas. Cada jugador puede aparecer con {1} partidas como máximo.", "Le {0} migliori partite. Ogni giocatore può comparire con al massimo {1} partite.", "As {0} melhores partidas. Cada jogador pode aparecer com no máximo {1} partidas.", "{0} permainan terbaik. Tiap pemain bisa masuk dengan maksimal {1} permainan.", "Ən yaxşı {0} oyun. Hər oyunçu ən çox {1} oyunla girə bilər.", "前 {0} 名对局。每位玩家最多 {1} 局上榜。", "上位{0}件のプレイ。1人につき最大{1}件まで掲載されます。", "상위 {0}개 기록. 플레이어마다 최대 {1}개까지 올라가요.", "أفضل {0} جولة. يظهر كل لاعب بحد أقصى {1} جولات.", "أحسن {0} ماتش. كل لاعب كيدخل بـ {1} ماتشات على الأكثر."],
+                "Skor tablosu yüklenemedi.": ["Couldn't load the leaderboard.", "Hindi ma-load ang leaderboard.", "Не удалось загрузить таблицу лидеров.", "Impossible de charger le classement.", "Bestenliste konnte nicht geladen werden.", "No se pudo cargar la clasificación.", "Impossibile caricare la classifica.", "Não foi possível carregar a classificação.", "Papan peringkat gagal dimuat.", "Reytinq yüklənmədi.", "排行榜加载失败。", "ランキングを読み込めませんでした。", "리더보드를 불러오지 못했어요.", "تعذّر تحميل لوحة المتصدرين.", "ما قدرناش نحملو الترتيب."],
+                "Düelloya çağır": ["Challenge to a duel", "Hamunin sa duelo", "Вызвать на дуэль", "Défier en duel", "Zum Duell herausfordern", "Retar a un duelo", "Sfida a duello", "Desafiar para um duelo", "Tantang duel", "Duelə çağır", "发起决斗", "決闘を申し込む", "결투 신청", "تحدَّ في مبارزة", "عيط ليه لمبارزة"],
+                "{0} can. Klasik kuralları, boss'lar var. Kısa ve hızlı maçlar.": ["{0} lives. Classic rules, with bosses. Short, fast matches.", "{0} buhay. Klasik na patakaran, may mga boss. Maikli at mabilis na laro.", "{0} жизни. Классические правила, есть боссы. Короткие и быстрые матчи.", "{0} vies. Règles classiques, avec boss. Des matchs courts et rapides.", "{0} Leben. Klassische Regeln mit Bossen. Kurze, schnelle Spiele.", "{0} vidas. Reglas clásicas, con jefes. Partidas cortas y rápidas.", "{0} vite. Regole classiche, con boss. Partite brevi e veloci.", "{0} vidas. Regras clássicas, com chefes. Partidas curtas e rápidas.", "{0} nyawa. Aturan klasik, ada bos. Pertandingan singkat dan cepat.", "{0} can. Klassik qaydalar, bosslar var. Qısa və sürətli matçlar.", "{0} 条命。经典规则，有首领。对局短而快。", "ライフ{0}つ。クラシックのルールでボスあり。短くてテンポのいい試合。", "목숨 {0}개. 클래식 규칙, 보스 등장. 짧고 빠른 경기.", "{0} أرواح. قواعد الوضع الكلاسيكي مع الزعماء. مباريات قصيرة وسريعة.", "{0} أرواح. قواعد الكلاسيك، كاينين الزعماء. ماتشات قصار وسراع."],
+                "{0} can. Aynı kurallar, daha uzun maçlar ve daha fazla hata payı.": ["{0} lives. Same rules, longer matches and more room for mistakes.", "{0} buhay. Parehong patakaran, mas mahabang laro at mas maraming puwang sa pagkakamali.", "{0} жизней. Те же правила, более долгие матчи и больше права на ошибку.", "{0} vies. Mêmes règles, des matchs plus longs et plus de marge d'erreur.", "{0} Leben. Gleiche Regeln, längere Spiele und mehr Spielraum für Fehler.", "{0} vidas. Mismas reglas, partidas más largas y más margen de error.", "{0} vite. Stesse regole, partite più lunghe e più margine di errore.", "{0} vidas. As mesmas regras, partidas mais longas e mais margem para errar.", "{0} nyawa. Aturan sama, pertandingan lebih panjang dan ruang kesalahan lebih besar.", "{0} can. Eyni qaydalar, daha uzun matçlar və səhv üçün daha çox yer.", "{0} 条命。规则相同，对局更长，容错更多。", "ライフ{0}つ。同じルールで、試合が長くミスの余裕も大きい。", "목숨 {0}개. 같은 규칙, 더 긴 경기와 더 넉넉한 실수 여유.", "{0} أرواح. القواعد نفسها، مباريات أطول ومجال أكبر للأخطاء.", "{0} أرواح. نفس القواعد، ماتشات طوال وبلاصة كثر للغلطات."],
+                "Beta: ilerlemen sadece bu cihazda tutulur, ana oyuna ve skor tablosuna gönderilmez.": ["Beta: your progress stays on this device only and isn't sent to the main game or the leaderboard.", "Beta: sa device na ito lang naka-save ang progress mo at hindi ito ipinapadala sa main game o sa leaderboard.", "Бета: прогресс хранится только на этом устройстве и не попадает в основную игру и таблицу лидеров.", "Bêta : ta progression reste sur cet appareil et n'est pas envoyée au jeu principal ni au classement.", "Beta: Dein Fortschritt bleibt nur auf diesem Gerät und wird nicht ins Hauptspiel oder die Bestenliste übertragen.", "Beta: tu progreso se queda solo en este dispositivo y no se envía al juego principal ni a la clasificación.", "Beta: i tuoi progressi restano solo su questo dispositivo e non vengono inviati al gioco principale né alla classifica.", "Beta: o teu progresso fica só neste dispositivo e não é enviado para o jogo principal nem para a classificação.", "Beta: progresmu hanya tersimpan di perangkat ini dan tidak dikirim ke game utama atau papan peringkat.", "Beta: irəliləyişin yalnız bu cihazda saxlanır, əsas oyuna və reytinqə göndərilmir.", "测试版：你的进度只保存在这台设备上，不会同步到正式版或排行榜。", "ベータ版：進行状況はこの端末だけに保存され、本編やランキングには送られません。", "베타: 진행 상황은 이 기기에만 저장되고 본 게임이나 리더보드로 전송되지 않아요.", "تجريبي: تقدّمك محفوظ على هذا الجهاز فقط ولا يُرسل إلى اللعبة الأساسية أو لوحة المتصدرين.", "بيتا: التقدم ديالك كيبقى غير فهاد الجهاز وما كيتصيفطش للعبة الأصلية ولا للترتيب."],
+            };
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [k, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t) t[k] = vals[i]; });
+        })();
+
+        (function pauseI18n() {
+            const k = "Rakibin oynamaya devam ediyor. Oyun {0} saniye içinde kendiliğinden devam eder.";
+            const v = {"en": "Your opponent is still playing. The game resumes on its own in {0} seconds.", "fil": "Patuloy pang naglalaro ang kalaban mo. Kusang magpapatuloy ang laro sa loob ng {0} segundo.", "ru": "Соперник продолжает играть. Игра продолжится сама через {0} с.", "fr": "Ton adversaire continue de jouer. La partie reprend toute seule dans {0} secondes.", "de": "Dein Gegner spielt weiter. Das Spiel geht in {0} Sekunden von selbst weiter.", "es": "Tu rival sigue jugando. La partida se reanudará sola en {0} segundos.", "it": "Il tuo avversario sta ancora giocando. La partita riprende da sola tra {0} secondi.", "pt": "O teu adversário continua a jogar. O jogo retoma sozinho dentro de {0} segundos.", "id": "Lawanmu masih bermain. Permainan otomatis lanjut dalam {0} detik.", "az": "Rəqibin oynamağa davam edir. Oyun {0} saniyəyə özü davam edəcək.", "zh": "对手仍在游戏中。游戏将在 {0} 秒后自动继续。", "ja": "相手はまだプレイ中です。{0}秒後に自動で再開します。", "ko": "상대는 아직 플레이 중이에요. {0}초 뒤 게임이 자동으로 다시 시작돼요.", "ar": "خصمك ما زال يلعب. ستستأنف اللعبة تلقائيًا خلال {0} ثانية.", "ary": "خصمك باقي كيلعب. اللعبة غادي ترجع بوحدها من بعد {0} ثانية."};
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const l in v) { const t = tables[l] || I18N_MORE[l]; if (t) t[k] = v[l]; }
+        })();
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
         accInit();
