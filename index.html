@@ -34757,6 +34757,98 @@
             for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
         })();
 
+
+        // ===================== UNVANLAR =====================
+        // Firestore'da titles/{uid}: { text: "Kurucu", color: "#facc15" (isteğe bağlı) }. Sadece Firebase konsolundan girilir
+        // (kural: herkes okur, kimse yazamaz). Unvan profil kartında, skor tablosu kartında ve tablodaki satırda adın yanında görünür.
+        const TITLES = { map: {}, at: 0, loading: false };
+        const titleStyle = document.createElement('style');
+        titleStyle.textContent = `.pcard-title{display:inline-block;margin-top:3px;padding:2px 9px;border-radius:9999px;font-size:.72rem;font-weight:900;letter-spacing:.03em;color:var(--tc,#facc15);border:1px solid var(--tc,#facc15);background:rgba(15,23,42,.55);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+            .lb-title{margin-left:6px;padding:0 6px;border-radius:9999px;font-size:.62rem;font-weight:900;color:var(--tc,#facc15);border:1px solid var(--tc,#facc15);white-space:nowrap;vertical-align:middle}`;
+        document.head.appendChild(titleStyle);
+        const titleColor = c => /^#[0-9a-fA-F]{3,8}$/.test(String(c || '')) ? c : '#facc15';
+        function titleOf(uid) { const t = uid && TITLES.map[uid]; return t && t.text ? t : null; }
+        async function loadTitles(force) {
+            if (!ACC.fb || TITLES.loading || (!force && TITLES.at && Date.now() - TITLES.at < 300000)) return;
+            TITLES.loading = true;
+            try {
+                const { F, db } = ACC.fb;
+                const snap = await F.getDocs(F.collection(db, 'titles'));
+                const m = {};
+                snap.forEach(d => { const v = d.data() || {}; if (v.text) m[d.id] = { text: String(v.text).slice(0, 32), color: titleColor(v.color) }; });
+                TITLES.map = m; TITLES.at = Date.now();
+            } catch (e) { console.warn('Unvanlar yüklenemedi:', e); TITLES.at = Date.now() - 240000; }
+            TITLES.loading = false;
+            try { if (lbModal.style.display === 'flex') lbRender(); } catch (e) {}
+            try { accRender(); } catch (e) {}
+        }
+        function addTitleTo(el, uid) {
+            const t = titleOf(uid), nameEl = el && el.querySelector('.pcard-name');
+            if (!t || !nameEl || el.querySelector('.pcard-title')) return el;
+            const b = document.createElement('div');
+            b.className = 'pcard-title'; b.setAttribute('translate', 'no');
+            b.style.setProperty('--tc', t.color); b.textContent = t.text;
+            nameEl.insertAdjacentElement('afterend', b);
+            return el;
+        }
+        const buildProfileCardT = buildProfileCard;
+        buildProfileCard = function () { const el = buildProfileCardT.apply(this, arguments); loadTitles(); return addTitleTo(el, ACC.user && ACC.user.uid); };
+        const buildPlayerCardT = buildPlayerCard;
+        buildPlayerCard = function (entry) { const el = buildPlayerCardT.apply(this, arguments); return addTitleTo(el, entry && entry.uid); };
+        const lbRenderT = lbRender;
+        lbRender = function () {
+            const r = lbRenderT.apply(this, arguments);
+            loadTitles();
+            const c = LB.cache[LB.mode];
+            if (!LB.view && c && c.rows) {
+                const rows = lbBody.querySelectorAll('.lb-row');
+                c.rows.forEach((row, i) => {
+                    const t = titleOf(row.uid), el = rows[i], name = el && el.querySelector('.lb-name');
+                    if (!t || !name || name.querySelector('.lb-title')) return;
+                    const b = document.createElement('span'); b.className = 'lb-title'; b.setAttribute('translate', 'no');
+                    b.style.setProperty('--tc', t.color); b.textContent = t.text;
+                    name.appendChild(b);
+                });
+            }
+            return r;
+        };
+
+        // ===================== SKOR TABLOSUNDA GÜNCEL GÖRÜNÜŞ =====================
+        // Satırdaki avatar eskiden skorun yapıldığı andaki görünüşteydi (rekoru eski olanlar varsayılan piyon görünüyordu).
+        // Artık listedeki oyuncuların profilleri toplu okunur (30'arlı sorgu) ve avatar şu an taktıkları görünüşle çizilir.
+        const LB_LOOKS = { loading: false };
+        async function lbLoadLooks(rows) {
+            if (!ACC.fb || LB_LOOKS.loading || !rows || !rows.length) return;
+            const need = rows.map(r => r.uid).filter(uid => { const p = LB_PROFILES[uid]; return uid && (!p || (!p.loading && Date.now() - (p.at || 0) > 60000)); });
+            if (!need.length) return;
+            LB_LOOKS.loading = true;
+            try {
+                const { F, db } = ACC.fb;
+                for (let i = 0; i < need.length; i += 30) {
+                    const chunk = need.slice(i, i + 30);
+                    const snap = await F.getDocs(F.query(F.collection(db, 'profiles'), F.where(F.documentId(), 'in', chunk)));
+                    const seen = new Set();
+                    snap.forEach(d => { seen.add(d.id); LB_PROFILES[d.id] = Object.assign(d.data() || {}, { at: Date.now() }); });
+                    chunk.forEach(uid => { if (!seen.has(uid)) LB_PROFILES[uid] = { none: true, at: Date.now() }; });
+                }
+            } catch (e) { console.warn('Profiller okunamadı:', e); }
+            LB_LOOKS.loading = false;
+            try { if (lbModal.style.display === 'flex' && !LB.view) lbRender(); } catch (e) {}
+        }
+        const lbRenderLook = lbRender;
+        lbRender = function () {
+            const r = lbRenderLook.apply(this, arguments);
+            const c = LB.cache[LB.mode];
+            if (!LB.view && c && c.rows && c.rows.length) {
+                const els = lbBody.querySelectorAll('.lb-row');
+                c.rows.forEach((row, i) => {
+                    const cur = lbCurrentEntry(row), cv = els[i] && els[i].querySelector('canvas.lb-av');
+                    if (cv && cur.look && cur.look !== row.look) drawLookAvatar(cv, cur.look, 30, 34);
+                });
+                lbLoadLooks(c.rows);
+            }
+            return r;
+        };
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
         accInit();
