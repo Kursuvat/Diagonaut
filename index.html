@@ -9082,7 +9082,10 @@
                 ctx.fillStyle = boss.hitFlash > 0 ? '#ffffff' : '#000000';
                 ctx.shadowColor = boss.stats.color;
                 ctx.shadowBlur = 25;
-                glyphFill(ctx, boss.stats.symbol, cx, cy + 6);
+                if (boss.stats.glyph) {
+                    OWL_OUTLINE = boss.stats.color;
+                    try { glyphFill(ctx, boss.stats.glyph, cx, cy + 4); } finally { OWL_OUTLINE = null; }
+                } else glyphFill(ctx, boss.stats.symbol, cx, cy + 6);
                 ctx.shadowBlur = 0;
             }
 
@@ -10170,6 +10173,12 @@
                     if (passedPlayer(bubbles)) return 'fail:Baloncuğu kaçırdın.';
                     return null;
                 }
+            },
+            {
+                id: 'boss',
+                title: "Boss'lar",
+                text: "Belli bir skora ulaşınca Siyah Vezir gelir, onu yenersen Siyah Şah çıkar. Boss'a dokunamazsın: taş yedikçe aldığın puan kadar ona hasar verirsin. Boss saldırmadan önce kareler yanıp söner, sonra dolar. Dolu mor ya da turuncu karelerden hemen çık!",
+                info: true
             },
             {
                 id: 'done',
@@ -30419,7 +30428,7 @@
         function duelRules(lv, kind) {
             kind = kind || DUEL.kind || 'duel';
             if (kind === 'attack') return `${lv} can, aynı taş sırası. Her ${ATK_PER} taş yediğinde rakibinin tahtasına bir saldırı taşı gider. İkisinin de canı bitince skoru yüksek olan kazanır.`;
-            if (kind === 'raid') return `Zor seviyede klasik kurallar. Siyah İmparator'un ${RAID_HP} canı ikinizin ortak hasarıyla düşer. Biriniz yenilirse ortağını izler.`;
+            if (kind === 'raid') return `Zor seviyede klasik kurallar. Pausiber'in ${RAID_HP} canı ikinizin ortak hasarıyla düşer. Biriniz yenilirse ortağını izler.`;
             if (kind === 'team') return `İkiye iki, kişi başı ${lv} can, aynı taş sırası. Takım skorları toplanır, yüksek olan takım kazanır.`;
             return `${lv} can, aynı taş sırası. Canı biten rakibini izler. İkisinin de canı bitince skoru yüksek olan kazanır.`;
         }
@@ -33036,7 +33045,7 @@
                 const left = res.win ? 0 : raidHpLeft();
                 const pct = Math.round(left / RAID_HP * 100);
                 extra = `<div class="raid-res">
-                    <div class="raid-res-top"><span>${BOSS_STATS.emperor.symbol}︎ <span>Siyah İmparator</span></span><b>${left} / ${RAID_HP}</b></div>
+                    <div class="raid-res-top"><span><span translate="no">Pausiber</span></span><b>${left} / ${RAID_HP}</b></div>
                     <div class="raid-res-bar"><i style="width:${pct}%"></i></div>
                     <div class="raid-res-dmg"><span>Senin hasarın: <b>${DUEL.dmgMine}</b></span><span>Ortağının hasarı: <b>${DUEL.dmgOpp}</b></span></div>
                     ${res.win && DUEL.raidT ? `<div class="raid-res-time">${ico('clock')}<span>Süre: ${fmtTime(DUEL.raidT)}</span></div>` : ''}
@@ -33108,7 +33117,7 @@
         };
 
         // ===================== BOSS BASKINI =====================
-        BOSS_STATS.emperor = { name: 'SİYAH İMPARATOR', symbol: '♚', hp: RAID_HP, reward: 0, color: '#e8435f', rgb: '232, 67, 95', interval: 1700, warn: 760, active: 480, speed: 1.35 };
+        BOSS_STATS.emperor = { name: 'BAYKUŞ', symbol: '', glyph: '\uE0D1', hp: RAID_HP, reward: 0, color: '#e8435f', rgb: '232, 67, 95', interval: 1700, warn: 760, active: 480, speed: 1.35 };
         function raidTotal() { return (DUEL.dmgMine || 0) + (DUEL.dmgOpp || 0); }
         function raidHpLeft() { return Math.max(0, RAID_HP - raidTotal()); }
         function raidBeginNet(base) {
@@ -34200,7 +34209,7 @@
             { id: 'duel', name: 'Düello', desc: 'Aynı taşlar, yüksek skor kazanır. Rastgele eşleşmeler rütbeli.', icon: 'swords', lives: true },
             { id: 'attack', name: 'Saldırı Düellosu', desc: 'Yediğin taşlar rakibinin tahtasına saldırı olarak düşer.', icon: 'bolt' },
             { id: 'team', name: 'Takım Düellosu', desc: 'İkiye iki, takım skorları toplanır. Rütbeli.', icon: 'users', lives: true },
-            { id: 'raid', name: 'Boss Baskını', desc: 'Bir ortakla Siyah İmparator\'u birlikte yen.', icon: 'crown' },
+            { id: 'raid', name: 'Boss Baskını', desc: 'Bir ortakla Pausiber\'i birlikte yen.', icon: 'crown' },
             { id: 'ghost', name: 'Hayalet Yarışı', desc: 'Bir oyuncunun en iyi koşusuna karşı yarış.', icon: 'ghost' }
         ];
         function onlSel() { return ONL_MODES.find(m => m.id === save.settings.onlMode) || ONL_MODES[0]; }
@@ -34384,7 +34393,7 @@
             const sub = dlbModal.querySelector('.onl-sub');
             const b = dlbBoard(DLB.key);
             if (sub) sub.textContent = b.src === 'elo' ? T('En yüksek rütbe puanları.') : b.src === 'ghostmeta' ? T('En iyi hayalet koşuları.') : b.time
-                ? T('Siyah İmparator\'u en hızlı yenen ortaklar. Her oyuncu en fazla {0} koşuyla girer.').replace('{0}', DLB_SLOTS)
+                ? T('Pausiber\'i en hızlı yenen ortaklar. Her oyuncu en fazla {0} koşuyla girer.').replace('{0}', DLB_SLOTS)
                 : T('En iyi {0} koşu. Her oyuncu en fazla {1} koşuyla girer.').replace('{0}', DLB_LIMIT).replace('{1}', DLB_SLOTS);
             const list = document.getElementById('dlb-list');
             const c = DLB.cache[DLB.key];
@@ -34975,6 +34984,211 @@
             requestAnimationFrame(() => { if (tutorial.active && player.targetRow > tutRow()) player.targetRow = tutRow(); });
             return r;
         };
+        // ===================== PAUSIBER BOSS (BOSS BASKINI) =====================
+        // Baskındaki boss artık Pausiber: siyah siluet, gözleri, gagası ve kanat çizgisi boss renginde parlar.
+        var OWL_OUTLINE = null;
+        const owlTint2 = document.createElement('canvas'); owlTint2.width = OWL_IMG_W; owlTint2.height = OWL_IMG_H;
+        const owlTint2Ctx = owlTint2.getContext('2d');
+        function owlTintTo(ctx2, img, color) {
+            ctx2.globalCompositeOperation = 'source-over';
+            ctx2.clearRect(0, 0, OWL_IMG_W, OWL_IMG_H);
+            ctx2.drawImage(img, 0, 0);
+            ctx2.globalCompositeOperation = 'source-in';
+            ctx2.fillStyle = color; ctx2.fillRect(0, 0, OWL_IMG_W, OWL_IMG_H);
+            ctx2.globalCompositeOperation = 'source-over';
+        }
+        const drawOwlPieceImg = drawOwlPiece;
+        drawOwlPiece = function (c, x, y) {
+            if (!OWL_OUTLINE || !owlSil.naturalWidth || !owlDark.naturalWidth) return drawOwlPieceImg(c, x, y);
+            const k = fontPx(c) / 55;
+            const hh = 56 * k, ww = hh * OWL_IMG_W / OWL_IMG_H;
+            const left = x - ww / 2, top = y + 1 * k - hh / 2;
+            owlTintTo(owlTint2Ctx, owlDark, OWL_OUTLINE);
+            owlTintTo(owlTintCtx, owlSil, typeof c.fillStyle === 'string' ? c.fillStyle : '#000000');
+            c.save();
+            c.drawImage(owlTint2, left, top, ww, hh);   // parlayan kontur (gölge/ışıma korunur)
+            c.shadowBlur = 0; c.shadowColor = 'rgba(0, 0, 0, 0)';
+            c.drawImage(owlTint, left, top, ww, hh);
+            c.restore();
+        };
+        const spawnBossOwl = spawnBoss;
+        spawnBoss = function (type) {
+            const r = spawnBossOwl.apply(this, arguments);
+            if (type === 'emperor' && owlSil.src) bossNameEl.innerHTML = `<img src="${owlSil.src}" alt="" style="height:1.2em;vertical-align:-0.25em;display:inline-block">`;
+            return r;
+        };
+
+        // ===================== REHBER: BOSS ADIMI CANLANDIRMASI =====================
+        // "Boss'lar" adımında tahtanın üstünde bir vezir belirir ve piyonun sütununa önce yanıp sönen, sonra dolan mor kareler düşer.
+        const drawTutorialHintsBoss = drawTutorialHints;
+        drawTutorialHints = function () {
+            drawTutorialHintsBoss.apply(this, arguments);
+            if (!tutorial.active || tutorial.phase !== 'read') return;
+            const st = TUTORIAL_STEPS[tutorial.step];
+            if (!st || st.id !== 'boss') return;
+            const qs = BOSS_STATS.queen, col = player.targetCol;
+            const cyc = (gameTime % 2600) / 2600;           // 0-0.55 uyarı, 0.55-0.85 dolu, sonra boş
+            const pulse = 0.5 + 0.5 * Math.sin(gameTime / 200);
+            const bx = 2 * TS + TS / 2, by = TS * 1.5;
+            ctx.save();
+            ctx.globalAlpha = 0.2 + 0.15 * pulse; ctx.fillStyle = qs.color;
+            ctx.beginPath(); ctx.arc(bx, by, TS * 0.62, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.font = '82px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillStyle = '#000000'; ctx.shadowColor = qs.color; ctx.shadowBlur = 25;
+            glyphFill(ctx, qs.symbol, bx, by + 6);
+            ctx.shadowBlur = 0;
+            if (cyc < 0.85) {
+                const warn = cyc < 0.55;
+                const blink = warn ? (Math.floor(gameTime / 160) % 2 === 0) : true;
+                for (let r = 3; r <= tutRow(); r++) {
+                    const x = col * TS + 3, y = r * TS + 3, w = TS - 6;
+                    if (warn) {
+                        if (!blink) continue;
+                        ctx.setLineDash([8, 6]); ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(168, 85, 247, 0.95)';
+                        ctx.strokeRect(x, y, w, w); ctx.setLineDash([]);
+                        ctx.fillStyle = 'rgba(168, 85, 247, 0.18)'; ctx.fillRect(x, y, w, w);
+                    } else {
+                        ctx.fillStyle = 'rgba(147, 51, 234, 0.62)'; ctx.fillRect(x, y, w, w);
+                        ctx.lineWidth = 3; ctx.strokeStyle = '#c084fc'; ctx.strokeRect(x, y, w, w);
+                    }
+                }
+                if (!warn) {
+                    ctx.font = 'bold 30px Arial'; ctx.fillStyle = '#f0abfc';
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.9)'; ctx.shadowBlur = 6;
+                    ctx.fillText('←   →', player.x + TS / 2, player.y + TS / 2);
+                    ctx.shadowBlur = 0;
+                }
+            }
+            ctx.restore();
+        };
+
+        // ===================== ÖRDEK TAŞI 2 =====================
+        // Daha dolgun gövde, kıvrık kuyruk, tüylü kanat, iki parçalı gaga, parlak göz, tepe tüyü ve taş kaidesi.
+        drawDuckPiece = function (c, x, y) {
+            const k = fontPx(c) / 55;
+            const fill = typeof c.fillStyle === 'string' ? c.fillStyle : '#ffffff';
+            const DARK = 'rgba(2, 6, 23, 0.88)';
+            c.save();
+            c.translate(x, y + 1 * k); c.scale(k, k);
+            c.lineJoin = 'round'; c.lineCap = 'round';
+            // Parçalar (önce hepsine kontur, sonra dolgu: tek parça gibi görünür)
+            const base = new Path2D();
+            base.moveTo(-19, 19); base.lineTo(19, 19);
+            base.quadraticCurveTo(22, 21, 21, 24); base.lineTo(-21, 24); base.quadraticCurveTo(-22, 21, -19, 19); base.closePath();
+            const collar = new Path2D();
+            collar.ellipse(0, 17.5, 16, 3.2, 0, 0, Math.PI * 2);
+            const body = new Path2D();
+            body.moveTo(-14, 0);
+            body.bezierCurveTo(-17, -6, -24, -9, -25, -13);          // kuyruk yukarı kıvrılır
+            body.bezierCurveTo(-21, -10, -14, -9, -8, -4);
+            body.bezierCurveTo(-2, -2, 3, -3, 5, -6);                  // sırt -> boyun
+            body.bezierCurveTo(9, -3, 19, 0, 18, 8);                   // göğüs
+            body.bezierCurveTo(17, 15, 8, 17, 0, 17);
+            body.lineTo(-8, 17);
+            body.bezierCurveTo(-18, 16, -21, 8, -14, 0);
+            body.closePath();
+            const head = new Path2D();
+            head.ellipse(8, -14, 9.5, 9, -0.15, 0, Math.PI * 2);
+            const neck = new Path2D();
+            neck.moveTo(1, -9); neck.quadraticCurveTo(3, -1, 4, 2); neck.lineTo(14, 2); neck.quadraticCurveTo(13, -6, 15, -9); neck.closePath();
+            const shapes = [base, collar, body, neck, head];
+            c.strokeStyle = DARK; c.lineWidth = 3.6;
+            for (const sh of shapes) c.stroke(sh);
+            c.shadowBlur = 0; c.shadowColor = 'rgba(0, 0, 0, 0)';
+            c.fillStyle = fill;
+            for (const sh of shapes) c.fill(sh);
+            // Işık ve gölge (sadece taşın içinde)
+            c.save();
+            const clip = new Path2D(); for (const sh of shapes) clip.addPath(sh);
+            c.clip(clip);
+            const g = c.createLinearGradient(-20, -24, 18, 24);
+            g.addColorStop(0, 'rgba(255, 255, 255, 0.30)'); g.addColorStop(0.45, 'rgba(255, 255, 255, 0)'); g.addColorStop(1, 'rgba(2, 6, 23, 0.30)');
+            c.fillStyle = g; c.fillRect(-30, -30, 60, 60);
+            c.fillStyle = 'rgba(2, 6, 23, 0.22)'; c.fillRect(-30, 18.6, 60, 8);       // kaide gölgesi
+            c.fillStyle = 'rgba(2, 6, 23, 0.14)';
+            c.beginPath(); c.ellipse(0, 14, 16, 3.5, 0, 0, Math.PI * 2); c.fill();   // gövde altı
+            c.restore();
+            // Kanat: yaprak biçimi ve üç tüy çizgisi
+            const wing = new Path2D();
+            wing.moveTo(-13, 3); wing.bezierCurveTo(-6, -3, 6, -1, 9, 6); wing.bezierCurveTo(4, 13, -6, 13, -13, 3); wing.closePath();
+            c.fillStyle = 'rgba(2, 6, 23, 0.12)'; c.fill(wing);
+            c.strokeStyle = 'rgba(2, 6, 23, 0.55)'; c.lineWidth = 1.7; c.stroke(wing);
+            c.lineWidth = 1.2; c.strokeStyle = 'rgba(2, 6, 23, 0.4)';
+            c.beginPath(); c.moveTo(-8, 5); c.quadraticCurveTo(-3, 9, 3, 8); c.moveTo(-10, 4); c.quadraticCurveTo(-5, 7, -1, 6.5); c.moveTo(-5, 1.5); c.quadraticCurveTo(0, 3.5, 5, 4.5); c.stroke();
+            // Kuyruk tüyleri
+            c.beginPath(); c.moveTo(-22, -11); c.lineTo(-18, -8); c.moveTo(-20, -12.5); c.lineTo(-16, -9.5); c.stroke();
+            // Tepe tüyü
+            c.strokeStyle = DARK; c.lineWidth = 1.8;
+            c.beginPath(); c.moveTo(6, -22.5); c.quadraticCurveTo(5, -27, 9, -27.5); c.moveTo(8, -22.8); c.quadraticCurveTo(9, -26, 12, -25.5); c.stroke();
+            // Yanak
+            c.fillStyle = 'rgba(251, 113, 133, 0.35)';
+            c.beginPath(); c.ellipse(11, -9.5, 2.6, 1.6, 0, 0, Math.PI * 2); c.fill();
+            // Gaga: üst ve alt parça
+            c.strokeStyle = DARK; c.lineWidth = 1.8;
+            const upper = new Path2D();
+            upper.moveTo(15.5, -15); upper.bezierCurveTo(20, -16.5, 26, -15.5, 27, -12.5); upper.bezierCurveTo(23, -11.2, 19, -11.5, 15.5, -12); upper.closePath();
+            const lower = new Path2D();
+            lower.moveTo(16, -12); lower.bezierCurveTo(20, -11.5, 24, -11.5, 25.5, -11.8); lower.bezierCurveTo(23, -9, 19, -8.8, 16, -10); lower.closePath();
+            const bg = c.createLinearGradient(16, -16, 26, -10); bg.addColorStop(0, '#fbbf24'); bg.addColorStop(1, '#f97316');
+            c.fillStyle = '#ea580c'; c.stroke(lower); c.fill(lower);
+            c.fillStyle = bg; c.stroke(upper); c.fill(upper);
+            c.fillStyle = 'rgba(124, 45, 18, 0.7)'; c.beginPath(); c.arc(19.5, -14.2, 0.6, 0, Math.PI * 2); c.fill();   // burun deliği
+            // Göz: parlak, iki ışık noktası, kaş
+            c.fillStyle = '#0f172a'; c.beginPath(); c.ellipse(10.5, -16.5, 2.1, 2.5, 0, 0, Math.PI * 2); c.fill();
+            c.fillStyle = '#ffffff'; c.beginPath(); c.arc(11.2, -17.4, 0.85, 0, Math.PI * 2); c.fill();
+            c.beginPath(); c.arc(9.9, -15.5, 0.4, 0, Math.PI * 2); c.fill();
+            c.strokeStyle = 'rgba(2, 6, 23, 0.6)'; c.lineWidth = 1.1;
+            c.beginPath(); c.moveTo(8.2, -20.2); c.quadraticCurveTo(10.5, -21.4, 13, -20.3); c.stroke();
+            // Kafada parıltı
+            c.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            c.beginPath(); c.ellipse(4.5, -18.5, 3.2, 1.7, -0.6, 0, Math.PI * 2); c.fill();
+            c.restore();
+        };
+
+        (function bossTutI18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {
+                "Boss'lar": ["Bosses", "Mga Boss", "Боссы", "Les boss", "Bosse", "Jefes", "Boss", "Chefes", "Bos", "Bosslar", "Boss", "ボス", "보스", "الزعماء", "الزعماء"],
+                "Belli bir skora ulaşınca Siyah Vezir gelir, onu yenersen Siyah Şah çıkar. Boss'a dokunamazsın: taş yedikçe aldığın puan kadar ona hasar verirsin. Boss saldırmadan önce kareler yanıp söner, sonra dolar. Dolu mor ya da turuncu karelerden hemen çık!": [
+                    "At a certain score the Black Queen arrives; beat her and the Black King appears. You can't touch a boss: every piece you capture deals as much damage as the points you earn. Before a boss attacks, squares blink, then fill in. Get out of filled purple or orange squares right away!",
+                    "Sa isang tiyak na score, darating ang Itim na Reyna; talunin mo siya at lalabas ang Itim na Hari. Hindi mo mahahawakan ang boss: bawat piyesang kinain mo ay tatama rito nang kasinlaki ng puntos mo. Bago umatake ang boss, kumikislap muna ang mga kahon, saka napupuno. Umalis agad sa punong lila o kahel na kahon!",
+                    "При определённом счёте появляется Чёрный ферзь, а если победишь его — Чёрный король. Босса нельзя коснуться: каждая съеденная фигура наносит ему столько урона, сколько очков ты получил. Перед атакой клетки мигают, а потом заполняются. Сразу уходи с заполненных фиолетовых и оранжевых клеток!",
+                    "À un certain score, la Dame noire arrive ; bats-la et le Roi noir apparaît. Tu ne peux pas toucher un boss : chaque pièce prise lui inflige autant de dégâts que les points gagnés. Avant une attaque, des cases clignotent puis se remplissent. Quitte tout de suite les cases violettes ou orange pleines !",
+                    "Ab einem bestimmten Punktestand kommt die Schwarze Dame, besiegst du sie, erscheint der Schwarze König. Bosse kannst du nicht berühren: Jede geschlagene Figur richtet so viel Schaden an, wie du Punkte bekommst. Vor einem Angriff blinken Felder und füllen sich dann. Verlass gefüllte lila oder orange Felder sofort!",
+                    "Al llegar a cierta puntuación aparece la Dama Negra; si la vences, sale el Rey Negro. No puedes tocar al jefe: cada pieza que capturas le hace tanto daño como los puntos que ganas. Antes de atacar, las casillas parpadean y luego se llenan. ¡Sal enseguida de las casillas moradas o naranjas llenas!",
+                    "A un certo punteggio arriva la Regina Nera; se la sconfiggi compare il Re Nero. Non puoi toccare un boss: ogni pezzo catturato gli infligge tanti danni quanti punti guadagni. Prima di un attacco le caselle lampeggiano, poi si riempiono. Esci subito dalle caselle viola o arancioni piene!",
+                    "A partir de certa pontuação chega a Dama Negra; se a venceres, aparece o Rei Negro. Não podes tocar num chefe: cada peça que capturas causa-lhe tanto dano quanto os pontos que ganhas. Antes de um ataque, as casas piscam e depois enchem-se. Sai logo das casas roxas ou laranja cheias!",
+                    "Di skor tertentu Ratu Hitam datang; kalahkan dia dan Raja Hitam muncul. Kamu tidak bisa menyentuh bos: setiap bidak yang kamu makan memberi kerusakan sebesar poin yang kamu dapat. Sebelum bos menyerang, kotak berkedip lalu terisi. Segera keluar dari kotak ungu atau oranye yang terisi!",
+                    "Müəyyən xala çatanda Qara Vəzir gəlir, onu məğlub etsən Qara Şah çıxır. Bossa toxuna bilməzsən: vurduğun hər fiqur qazandığın xal qədər ona zərbə vurur. Boss hücum etməzdən əvvəl xanalar yanıb-sönür, sonra dolur. Dolu bənövşəyi və ya narıncı xanalardan dərhal çıx!",
+                    "达到一定分数时黑后会出现，打败她后黑王登场。你不能碰到首领：每吃掉一枚棋子，就会对它造成与所得分数相同的伤害。首领攻击前，格子会先闪烁，然后被填满。立刻离开已填满的紫色或橙色格子！",
+                    "一定のスコアに達すると黒のクイーンが現れ、倒すと黒のキングが出てくる。ボスには触れない。駒を取るたびに、得た点数と同じダメージを与える。ボスの攻撃前はマスが点滅し、その後塗りつぶされる。塗られた紫やオレンジのマスからすぐ出よう！",
+                    "일정 점수에 도달하면 흑색 퀸이 나타나고, 퀸을 쓰러뜨리면 흑색 킹이 나와요. 보스는 만질 수 없어요. 말을 잡을 때마다 얻은 점수만큼 피해를 줘요. 보스가 공격하기 전에 칸이 깜빡이다가 채워져요. 채워진 보라색이나 주황색 칸에서 바로 나오세요!",
+                    "عند الوصول إلى نتيجة معينة يظهر الوزير الأسود، وإذا هزمته يظهر الملك الأسود. لا يمكنك لمس الزعيم: كل قطعة تأكلها تُلحق به ضررًا بقدر النقاط التي تكسبها. قبل الهجوم تومض المربعات ثم تمتلئ. اخرج فورًا من المربعات البنفسجية أو البرتقالية الممتلئة!",
+                    "ملي توصل لواحد السكور كيجي الوزير الكحل، وإلا غلبتيه كيبان الملك الكحل. ما تقدرش تقيس الزعيم: كل قطعة كتاكلها كتضربو بقد النقط اللي ربحتي. قبل ما يهجم، الخانات كيضويو وكيطفاو ومن بعد كيتعمرو. خرج دغيا من الخانات البنفسجية ولا البرتقالية العامرين!"
+                ],
+                "Bir ortakla Pausiber'i birlikte yen.": ["Defeat Pausiber together with a partner.", "Talunin si Pausiber kasama ang isang partner.", "Победите Pausiber вместе с напарником.", "Battez Pausiber avec un partenaire.", "Besiege Pausiber mit einem Partner.", "Derrota a Pausiber junto a un compañero.", "Sconfiggi Pausiber insieme a un compagno.", "Derrota o Pausiber com um parceiro.", "Kalahkan Pausiber bersama rekan.", "Bir tərəfdaşla Pausiberi birlikdə məğlub et.", "与搭档一起击败 Pausiber。", "パートナーと一緒にPausiberを倒そう。", "파트너와 함께 Pausiber를 쓰러뜨리세요.", "اهزم Pausiber مع شريك.", "غلب Pausiber مع شي شريك."],
+                "Pausiber'i en hızlı yenen ortaklar. Her oyuncu en fazla {0} koşuyla girer.": ["The fastest partners to defeat Pausiber. Each player can appear with up to {0} runs.", "Ang pinakamabilis na magpartner na tumalo kay Pausiber. Hanggang {0} takbo lang bawat player.", "Самые быстрые напарники, победившие Pausiber. Каждый игрок может попасть сюда максимум {0} раза.", "Les partenaires les plus rapides à battre Pausiber. Chaque joueur peut y figurer {0} fois maximum.", "Die schnellsten Partner gegen Pausiber. Jeder Spieler kann mit höchstens {0} Läufen vertreten sein.", "Los compañeros más rápidos en derrotar a Pausiber. Cada jugador aparece con {0} partidas como máximo.", "I compagni più veloci a sconfiggere Pausiber. Ogni giocatore compare con al massimo {0} partite.", "Os parceiros mais rápidos a derrotar o Pausiber. Cada jogador aparece com no máximo {0} partidas.", "Rekan tercepat yang mengalahkan Pausiber. Tiap pemain bisa masuk maksimal {0} kali.", "Pausiberi ən tez məğlub edən tərəfdaşlar. Hər oyunçu ən çox {0} dəfə girə bilər.", "最快击败 Pausiber 的搭档。每位玩家最多 {0} 次上榜。", "Pausiberを最速で倒したペア。1人につき最大{0}件まで掲載。", "Pausiber를 가장 빨리 쓰러뜨린 파트너. 플레이어마다 최대 {0}개까지 올라가요.", "أسرع الشركاء في هزيمة Pausiber. يظهر كل لاعب بحد أقصى {0} مرات.", "أسرع الشركاء اللي غلبو Pausiber. كل لاعب كيدخل {0} ديال المرات على الأكثر."],
+                "Zor seviyede klasik kurallar. Pausiber'in {0} canı ikinizin ortak hasarıyla düşer. Biriniz yenilirse ortağını izler.": ["Classic rules on Hard. Pausiber's {0} HP drop with your combined damage. If one of you is out, they watch their partner.", "Klasik na patakaran sa Hard. Bumababa ang {0} HP ni Pausiber sa pinagsamang damage ninyo. Kapag naubos ang isa, papanoorin niya ang partner.", "Классические правила на сложном уровне. {0} ед. здоровья Pausiber уменьшаются от вашего общего урона. Выбывший смотрит за напарником.", "Règles classiques en Difficile. Les {0} PV de Pausiber baissent avec vos dégâts cumulés. Si l'un de vous est éliminé, il regarde son partenaire.", "Klassische Regeln auf Schwer. Pausibers {0} LP sinken durch euren gemeinsamen Schaden. Wer raus ist, schaut dem Partner zu.", "Reglas clásicas en Difícil. Los {0} PV de Pausiber bajan con el daño de ambos. Si uno cae, mira a su compañero.", "Regole classiche a Difficile. I {0} PV di Pausiber calano con il vostro danno combinato. Chi è fuori guarda il compagno.", "Regras clássicas no Difícil. Os {0} PV do Pausiber descem com o dano dos dois. Se um ficar de fora, vê o parceiro.", "Aturan klasik tingkat Sulit. {0} HP Pausiber berkurang dari gabungan serangan kalian. Jika salah satu kalah, ia menonton rekannya.", "Çətin səviyyədə klassik qaydalar. Pausiberin {0} canı ikinizin ortaq zərbəsi ilə azalır. Biriniz yıxılsa, tərəfdaşını izləyir.", "困难难度下的经典规则。Pausiber 的 {0} 点生命会因你们的合计伤害而减少。一人出局后可以观看搭档。", "難易度「難しい」のクラシックルール。Pausiberの{0}HPは2人の合計ダメージで減ります。脱落したらパートナーを観戦。", "어려움 난이도의 클래식 규칙. Pausiber의 체력 {0}은 둘의 합산 피해로 줄어요. 한 명이 쓰러지면 파트너를 관전해요.", "قواعد كلاسيكية على المستوى الصعب. تنخفض {0} نقطة من صحة Pausiber بضرركما المشترك. إذا خرج أحدكما يشاهد شريكه.", "قواعد الكلاسيك فالمستوى الصعيب. الصحة ديال Pausiber ({0}) كتنقص بالضربات ديالكم بجوج. إلا طاح واحد فيكم كيتفرج فالشريك ديالو."],
+                "PAUSIBER YENİLDİ!": ["PAUSIBER DEFEATED!", "NATALO SI PAUSIBER!", "PAUSIBER ПОВЕРЖЕН!", "PAUSIBER VAINCU !", "PAUSIBER BESIEGT!", "¡PAUSIBER DERROTADO!", "PAUSIBER SCONFITTO!", "PAUSIBER DERROTADO!", "PAUSIBER DIKALAHKAN!", "PAUSIBER MƏĞLUB OLDU!", "Pausiber 被击败！", "Pausiberを倒した！", "Pausiber 처치!", "هُزم Pausiber!", "Pausiber طاح!"],
+                "PAUSIBER saldırısından kaçamadın!": ["You couldn't dodge PAUSIBER's attack!", "Hindi mo naiwasan ang atake ni PAUSIBER!", "Вы не увернулись от атаки PAUSIBER!", "Tu n'as pas esquivé l'attaque de PAUSIBER !", "Du konntest dem Angriff von PAUSIBER nicht ausweichen!", "¡No esquivaste el ataque de PAUSIBER!", "Non hai schivato l'attacco di PAUSIBER!", "Não conseguiste fugir ao ataque do PAUSIBER!", "Kamu tidak bisa menghindari serangan PAUSIBER!", "PAUSIBERin hücumundan qaça bilmədin!", "你没能躲开 Pausiber 的攻击！", "Pausiberの攻撃をかわせなかった！", "Pausiber의 공격을 피하지 못했어요!", "لم تتفادَ هجوم Pausiber!", "ما قدرتيش تهرب من الهجوم ديال Pausiber!"],
+                "PAUSIBER GELDİ!": ["PAUSIBER IS HERE!", "NARITO NA SI PAUSIBER!", "PAUSIBER ЗДЕСЬ!", "PAUSIBER EST LÀ !", "PAUSIBER IST DA!", "¡LLEGÓ PAUSIBER!", "È ARRIVATO PAUSIBER!", "CHEGOU O PAUSIBER!", "PAUSIBER DATANG!", "PAUSIBER GƏLDİ!", "Pausiber 来了！", "Pausiberが現れた！", "Pausiber가 나타났다!", "وصل Pausiber!", "Pausiber وصل!"]
+            };
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
+        })();
+
+        (function owlBossNameI18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {
+                "BAYKUŞ": ["OWL", "KUWAGO", "СОВА", "HIBOU", "EULE", "BÚHO", "GUFO", "MOCHO", "BURUNG HANTU", "BAYQUŞ", "猫头鹰", "フクロウ", "부엉이", "البومة", "البومة"],
+                "BAYKUŞ GELDİ!": ["THE OWL IS HERE!", "NARITO NA ANG KUWAGO!", "СОВА ЗДЕСЬ!", "LE HIBOU EST LÀ !", "DIE EULE IST DA!", "¡LLEGÓ EL BÚHO!", "È ARRIVATO IL GUFO!", "CHEGOU O MOCHO!", "BURUNG HANTU DATANG!", "BAYQUŞ GƏLDİ!", "猫头鹰来了！", "フクロウが現れた！", "부엉이가 나타났다!", "وصلت البومة!", "البومة وصلات!"],
+                "BAYKUŞ YENİLDİ!": ["OWL DEFEATED!", "NATALO ANG KUWAGO!", "СОВА ПОВЕРЖЕНА!", "HIBOU VAINCU !", "EULE BESIEGT!", "¡BÚHO DERROTADO!", "GUFO SCONFITTO!", "MOCHO DERROTADO!", "BURUNG HANTU DIKALAHKAN!", "BAYQUŞ MƏĞLUB OLDU!", "猫头鹰被击败！", "フクロウを倒した！", "부엉이 처치!", "هُزمت البومة!", "البومة طاحت!"],
+                "BAYKUŞ saldırısından kaçamadın!": ["You couldn't dodge the OWL's attack!", "Hindi mo naiwasan ang atake ng KUWAGO!", "Вы не увернулись от атаки СОВЫ!", "Tu n'as pas esquivé l'attaque du HIBOU !", "Du konntest dem Angriff der EULE nicht ausweichen!", "¡No esquivaste el ataque del BÚHO!", "Non hai schivato l'attacco del GUFO!", "Não conseguiste fugir ao ataque do MOCHO!", "Kamu tidak bisa menghindari serangan BURUNG HANTU!", "BAYQUŞUN hücumundan qaça bilmədin!", "你没能躲开猫头鹰的攻击！", "フクロウの攻撃をかわせなかった！", "부엉이의 공격을 피하지 못했어요!", "لم تتفادَ هجوم البومة!", "ما قدرتيش تهرب من الهجوم ديال البومة!"]
+            };
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
+        })();
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
         accInit();
