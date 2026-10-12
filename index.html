@@ -1298,8 +1298,13 @@
             margin-top: 6px;
             font-size: 0.85rem;
             font-weight: 800;
-            display: none;
+            min-height: 2.6em;
+            line-height: 1.3em;
+            display: block;
+            visibility: hidden;
         }
+        #tut-feedback.show { visibility: visible; }
+        #tut-go.wait { visibility: hidden; }
 
         #tut-feedback.ok { color: #34d399; }
         #tut-feedback.fail { color: #f87171; }
@@ -2448,6 +2453,7 @@
             <div id="tut-title" class="font-black text-lg text-white"></div>
             <div id="tut-text" class="text-sm text-slate-300"></div>
             <div id="tut-feedback"></div>
+            <button id="tut-go" class="btn btn-small w-full !mt-2">Hazırım</button>
             <div id="tut-final" class="grid grid-cols-2 gap-2 mt-3" style="display: none;">
                 <button id="tut-play-btn" class="btn btn-small w-full !mt-0">OYUNA BAŞLA</button>
                 <button id="tut-menu-btn" class="btn btn-secondary btn-small w-full !mt-0">ANA MENÜ</button>
@@ -8366,7 +8372,7 @@
             currentSpeed = tutorial.active
                 ? (TUTORIAL_STEPS[tutorial.step].speed || TUT_SPEED)
                 : puzzle ? PUZZLES[puzzle.index].speed
-                : Math.min(touchMode() ? TOUCH_MAX_SPEED : MAX_SPEED, baseSpeed + (speedClock / 1000) * SPEED_RAMP);
+                : Math.min(touchMode() ? TOUCH_MAX_SPEED : MAX_SPEED, baseSpeed + (speedClock / 1000) * SPEED_RAMP) * warmSpeedFactor();
             let moveDist = (currentSpeed * worldDt) / 1000;
             // Dikey adım sürerken tahta kaymaya devam ettiği için adım 1 yerine ~1,5 kare gibi görünüyordu.
             // Adım artık çok kısa sürüyor ve sürerken piyon tahtaya bağlı: tahtaya göre tam bir kare gider.
@@ -8393,7 +8399,7 @@
 
             if (puzzle) {
                 updatePuzzle(moveDist);
-            } else if (!tutorial.active && distanceSinceLastSpawn > TS * diffOf(matchStats.diff).gap) {
+            } else if (!tutorial.active && distanceSinceLastSpawn > TS * diffOf(matchStats.diff).gap * warmGapFactor()) {
                 spawnEnemy();
                 distanceSinceLastSpawn = 0;
             }
@@ -10096,6 +10102,12 @@
 
         const TUTORIAL_STEPS = [
             {
+                id: 'goal',
+                title: 'Amaç',
+                text: 'Beyaz piyon sensin. Siyah taşlara önden çarpmadan ilerle ve onları çaprazdan yiyerek puan topla. Her adımda önce açıklamayı oku, hazır olunca düğmeye bas.',
+                info: true
+            },
+            {
                 id: 'move',
                 title: 'Hareket',
                 text: 'Şerit değiştirmek için ekranda sağa ya da sola kaydır. Bilgisayarda ← → ok tuşlarını ya da A / D tuşlarını kullan.',
@@ -10122,7 +10134,7 @@
                 id: 'dodge',
                 title: 'Düz Çarpışma',
                 text: 'Bu piyon tam senin şeridinde! Taşlara önden çarparsan elenirsin. Yana kaçarak onu atlat.',
-                speed: 200,
+                speed: 150,
                 setup() { tutCenter(2); tutSpawnPiece('pawn', 2); },
                 evaluate() { return passedPlayer(enemies) ? 'success' : null; },
                 fail: { straight: 'Düz çarptın! Taş şeridine yaklaşınca yana kaç.' }
@@ -10131,7 +10143,7 @@
                 id: 'rook',
                 title: 'Kale Uyarısı',
                 text: 'Bir şeritte kırmızı bir ! belirirse oraya kale gelecek demektir. Kale gelince o şerit kırmızı lazerle kaplanır. Hemen şeritten çık!',
-                speed: 180,
+                speed: 140,
                 setup() {
                     tutCenter(4);
                     tutorial.rookSeen = false;
@@ -10167,6 +10179,31 @@
             }
         ];
 
+        const tutGoBtn = document.getElementById('tut-go');
+        function tutSetRead(retry) {
+            tutorial.phase = 'read';
+            tutGoBtn.textContent = T(retry ? 'Tekrar dene' : 'Hazırım');
+            tutGoBtn.classList.remove('wait');
+        }
+        function tutGo() {
+            if (!tutorial.active || tutorial.phase !== 'read' || gameState !== 'PLAYING') return;
+            const st = TUTORIAL_STEPS[tutorial.step];
+            if (st.final) return;
+            tutGoBtn.classList.add('wait');
+            tutFeedback.classList.remove('show');
+            if (st.info) {   // sadece okunacak adım
+                tutorial.phase = 'success';
+                tutorial.timer = 300;
+                return;
+            }
+            beginTutorialStep();
+        }
+        tutGoBtn.addEventListener('click', () => tutGo());
+        document.addEventListener('keydown', e => {
+            if (!tutorial.active || tutorial.phase !== 'read' || gameState !== 'PLAYING') return;
+            if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') { e.preventDefault(); e.stopPropagation(); tutGo(); }
+        }, true);
+
         function renderTutorialCard() {
             const st = TUTORIAL_STEPS[tutorial.step];
             const total = TUTORIAL_STEPS.length - 1; // son adım "hazırsın" ekranı
@@ -10179,15 +10216,17 @@
             }
             tutTitle.textContent = st.final ? st.title : `${tutorial.step + 1}. ${st.title}`;
             tutText.textContent = (save.settings.controls === 'buttons' && st.textButtons) ? st.textButtons : st.text;
-            tutFeedback.style.display = 'none';
+            tutFeedback.classList.remove('show');
             tutFinal.style.display = st.final ? 'grid' : 'none';
+            tutGoBtn.style.display = st.final ? 'none' : 'block';
+            tutGoBtn.textContent = T('Hazırım');
+            tutGoBtn.classList.toggle('wait', tutorial.phase !== 'read');
             document.getElementById('tut-skip').style.display = st.final ? 'none' : 'inline-block';
         }
 
         function showTutorialFeedback(text, kind) {
             tutFeedback.textContent = text;
-            tutFeedback.className = kind;
-            tutFeedback.style.display = 'block';
+            tutFeedback.className = kind + ' show';
         }
 
         function clearTutorialBoard() {
@@ -10213,7 +10252,8 @@
             clearTutorialBoard();
             effects.shield = 0;
             tutorial.phase = 'fail';
-            tutorial.timer = 2000;
+            tutorial.timer = 900;
+            tutGoBtn.classList.add('wait');
             showTutorialFeedback(`✗ ${msg} Tekrar dene!`, 'fail');
             playSound('death');
             vibrate(120);
@@ -10224,18 +10264,16 @@
             if (st.final) return;
             tutorial.timer -= dt;
 
+            // Her adım "okuma" ile başlar: tahta boş akar, oyuncu hazır olunca düğmeye basar
             if (tutorial.phase === 'intro') {
-                if (tutorial.timer <= 0) beginTutorialStep();
+                if (tutorial.timer <= 0) tutSetRead(false);
             } else if (tutorial.phase === 'fail') {
-                if (tutorial.timer <= 0) {
-                    tutFeedback.style.display = 'none';
-                    beginTutorialStep();
-                }
+                // Hata mesajı yerinde kalır; oyuncu "Tekrar dene"ye basınca adım yeniden başlar
+                if (tutorial.timer <= 0) tutSetRead(true);
             } else if (tutorial.phase === 'success') {
                 if (tutorial.timer <= 0) {
                     tutorial.step++;
-                    tutorial.phase = 'intro';
-                    tutorial.timer = 1400; // yeni adımı okumak için kısa süre
+                    tutorial.phase = 'read';
                     renderTutorialCard();
                     if (TUTORIAL_STEPS[tutorial.step].final) {
                         save.tutorialDone = true;
@@ -10311,7 +10349,7 @@
             save.tutorialOffered = true;
             writeSave();
             resetGame('tutorial');
-            tutorial = { active: true, step: 0, phase: 'intro', timer: 900, eaten: 0, collected: 0, moved: false, rookSeen: false };
+            tutorial = { active: true, step: 0, phase: 'read', timer: 0, eaten: 0, collected: 0, moved: false, rookSeen: false };
             tutorialCard.style.display = 'block';
             renderTutorialCard();
             updateTouchControls();
@@ -34847,6 +34885,94 @@
                 });
                 lbLoadLooks(c.rows);
             }
+            return r;
+        };
+
+        // ===================== YENİ OYUNCULAR: YAVAŞ BAŞLANGIÇ =====================
+        // İlk 3 maçta (Klasik, Zamana Karşı, Sadece Kaç) ilk 25 saniye tahta daha yavaş akar ve taşlar daha seyrek gelir.
+        // Online maçlarda, bulmacada ve rehberde uygulanmaz.
+        const WARM = { on: false };
+        const WARM_MS = 25000;
+        function warmK() {
+            if (!WARM.on || tutorial.active || puzzle) return 1;
+            if (!['classic', 'timeAttack', 'dodge'].includes(matchStats.mode)) return 1;
+            return Math.min(1, gameTime / WARM_MS);
+        }
+        function warmSpeedFactor() { return 0.65 + 0.35 * warmK(); }
+        function warmGapFactor() { return 1.35 - 0.35 * warmK(); }
+        const resetGameWarm = resetGame;
+        resetGame = function (mode) {
+            const r = resetGameWarm.apply(this, arguments);
+            const st = save.stats || {};
+            const played = (st.games || 0) + (st.taGames || 0) + (st.dodgeGames || 0);
+            WARM.on = mode !== 'tutorial' && played <= 3;
+            return r;
+        };
+
+        // ===================== GİRİŞ PENCERESİNDE "MİSAFİR OLARAK OYNA" =====================
+        // Giriş istemeyen oyuncu en üstte, kaydırmadan görebileceği bir düğmeyle doğrudan oyuna geçer.
+        const guestStyle = document.createElement('style');
+        guestStyle.textContent = `.acc-guest{margin:0 0 14px}.acc-guest .btn{margin-top:0!important}.acc-guest p{margin:6px 0 0;font-size:.75rem;color:#94a3b8;text-align:center}`;
+        document.head.appendChild(guestStyle);
+        const accRenderGuest = accRender;
+        accRender = function () {
+            accRenderGuest.apply(this, arguments);
+            if (accModal.style.display !== 'flex' || ACC.state !== 'signedOut' || document.getElementById('acc-guest')) return;
+            const box = document.createElement('div');
+            box.className = 'acc-guest';
+            box.innerHTML = `<button id="acc-guest" class="btn btn-secondary w-full">Misafir olarak oyna</button>
+                <p>İlerlemen bu cihazda saklanır. İstediğin zaman giriş yapabilirsin.</p>`;
+            accBody.insertBefore(box, accBody.firstChild);
+            box.querySelector('button').onclick = () => document.getElementById('close-acc-btn').click();
+        };
+
+        (function tutGuestI18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {
+                "Misafir olarak oyna": ["Play as guest", "Maglaro bilang bisita", "Играть как гость", "Jouer en invité", "Als Gast spielen", "Jugar como invitado", "Gioca come ospite", "Jogar como convidado", "Main sebagai tamu", "Qonaq kimi oyna", "以游客身份游玩", "ゲストとして遊ぶ", "게스트로 플레이", "العب كضيف", "لعب كضيف"],
+                "İlerlemen bu cihazda saklanır. İstediğin zaman giriş yapabilirsin.": ["Your progress is saved on this device. You can sign in any time.", "Nakaimbak sa device na ito ang progreso mo. Puwede kang mag-sign in anumang oras.", "Прогресс сохраняется на этом устройстве. Войти можно в любой момент.", "Ta progression est enregistrée sur cet appareil. Tu peux te connecter à tout moment.", "Dein Fortschritt wird auf diesem Gerät gespeichert. Du kannst dich jederzeit anmelden.", "Tu progreso se guarda en este dispositivo. Puedes iniciar sesión cuando quieras.", "I tuoi progressi restano su questo dispositivo. Puoi accedere quando vuoi.", "O teu progresso fica guardado neste dispositivo. Podes iniciar sessão quando quiseres.", "Progresmu disimpan di perangkat ini. Kamu bisa masuk kapan saja.", "İrəliləyişin bu cihazda saxlanılır. İstədiyin vaxt daxil ola bilərsən.", "你的进度保存在这台设备上，随时可以登录。", "進行状況はこの端末に保存されます。いつでもログインできます。", "진행 상황은 이 기기에 저장됩니다. 언제든지 로그인할 수 있어요.", "يُحفظ تقدمك على هذا الجهاز. يمكنك تسجيل الدخول في أي وقت.", "التقدم ديالك كيتحفظ فهاد الجهاز. تقدر تدخل لحسابك فأي وقت."],
+                "Hazırım": ["I'm ready", "Handa na ako", "Я готов", "Je suis prêt", "Bereit", "Estoy listo", "Sono pronto", "Estou pronto", "Saya siap", "Hazıram", "我准备好了", "準備できた", "준비됐어요", "أنا جاهز", "أنا واجد"],
+                "Amaç": ["Goal", "Layunin", "Цель", "Objectif", "Ziel", "Objetivo", "Obiettivo", "Objetivo", "Tujuan", "Məqsəd", "目标", "目的", "목표", "الهدف", "الهدف"],
+                "Beyaz piyon sensin. Siyah taşlara önden çarpmadan ilerle ve onları çaprazdan yiyerek puan topla. Her adımda önce açıklamayı oku, hazır olunca düğmeye bas.": [
+                    "You're the white pawn. Move forward without running into black pieces head-on, and score points by capturing them diagonally. Read each step first, then press the button when you're ready.",
+                    "Ikaw ang puting pawn. Umabante nang hindi bumabangga nang harapan sa mga itim na piyesa, at kumuha ng puntos sa pagkain sa kanila nang pahilis. Basahin muna ang bawat hakbang, saka pindutin ang button kapag handa ka na.",
+                    "Ты — белая пешка. Двигайся вперёд, не врезаясь в чёрные фигуры в лоб, и набирай очки, забирая их по диагонали. Сначала прочитай каждый шаг, а когда будешь готов, нажми кнопку.",
+                    "Tu es le pion blanc. Avance sans heurter les pièces noires de face et marque des points en les prenant en diagonale. Lis d'abord chaque étape, puis appuie sur le bouton quand tu es prêt.",
+                    "Du bist der weiße Bauer. Lauf vorwärts, ohne frontal in schwarze Figuren zu rennen, und sammle Punkte, indem du sie diagonal schlägst. Lies jeden Schritt zuerst und drück den Knopf, wenn du bereit bist.",
+                    "Eres el peón blanco. Avanza sin chocar de frente con las piezas negras y suma puntos capturándolas en diagonal. Lee primero cada paso y pulsa el botón cuando estés listo.",
+                    "Sei il pedone bianco. Avanza senza scontrarti frontalmente con i pezzi neri e fai punti catturandoli in diagonale. Leggi prima ogni passo, poi premi il pulsante quando sei pronto.",
+                    "Tu és o peão branco. Avança sem chocar de frente com as peças pretas e ganha pontos capturando-as na diagonal. Lê primeiro cada passo e carrega no botão quando estiveres pronto.",
+                    "Kamu adalah pion putih. Maju tanpa menabrak bidak hitam dari depan, dan kumpulkan poin dengan memakannya secara diagonal. Baca dulu setiap langkah, lalu tekan tombol saat kamu siap.",
+                    "Ağ piyada sənsən. Qara fiqurlara önündən toqquşmadan irəlilə və onları çəpinə vuraraq xal topla. Hər addımda əvvəlcə izahı oxu, hazır olanda düyməyə bas.",
+                    "你是白色兵。向前推进，不要正面撞上黑子，斜着吃掉它们来得分。每一步先读说明，准备好后再按按钮。",
+                    "あなたは白のポーン。黒い駒に正面からぶつからないように進み、斜めに取って得点しよう。各ステップはまず説明を読んで、準備ができたらボタンを押してね。",
+                    "당신은 흰색 폰이에요. 검은 말과 정면으로 부딪히지 않게 전진하고, 대각선으로 잡아서 점수를 얻으세요. 각 단계는 먼저 설명을 읽고, 준비되면 버튼을 누르세요.",
+                    "أنت البيدق الأبيض. تقدّم دون أن تصطدم بالقطع السوداء من الأمام، واجمع النقاط بأكلها قطريًا. اقرأ كل خطوة أولًا، ثم اضغط الزر عندما تكون جاهزًا.",
+                    "نتا هو البيدق الأبيض. زيد القدام بلا ما تضرب فالقطع الكحلين من القدام، وجمع النقط ملي تاكلهم بالميلة. قرا كل خطوة الأول، ومن بعد ورك على الزر ملي تكون واجد."
+                ]
+            };
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
+        })();
+
+
+        // Rehberde piyonun satırı kartın gerçek yüksekliğine göre seçilir (kart piyonun üstüne binmesin)
+        const tutRowBase = tutRow;
+        tutRow = function () {
+            const def = tutRowBase();
+            try {
+                if (tutorialCard.style.display !== 'block') return def;
+                const c = canvas.getBoundingClientRect(), k = tutorialCard.getBoundingClientRect();
+                if (!c.height || !k.height) return def;
+                const rowH = c.height / ROWS;
+                const free = Math.floor((k.top - c.top) / rowH) - 1;   // kartın üstünde kalan son tam satır
+                return Math.max(3, Math.min(def, free));
+            } catch (e) { return def; }
+        };
+        const renderTutorialCardRow = renderTutorialCard;
+        renderTutorialCard = function () {
+            const r = renderTutorialCardRow.apply(this, arguments);
+            requestAnimationFrame(() => { if (tutorial.active && player.targetRow > tutRow()) player.targetRow = tutRow(); });
             return r;
         };
         if (LANG !== 'tr') applyLanguage(LANG);
