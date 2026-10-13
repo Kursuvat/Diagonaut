@@ -35670,6 +35670,82 @@
             });
         })();
 
+        // ===================== KULLANICI ADI FİLTRESİ 2 =====================
+        // Küfür, hakaret, cinsel içerik, ırkçılık ve nefret söylemi içeren isimler engellenir.
+        // İsim önce sadeleştirilir (rakam-harf hileleri: 0=o 1=i 3=e 4=a 5=s 7=t 8=b 9=g, alt çizgiler kaldırılır,
+        // tekrar eden harfler tekilleştirilir: "f_u_u_c_k", "s1k", "0r0spu" gibi). Sonra iki listeye bakılır:
+        //  - NAME_BAD_SUB: ismin herhangi bir yerinde geçerse engellenir (masum kelimelerin içinde geçmeyecek kadar özel kelimeler)
+        //  - NAME_BAD_WORD: kısa ve masum kelimelerin içinde de geçebilenler; sadece ayrı bir parça olarak geçerse engellenir
+        //    (parçalar: alt çizgi ve rakamlarla ayrılan kısımlar, ya da ismin tamamı)
+        // NAME_ALLOW: içinde yasaklı parça geçen ama masum olan bilinen kelimeler (önce bunlar silinir).
+        const NAME_BAD_SUB = [
+            // Türkçe küfür ve hakaret
+            'amk', 'amq', 'amcik', 'amck', 'amina', 'aminak', 'aminako', 'aminiz', 'amini', 'amnskm', 'amisin',
+            'ananin', 'ananisik', 'ananiz', 'anani', 'avradin', 'avrad', 'bacini', 'bacin',
+            'orospu', 'orosbu', 'orspu', 'oruspu', 'orosp', 'pezevenk', 'pezeveng', 'pust', 'ibne', 'ipne', 'gavat', 'kahpe', 'kaltak', 'kancik',
+            'siktir', 'siktim', 'sikerim', 'sikeyim', 'sikiyim', 'sikis', 'sikik', 'sikim', 'sikti', 'siksin', 'sikec', 'skrm', 'sktr',             'yarak', 'yarrak', 'yarag', 'yarram', 'dalyarak', 'yavsak', 'yavshak', 'gotveren', 'gotlek', 'gotun', 'gotune', 'gotos', 'gotos',
+            'sokuk', 'sokarim', 'sokayim', 'kodumun', 'kodumun', 'dallama', 'dangalak', 'gerizekali', 'gerzek', 'salak', 'aptal', 'ahmak', 'angut',
+            'oligofren', 'mongol', 'embesil', 'serefsiz', 'haysiyetsiz', 'pislik', 'surtuk', 'fahise', 'kerhane',             // İngilizce küfür ve hakaret
+            'fuck', 'fuk', 'fck', 'fuq', 'phuck', 'motherf', 'shit', 'bitch', 'biatch', 'btch', 'cunt', 'whore', 'slut', 'bastard', 'asshole', 'arsehole',
+            'twat', 'wank', 'jerkoff', 'dumbass', 'dipshit', 'douche', 'retard', 'moron', 'idiot', 'stupid', 'loser',
+            // Cinsel içerik
+            'porn', 'p0rn', 'sex', 'sexy', 'xxx', 'dildo', 'penis', 'vagina', 'pussy', 'boobs', 'boob', 'blowjob', 'handjob', 'cumshot', 'orgasm', 'orgy',
+            'horny', 'milf', 'hentai', 'nude', 'naked', 'rapist', 'raping', 'molest', 'incest', 'pedophil', 'pedofil', 'paedo', 'grooming', 'onlyfans',
+            // Irkçılık ve nefret söylemi
+            'nigg', 'nigga', 'nigr', 'nignog', 'negro', 'chink', 'gook', 'wetback', 'kike', 'faggot', 'fagot', 'tranny', 'beaner', 'raghead',
+            'towelhead', 'sandnig', 'zenci', 'cingene', 'kurtpis', 'pisarap', 'pisermeni', 'pisyahudi', 'pisrum', 'pissuriyeli',             'kkk', 'klan', 'neonazi', 'hitler', 'heil', 'siegheil', 'whitepower', 'whitepride', 'holocaust', 'genocide', 'soykirim', 'ethnicclean',
+            'isis', 'alqaeda', 'terorist', 'terrorist', 'jihad', 'killall', 'killyourself', 'kys', 'suicide', 'intihar',
+            // Diğer diller
+            'puta', 'puto', 'mierda', 'cabron', 'pendejo', 'verga', 'chinga', 'joder', 'merde', 'putain', 'salope', 'connard', 'encule', 'batard',
+            'scheisse', 'fotze', 'hurensohn', 'wichser', 'arschloch', 'blyat', 'blyad', 'pizda', 'pidor', 'pidar', 'ebat', 'yebat', 'xuy',             'sharmuta', 'sharmoota', 'qehbe', 'gehbe', 'dalbayob', 'dalbayeb', 'gijdillaq', 'qancig', 'vaffanculo', 'stronzo', 'cazzo', 'porra', 'caralho', 'buceta',
+            // Yetki taklidi
+            'admin', 'moderator', 'diagonaut', 'official', 'resmi', 'destek', 'support', 'yonetici', 'kursuvat'
+        ];
+        const NAME_BAD_WORD = ['aq', 'oc', 'pic', 'sik', 'got', 'gotu', 'amq', 'mal', 'anan', 'ass', 'cum', 'tit', 'tits', 'cock', 'dick', 'fag', 'rape',
+            'pedo', 'coon', 'spic', 'paki', 'jap', 'nazi', 'nazis', 'dyke', 'suka', 'hui', 'kos', 'cono', 'nig', 'hoe', 'kys'];
+        const NAME_ALLOW = ['nazim', 'nazif', 'nazir', 'nazli', 'nazire', 'essex', 'sussex', 'middlesex', 'peacock', 'hancock', 'cockpit', 'cockatoo',
+            'raccoon', 'tycoon', 'cocoon', 'japan', 'japon', 'torpedo', 'scrape', 'grape', 'drape', 'cumhur', 'cuma', 'malik', 'kamal', 'cemal', 'jamal',
+            'class', 'pass', 'mass', 'bass', 'grass', 'glass', 'assassin', 'cassie', 'picasso', 'epic', 'spice', 'pickle', 'picnic', 'topic', 'tropic', 'magic',
+            'musical', 'scunthorpe', 'shitake', 'shiitake', 'title', 'titan', 'kosova', 'hoca', 'hokey', 'hope', 'gayret', 'isisli', 'basic', 'music',
+            'skipper', 'analist', 'anane', 'lezzet', 'samsun', 'amasya', 'amerika', 'america', 'amazon', 'amazing', 'kamikaze', 'mustafa', 'salakot',
+            'cucumber', 'document', 'kosmos', 'kosmik', 'pickaxe', 'dickens', 'benedict', 'addict', 'predict', 'verdict', 'sextant', 'sextet',
+            'superstar', 'starship', 'sherlock', 'sushi', 'shift', 'shitzu', 'klanlar', 'aptalya', 'bastardo', 'montenegro', 'nigeria', 'fukuoka', 'fukushima', 'sikinti', 'picasso', 'iamk'];
+        const LEET = { '0': 'o', '1': 'i', '2': 'z', '3': 'e', '4': 'a', '5': 's', '6': 'g', '7': 't', '8': 'b', '9': 'g' };
+        function nameVariants(name) {
+            const low = String(name).toLowerCase();
+            const leet = low.replace(/[0-9]/g, d => LEET[d] || d);
+            const joined = leet.replace(/_/g, '');
+            const lettersOnly = low.replace(/[^a-z]/g, '');   // rakamları atarak (ör. "f1uck" -> "fuck")
+            const squeeze = s => s.replace(/(.)\1+/g, '$1');
+            return [...new Set([joined, squeeze(joined), lettersOnly, squeeze(lettersOnly)])];
+        }
+        function stripAllowed(s) {
+            for (const a of NAME_ALLOW) s = s.split(a).join('#');
+            return s;
+        }
+        function nameIsBad(name) {
+            const low = String(name).toLowerCase();
+            // 1) Parça kontrolü: alt çizgi ve rakamlarla ayrılan parçalar ya da ismin tamamı
+            const parts = new Set([low, ...low.split(/[_0-9]+/).filter(Boolean), ...low.replace(/[0-9]/g, d => LEET[d] || d).split('_').filter(Boolean)]);
+            for (const p of parts) {
+                const sq = p.replace(/(.)\1+/g, '$1');
+                if (NAME_BAD_WORD.includes(p) || NAME_BAD_WORD.includes(sq)) return true;
+            }
+            // 2) Herhangi bir yerde geçen kelimeler (sadeleştirilmiş hâllerde, masum kelimeler çıkarıldıktan sonra)
+            for (const v of nameVariants(name)) {
+                const s = stripAllowed(v);
+                for (const w of NAME_BAD_SUB) if (s.includes(w)) return true;
+            }
+            // 3) Bilinen nefret sayıları
+            if (/1488|14_88|88_14/.test(low)) return true;
+            return false;
+        }
+        accNameProblem = function (name) {
+            if (!USERNAME_RE.test(name)) return 'format';
+            if (nameIsBad(name)) return 'blocked';
+            return null;
+        };
+
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
         accInit();
