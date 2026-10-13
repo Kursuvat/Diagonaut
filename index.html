@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <!-- Made By Muhammed Kürşad Topkara -->
-<html lang="tr">
+<html lang="tr" class="notranslate">
 <head>
     <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Diagonaut</title>
     <!-- Taban stiller (eski Tailwind CDN yerine, internetsiz de çalışır) -->
@@ -15785,7 +15786,7 @@
                     <p class="acc-note">E-posta adresin ve gerçek adın asla başka oyunculara gösterilmez.</p>`;
             } else if (ACC.state === 'needName') {
                 html = `${verify}${info}<h3 class="acc-sub">Kullanıcı adını seç</h3>
-                    <p class="acc-text">Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan değiştirilemez.</p>
+                    <p class="acc-text">Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan 2000 tokenla değiştirebilirsin.</p>
                     <input id="acc-name" class="acc-input" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="pawn_master">
                     ${err}
                     <button id="acc-save" class="btn w-full" ${ACC.busy ? 'disabled' : ''}>Kaydet</button>
@@ -35455,6 +35456,219 @@
             @keyframes pcardGleam{0%,62%{transform:translateX(-60%)}100%{transform:translateX(60%)}}
             @media (prefers-reduced-motion: reduce){.pcard::after{animation:none!important;display:none}}`;
         document.head.appendChild(cardFxStyle);
+
+        // ===================== KULLANICI ADI DEĞİŞTİRME (2000 TOKEN) =====================
+        const RENAME_COST = 2000;
+        const renameStyle = document.createElement('style');
+        renameStyle.textContent = `.acc-rename{margin:10px 0 4px}.acc-rename .row{display:flex;gap:8px;margin-top:8px}
+            .acc-rename input{flex:1;min-width:0}.acc-rename .btn{margin-top:0!important;white-space:nowrap}
+            .acc-rename-msg{margin:6px 0 0;font-size:.8rem;font-weight:700}.acc-rename-msg.ok{color:#34d399}.acc-rename-msg.err{color:#f87171}`;
+        document.head.appendChild(renameStyle);
+        const RENAME = { open: false, busy: false, msg: '', ok: false };
+        async function accRename(name) {
+            if (!ACC.fb || !ACC.user || !ACC.profile || RENAME.busy) return;
+            const say = (m, ok) => { RENAME.msg = m; RENAME.ok = !!ok; accRender(); };
+            name = String(name || '').trim();
+            const problem = accNameProblem(name);
+            if (problem) return say(ACC_ERRORS[problem] || ACC_ERRORS.format);
+            const oldName = ACC.profile.username, oldLower = (ACC.profile.usernameLower || oldName.toLowerCase());
+            const lower = name.toLowerCase();
+            if (name === oldName) return say('Bu zaten senin ismin.');
+            if (save.tokens < RENAME_COST) return say('Yeterli tokenın yok.');
+            const { F, db } = ACC.fb, uid = ACC.user.uid;
+            RENAME.busy = true; say('');
+            try {
+                await F.runTransaction(db, async tx => {
+                    const newRef = F.doc(db, 'usernames', lower);
+                    if (lower !== oldLower) {
+                        const taken = await tx.get(newRef);
+                        if (taken.exists() && taken.data().uid !== uid) throw { code: 'taken' };
+                        tx.set(newRef, { uid: uid });
+                        tx.delete(F.doc(db, 'usernames', oldLower));
+                    }
+                    tx.update(F.doc(db, 'users', uid), { username: name, usernameLower: lower });
+                });
+            } catch (e) {
+                RENAME.busy = false;
+                const code = (e && e.code) || '';
+                if (code !== 'taken') console.warn('İsim değiştirilemedi:', e);
+                return say(code === 'taken' ? ACC_ERRORS.taken : (code === 'unavailable' ? ACC_ERRORS.net : 'İsim değiştirilemedi. Tekrar dene.'));
+            }
+            // Ödeme ve yerel bilgiler
+            save.tokens -= RENAME_COST;
+            save.stats.tokensSpent = (save.stats.tokensSpent || 0) + RENAME_COST;
+            writeSave(); try { updateTokenUI(); } catch (e) {}
+            ACC.profile = Object.assign({}, ACC.profile, { username: name, usernameLower: lower });
+            RENAME.busy = false; RENAME.open = false;
+            say('İsmin değiştirildi!', true);
+            // Herkese açık yerlerdeki isim: profil, skor tabloları, rütbe ve hayalet listesi
+            try { await F.updateDoc(F.doc(db, 'profiles', uid), { username: name }); } catch (e) {}
+            for (const m of ['classic', 'timeAttack', 'dodge']) {
+                try {
+                    const ref = F.doc(db, 'leaderboard', m, 'scores', uid);
+                    const s = await F.getDoc(ref);
+                    if (s.exists()) await F.updateDoc(ref, { username: name });
+                } catch (e) {}
+            }
+            try { LB.cache = {}; } catch (e) {}
+            try {
+                if (ON.R && ON.db) {
+                    ON.name = name;
+                    const R = ON.R;
+                    for (const p of ['elo', 'ghostmeta']) {
+                        const s = await R.get(onRef(`${p}/${uid}`));
+                        if (s.exists()) await R.update(onRef(`${p}/${uid}`), { n: name }).catch(() => {});
+                    }
+                    try { onWriteStatus(false); } catch (e) {}
+                }
+            } catch (e) {}
+        }
+        const accRenderRename = accRender;
+        accRender = function () {
+            accRenderRename.apply(this, arguments);
+            if (accModal.style.display !== 'flex' || ACC.state !== 'ready' || !ACC.profile) return;
+            const slot = document.getElementById('acc-card-slot');
+            if (!slot || document.getElementById('acc-rename')) return;
+            const box = document.createElement('div');
+            box.className = 'acc-rename'; box.id = 'acc-rename';
+            const msg = RENAME.msg ? `<p class="acc-rename-msg ${RENAME.ok ? 'ok' : 'err'}">${accEsc(RENAME.msg)}</p>` : '';
+            if (!RENAME.open) {
+                box.innerHTML = `<button id="acc-rename-open" class="btn btn-secondary btn-small w-full">İsmini değiştir</button>${msg}`;
+            } else {
+                box.innerHTML = `<div class="row"><input id="acc-rename-input" class="acc-input" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Yeni kullanıcı adı">
+                    <button id="acc-rename-go" class="btn btn-small" ${RENAME.busy ? 'disabled' : ''}>${T('Değiştir ({0} token)').replace('{0}', RENAME_COST)}</button></div>
+                    <button id="acc-rename-cancel" class="acc-skip">Vazgeç</button>${msg}`;
+            }
+            slot.insertAdjacentElement('afterend', box);
+            const ob = document.getElementById('acc-rename-open');
+            if (ob) ob.onclick = () => { RENAME.open = true; RENAME.msg = ''; accRender(); setTimeout(() => { const i = document.getElementById('acc-rename-input'); if (i) i.focus(); }, 30); };
+            const inp = document.getElementById('acc-rename-input');
+            if (inp) {
+                inp.value = RENAME.typed || '';
+                inp.oninput = () => { RENAME.typed = inp.value; };
+                inp.onkeydown = e => { if (e.key === 'Enter') accRename(inp.value); e.stopPropagation(); };
+                document.getElementById('acc-rename-go').onclick = () => accRename(inp.value);
+                document.getElementById('acc-rename-cancel').onclick = () => { RENAME.open = false; RENAME.msg = ''; RENAME.typed = ''; accRender(); };
+            }
+        };
+        document.getElementById('close-acc-btn').addEventListener('click', () => { RENAME.open = false; RENAME.msg = ''; RENAME.typed = ''; });
+
+        // ===================== 10'LU SANDIK (9 FİYATINA) =====================
+        const chest10Style = document.createElement('style');
+        chest10Style.textContent = `.market-btn.buy10{font-size:.72rem}
+            #chest10-modal{display:none;background:rgba(15,23,42,.9);backdrop-filter:blur(8px);z-index:31}
+            #chest10-modal .glass-panel{padding:1.1rem;width:min(94vw,420px)}
+            .c10-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0 12px}
+            .c10-cell{border-radius:12px;border:2px solid var(--rc);background:rgba(15,23,42,.6);padding:4px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0;
+              opacity:0;transform:scale(.6);animation:c10In .35s ease-out forwards}
+            .c10-cell .market-preview{width:100%;aspect-ratio:1;height:auto;transform:none}
+            .c10-cell .market-preview canvas,.c10-cell .market-preview svg{width:100%!important;height:auto!important}
+            .c10-cell small{font-size:.58rem;font-weight:800;line-height:1.1;text-align:center;color:#e2e8f0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+            .c10-cell b{font-size:.58rem;font-weight:900}
+            @keyframes c10In{to{opacity:1;transform:scale(1)}}
+            .chest10-note{font-size:.75rem;font-weight:800;color:#fbbf24;text-align:center;margin:0 0 8px}`;
+        document.head.appendChild(chest10Style);
+        const chest10Modal = document.createElement('div');
+        chest10Modal.id = 'chest10-modal';
+        chest10Modal.className = 'ui-layer interactive vivid';
+        chest10Modal.innerHTML = `<div class="glass-panel"><h2 class="text-2xl font-black text-white" id="c10-title"></h2>
+            <p class="text-xs text-slate-400" id="c10-sum"></p><div class="c10-grid" id="c10-grid"></div>
+            <button id="c10-close" class="btn btn-secondary w-full !mt-0">KAPAT</button></div>`;
+        document.getElementById('game-container').appendChild(chest10Modal);
+        document.getElementById('c10-close').addEventListener('click', () => { chest10Modal.style.display = 'none'; try { renderMarket(); } catch (e) {} });
+        function buyChest10(key) {
+            const c = CHESTS[key], cost = c.price * 9;
+            if (save.tokens < cost) return;
+            save.tokens -= cost;
+            save.stats.tokensSpent += cost;
+            playSound('buy');
+            const res = [];
+            let refundSum = 0, newCount = 0;
+            for (let i = 0; i < 10; i++) {
+                const pick = rollChest(key);
+                const dup = save.owned.includes(pick.item.id);
+                const refund = dup ? Math.floor(pick.item.price / 2) : 0;
+                if (dup) { addTokens(refund); refundSum += refund; } else { save.owned.push(pick.item.id); newCount++; }
+                save.chestsOpened++;
+                res.push({ pick, dup, refund });
+            }
+            writeSave(); updateTokenUI(); checkAchievements();
+            // En değerli olanlar önce
+            res.sort((a, b) => b.pick.item.price - a.pick.item.price);
+            document.getElementById('c10-title').textContent = `${T(c.name)} ×10`;
+            document.getElementById('c10-sum').innerHTML = `${T('{0} yeni kozmetik').replace('{0}', newCount)} · +${refundSum} ${coinIco()}`;
+            const grid = document.getElementById('c10-grid');
+            grid.innerHTML = '';
+            res.forEach((r, i) => {
+                const rar = itemRarity(r.pick.item);
+                const cell = document.createElement('div');
+                cell.className = 'c10-cell';
+                cell.style.setProperty('--rc', rar.color);
+                cell.style.animationDelay = (reduceMotion ? 0 : i * 90) + 'ms';
+                previewSel = {};
+                try { cell.appendChild(makePreview(r.pick.cat, r.pick.item, false)); } catch (e) {}
+                const nm = document.createElement('small'); nm.textContent = r.pick.item.name; cell.appendChild(nm);
+                const tag = document.createElement('b');
+                if (r.dup) { tag.innerHTML = `+${r.refund} ${coinIco()}`; tag.style.color = '#fbbf24'; }
+                else { tag.textContent = 'YENİ'; tag.style.color = '#34d399'; }
+                cell.appendChild(tag);
+                grid.appendChild(cell);
+            });
+            chest10Modal.style.display = 'flex';
+            playSound('achieve');
+        }
+        const renderChests10 = renderChests;
+        renderChests = function () {
+            renderChests10.apply(this, arguments);
+            const rows = marketList.querySelectorAll('.chest-row');
+            rows.forEach((row, i) => {
+                const key = CHEST_ORDER[i], c = CHESTS[key];
+                const btns = row.querySelector('.chest-btns');
+                if (!btns || !c) return;
+                const b = document.createElement('button');
+                b.className = 'market-btn buy buy10';
+                b.innerHTML = `10× ${coinIco()} ${c.price * 9}`;
+                b.disabled = save.tokens < c.price * 9;
+                b.onclick = () => buyChest10(key);
+                btns.appendChild(b);
+            });
+            const note = document.createElement('p');
+            note.className = 'chest10-note';
+            note.textContent = "10'lu alırsan 1 sandık bedava!";
+            const legend = marketList.querySelector('.rarity-legend');
+            if (legend) legend.insertAdjacentElement('afterend', note);
+        };
+
+        // ===================== TARAYICI ÇEVİRİSİNİ KAPAT =====================
+        // Oyunun kendi 16 dilli çevirisi var. Tarayıcının otomatik çevirisi (Chrome, Samsung İnternet vb.) yazıları bozuyordu:
+        // "Skor" -> "Gol", "Kuşanıldı" -> "Kuzanıldı" gibi. Kendi çeviri sistemimiz translate="no" kullandığı için
+        // sayfanın tamamına onu koyamayız; tarayıcılar için "notranslate" sınıfı ve google meta etiketi yeterli.
+        (function noBrowserTranslate() {
+            document.documentElement.classList.add('notranslate');
+            if (document.body) document.body.classList.add('notranslate');
+            if (!document.querySelector('meta[name="google"]')) {
+                const m = document.createElement('meta'); m.name = 'google'; m.content = 'notranslate';
+                document.head.appendChild(m);
+            }
+        })();
+
+        (function batch6I18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {"İsmini değiştir": ["Change your name", "Palitan ang pangalan", "Сменить имя", "Changer de nom", "Namen ändern", "Cambiar nombre", "Cambia nome", "Mudar de nome", "Ganti nama", "Adını dəyiş", "更改名字", "名前を変更", "이름 변경", "تغيير الاسم", "بدّل السمية"], "Yeni kullanıcı adı": ["New username", "Bagong username", "Новое имя пользователя", "Nouveau pseudo", "Neuer Benutzername", "Nuevo nombre de usuario", "Nuovo nome utente", "Novo nome de utilizador", "Nama pengguna baru", "Yeni istifadəçi adı", "新用户名", "新しいユーザー名", "새 사용자 이름", "اسم مستخدم جديد", "سمية جديدة"], "Değiştir ({0} token)": ["Change ({0} tokens)", "Palitan ({0} token)", "Сменить ({0} токенов)", "Changer ({0} jetons)", "Ändern ({0} Token)", "Cambiar ({0} tokens)", "Cambia ({0} token)", "Mudar ({0} tokens)", "Ganti ({0} token)", "Dəyiş ({0} token)", "更改（{0} 代币）", "変更（{0}トークン）", "변경 ({0} 토큰)", "تغيير ({0} رمز)", "بدّل ({0} توكن)"], "Vazgeç": ["Cancel", "Kanselahin", "Отмена", "Annuler", "Abbrechen", "Cancelar", "Annulla", "Cancelar", "Batal", "İmtina", "取消", "キャンセル", "취소", "إلغاء", "لغي"], "Bu zaten senin ismin.": ["That's already your name.", "Iyan na ang pangalan mo.", "Это уже твоё имя.", "C'est déjà ton nom.", "Das ist schon dein Name.", "Ese ya es tu nombre.", "È già il tuo nome.", "Esse já é o teu nome.", "Itu sudah namamu.", "Bu artıq sənin adındır.", "这已经是你的名字了。", "それはすでにあなたの名前です。", "이미 당신의 이름이에요.", "هذا اسمك بالفعل.", "هادي راها سميتك."], "Yeterli tokenın yok.": ["You don't have enough tokens.", "Kulang ang token mo.", "Недостаточно токенов.", "Tu n'as pas assez de jetons.", "Du hast nicht genug Token.", "No tienes suficientes tokens.", "Non hai abbastanza token.", "Não tens tokens suficientes.", "Token kamu tidak cukup.", "Kifayət qədər tokenin yoxdur.", "你的代币不够。", "トークンが足りません。", "토큰이 부족해요.", "ليس لديك رموز كافية.", "ما عندكش التوكن الكافي."], "İsim değiştirilemedi. Tekrar dene.": ["Couldn't change your name. Try again.", "Hindi napalitan ang pangalan. Subukan ulit.", "Не удалось сменить имя. Попробуй ещё раз.", "Impossible de changer de nom. Réessaie.", "Name konnte nicht geändert werden. Versuch es noch einmal.", "No se pudo cambiar el nombre. Inténtalo de nuevo.", "Impossibile cambiare nome. Riprova.", "Não foi possível mudar o nome. Tenta novamente.", "Gagal mengganti nama. Coba lagi.", "Adı dəyişmək olmadı. Yenidən cəhd et.", "无法更改名字，请重试。", "名前を変更できませんでした。もう一度お試しください。", "이름을 바꾸지 못했어요. 다시 시도하세요.", "تعذّر تغيير الاسم. حاول مجددًا.", "ما تبدلاتش السمية. عاود جرب."], "İsmin değiştirildi!": ["Your name has been changed!", "Napalitan na ang pangalan mo!", "Имя изменено!", "Ton nom a été changé !", "Dein Name wurde geändert!", "¡Tu nombre ha cambiado!", "Il tuo nome è stato cambiato!", "O teu nome foi mudado!", "Namamu sudah diganti!", "Adın dəyişdirildi!", "名字已更改！", "名前を変更しました！", "이름이 바뀌었어요!", "تم تغيير اسمك!", "السمية ديالك تبدلات!"], "{0} yeni kozmetik": ["{0} new cosmetics", "{0} bagong cosmetic", "Новых косметик: {0}", "{0} nouveaux cosmétiques", "{0} neue Kosmetik-Items", "{0} cosméticos nuevos", "{0} nuovi cosmetici", "{0} cosméticos novos", "{0} kosmetik baru", "{0} yeni kosmetik", "{0} 件新外观", "新しいコスメ {0} 個", "새 꾸미기 {0}개", "{0} مظاهر جديدة", "{0} ديال الكوسميتيك جداد"], "YENİ": ["NEW", "BAGO", "НОВОЕ", "NOUVEAU", "NEU", "NUEVO", "NUOVO", "NOVO", "BARU", "YENİ", "新", "NEW", "NEW", "جديد", "جديد"], "10'lu alırsan 1 sandık bedava!": ["Buy 10 and get 1 chest free!", "Bumili ng 10 at libre ang 1 chest!", "Купи 10 — один сундук бесплатно!", "Achètes-en 10 et un coffre est offert !", "Kauf 10 und 1 Truhe ist gratis!", "¡Compra 10 y 1 cofre te sale gratis!", "Comprane 10 e 1 forziere è gratis!", "Compra 10 e 1 baú é grátis!", "Beli 10, gratis 1 peti!", "10-unu alsan, 1 sandıq pulsuzdur!", "买 10 个送 1 个宝箱！", "10個買うと1個無料！", "10개 사면 1개 무료!", "اشترِ 10 واحصل على صندوق مجانًا!", "شري 10 وواحد فابور!"]};
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
+            // Kullanıcı adı açıklaması: "Sonradan değiştirilemez." yerine "2000 tokenla değiştirebilirsin."
+            const OLD = "Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan değiştirilemez.";
+            const NEW = "Diğer oyuncular seni bu isimle görecek. 3‑16 karakter: İngilizce harfler, rakamlar ve alt çizgi (_). Sonradan 2000 tokenla değiştirebilirsin.";
+            const NEWS = {"en": "You can change it later for 2000 tokens.", "fil": "Puwede mo itong palitan mamaya kapalit ng 2000 token.", "ru": "Позже его можно сменить за 2000 токенов.", "fr": "Tu pourras le changer plus tard pour 2000 jetons.", "de": "Du kannst ihn später für 2000 Token ändern.", "es": "Podrás cambiarlo más tarde por 2000 tokens.", "it": "Potrai cambiarlo più tardi per 2000 token.", "pt": "Podes mudá-lo mais tarde por 2000 tokens.", "id": "Kamu bisa menggantinya nanti dengan 2000 token.", "az": "Sonradan 2000 tokenə dəyişə bilərsən.", "zh": "之后可花费 2000 代币更改。", "ja": "あとで2000トークンで変更できます。", "ko": "나중에 2000 토큰으로 바꿀 수 있어요.", "ar": "يمكنك تغييره لاحقًا مقابل 2000 رمز.", "ary": "تقدر تبدلو من بعد ب 2000 توكن."};
+            ORDER.forEach(lang => {
+                const t = tables[lang] || I18N_MORE[lang];
+                if (!t || !t[OLD] || (NEW in t)) return;
+                const old = String(t[OLD]);
+                const cut = old.replace(/[^.。！!]*[.。！!]\s*$/, '');
+                t[NEW] = (cut.trim() ? cut.trimEnd() + (/[。]$/.test(cut.trim()) ? '' : ' ') : '') + NEWS[lang];
+            });
+        })();
 
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
