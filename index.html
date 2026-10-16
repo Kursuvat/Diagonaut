@@ -15507,6 +15507,9 @@
             measurementId: "G-96XW2W2EH9"
         };
         const FB_VER = '12.19.0';
+        // App Check (ücretsiz, reCAPTCHA v3): Firebase'e sadece diagonaut.com'daki oyundan yazılabilsin.
+        // Anahtarı Google reCAPTCHA yönetim panelinden alıp buraya yapıştır, sonra Firebase konsolunda App Check'i aç (bkz. kurulum notu).
+        const APPCHECK_SITE_KEY = '';
         const ACC = { state: 'loading', user: null, profile: null, busy: false, error: '', fb: null, mode: 'login', info: '' };
         const USERNAME_RE = /^[A-Za-z0-9_]{3,16}$/;
         // Instagram, TikTok, Facebook gibi uygulamaların içindeki tarayıcılarda Google girişe izin vermiyor
@@ -15547,6 +15550,12 @@
                     import(base + 'firebase-firestore.js')
                 ]);
                 const app = A.initializeApp(FB_CONFIG);
+                if (APPCHECK_SITE_KEY) {
+                    try {
+                        const AC = await import(base + 'firebase-app-check.js');
+                        AC.initializeAppCheck(app, { provider: new AC.ReCaptchaV3Provider(APPCHECK_SITE_KEY), isTokenAutoRefreshEnabled: true });
+                    } catch (e) { console.warn('App Check başlatılamadı:', e); }
+                }
                 const auth = U.getAuth(app);
                 try { auth.languageCode = LANG; } catch (e) {}   // doğrulama/sıfırlama e-postaları oyunun dilinde gelsin
                 const db = F.getFirestore(app);
@@ -16007,6 +16016,7 @@
                 batch.delete(F.doc(db, 'users', user.uid));
                 batch.delete(F.doc(db, 'saves', user.uid));
                 batch.delete(F.doc(db, 'profiles', user.uid));
+                batch.delete(F.doc(db, 'runs', user.uid));   // hile önlemi: koşu bileti
                 for (const m of ['classic', 'timeAttack', 'dodge', 'puzzle']) batch.delete(F.doc(db, 'leaderboard', m, 'scores', user.uid));
                 await batch.commit();
                 if (typeof onDeleteAllData === 'function') await onDeleteAllData();   // arkadaş listesi, istekler ve çevrimiçi durumu
@@ -31967,8 +31977,10 @@
         }
         async function dlbSubmit(lv, scoreVal, result, oppName) {
             if (!ON.R || !ON.uid || !(scoreVal > 0)) return;
-            const R = ON.R, uid = ON.uid, base = 'dlb/' + lv + '/';
+            const R = ON.R, uid = ON.uid, base = 'dlb/' + lv + '/', mid = String(DUEL.id || '');
             try {
+                // Hile önlemi: tablodaki skor, maç kaydındaki skordan büyük olamaz. Son skor önce maça yazılır.
+                if (mid) await R.update(onRef(`matches/${mid}/p/${uid}`), { s: Math.floor(scoreVal), h: R.serverTimestamp() }).catch(() => {});
                 const snaps = await Promise.all([0, 1, 2].map(i => R.get(onRef(base + uid + '_' + i))));
                 let slot = -1, low = Infinity;
                 snaps.forEach((sn, i) => {
@@ -31978,7 +31990,7 @@
                 });
                 if (slot < 0 || scoreVal <= low) return;
                 await R.set(onRef(base + uid + '_' + slot), {
-                    u: uid, n: ON.name, s: Math.floor(scoreVal), w: result, o: String(oppName || '').slice(0, 33), lk: myLook(), t: R.serverTimestamp()
+                    u: uid, n: ON.name, s: Math.floor(scoreVal), w: result, o: String(oppName || '').slice(0, 33), lk: myLook(), t: R.serverTimestamp(), m: mid
                 });
                 delete DLB.cache[lv];
             } catch (e) { console.warn('Düello skoru gönderilemedi:', e); }
@@ -32996,7 +33008,7 @@
                 const next = Object.assign({ d: ELO_START, dn: 0, t: ELO_START, tn: 0 }, ELO.me || {});
                 next[field] = nr; next[field + 'n'] = n + 1; next.n = ON.name; next.lk = myLook();
                 ELO.me = next;
-                await ON.R.set(onRef('elo/' + ON.uid), { d: Math.round(next.d), dn: next.dn, t: Math.round(next.t), tn: next.tn, n: String(ON.name || '').slice(0, 16), lk: next.lk, u: ON.uid });
+                await ON.R.set(onRef('elo/' + ON.uid), { d: Math.round(next.d), dn: next.dn, t: Math.round(next.t), tn: next.tn, n: String(ON.name || '').slice(0, 16), lk: next.lk, u: ON.uid, m: String(id || ''), ts: ON.R.serverTimestamp() });
                 if (DUEL.id === id) DUEL.eloD = { d, r: nr };
                 const el = document.getElementById('duel-elo');
                 if (el) el.innerHTML = eloResultHTML({ d, r: nr });
@@ -33214,7 +33226,7 @@
         // Baskın skor tablosu: en hızlı boss öldürme süresi (düşük olan iyi)
         async function dlbSubmitTime(key, secs, oppName) {
             if (!ON.R || !ON.uid || !(secs > 0)) return;
-            const R = ON.R, uid = ON.uid, base = 'dlb/' + key + '/';
+            const R = ON.R, uid = ON.uid, base = 'dlb/' + key + '/', mid = String(DUEL.id || '');
             try {
                 const snaps = await Promise.all([0, 1, 2].map(i => R.get(onRef(base + uid + '_' + i))));
                 let slot = -1, worst = -1;
@@ -33224,7 +33236,7 @@
                     if (sc > worst) { worst = sc; slot = i; }
                 });
                 if (slot < 0 || secs >= worst) return;
-                await R.set(onRef(base + uid + '_' + slot), { u: uid, n: ON.name, s: Math.round(secs), w: 1, o: String(oppName || '').slice(0, 33), lk: myLook(), t: R.serverTimestamp() });
+                await R.set(onRef(base + uid + '_' + slot), { u: uid, n: ON.name, s: Math.round(secs), w: 1, o: String(oppName || '').slice(0, 33), lk: myLook(), t: R.serverTimestamp(), m: mid });
                 delete DLB.cache[key];
             } catch (e) { console.warn('Baskın süresi gönderilemedi:', e); }
         }
@@ -35745,6 +35757,561 @@
             if (nameIsBad(name)) return 'blocked';
             return null;
         };
+
+        // ===================== HİLE ÖNLEMİ (ÜCRETSİZ KATMANLAR) =====================
+        // Sınırlar botlarla ölçüldü (16 Ekim 2026, 60'tan fazla maç):
+        //  - Ölümsüz "usta" bot, Klasik: 5 dakikada en fazla 1190 (sn'de ~4), 15 sn'lik en hızlı dilimde sn'de ~10, ilk dakikada en fazla 230
+        //  - Zamana Karşı: 60 sn'de en fazla 176 · Sadece Kaç: 3 dakikada en fazla 313 (sn'de ~1,75)
+        //  - Tek yemede en fazla 20 puan (kale 5 x çarpan 4), zincir bonusu en fazla 80, Sadece Kaç geçişi en fazla 4
+        // Sonuç seviyeleri: 'ok' (normal), 'review' (tabloya girer, yönetici ekranına düşer), 'blocked' (tabloya girmez, yönetici ekranına düşer).
+        // Kalıcı ban otomatik değil: kararı yönetici verir. Bütün durum kapalı bir blokta (konsoldan ulaşılamaz).
+        (function antiCheat() {
+            const HARD = { base: 200, rate: 10 };   // Firebase kuralındaki sınırın aynısı: skor <= 200 + 10 x oyun saniyesi
+            const REVIEW = {
+                classic:    t => 80 + 5 * t,
+                timeAttack: t => Math.min(300, 80 + 5 * t),
+                dodge:      t => 40 + 2.5 * t
+            };
+            const JUDGED = ['classic', 'timeAttack', 'dodge'];
+            const MAX_EAT = 20, MAX_CHAIN = 80, MAX_PASS = 4;
+            const REASONS = {
+                outside: 'Skor oyun döngüsü dışında değişti (konsol)', eat: 'İmkânsız yeme puanı (20 üstü)', bomb: 'İmkânsız bomba puanı',
+                bombs2s: '2 sn içinde iki bomba', chain: 'İmkânsız zincir bonusu', chains2s: '2 sn içinde birden fazla bonus', pass: 'İmkânsız geçiş puanı',
+                unknown: 'Kaynağı bilinmeyen puan', negative: 'Skor azaldı', ledger: 'Gölge skor tutmuyor', speed: 'Oyun saati gerçek saatten hızlı',
+                clock: 'Cihaz saatleri tutarsız', hard: 'Kesin sınırın üstünde', rate: 'Çok yüksek skor hızı', rule: 'Firebase kuralı reddetti'
+            };
+            const S = { admin: false, banned: false, statusUid: null };
+            let LAST = null;
+            let PENDING = Promise.resolve();
+            const R = { active: false };
+
+            // ---------- Koşunun izlenmesi ----------
+            function counters() {
+                const st = save.stats || {};
+                return { eat: matchStats.eaten || 0, chain: st.chainsCleared || 0, dodge: st.dodged || 0 };
+            }
+            function mark(code, level) {
+                if (!R.reasons.includes(code)) R.reasons.push(code);
+                if (level === 'blocked') R.level = 'blocked';
+                else if (level === 'review' && R.level === 'ok') R.level = 'review';
+            }
+            function startRun() {
+                Object.assign(R, { active: false, mode: null, seen: 0, lastExit: 0, reasons: [], level: 'ok', snap: null,
+                    bigEats: [], bombs: [], bonus: [], bombFrames: new Set(), frame: 0, preEnemies: 0, d0: Date.now(), p0: performance.now(), uid: null });
+            }
+            function arm() {
+                if (!JUDGED.includes(matchStats.mode) || puzzle || tutorial.active) return;
+                R.mode = matchStats.mode; R.active = true;
+                R.seen = score; R.lastExit = score; R.snap = counters();
+                R.d0 = Date.now(); R.p0 = performance.now();
+                R.uid = (ACC.user && ACC.state === 'ready') ? ACC.user.uid : null;
+                if (R.uid) writeTicket(R.mode);
+            }
+            function classify() {
+                const delta = score - R.seen; R.seen = score;
+                if (!delta) return;
+                if (delta < 0) { mark('negative', 'review'); return; }
+                const now = performance.now(), c = counters();
+                const dChain = c.chain - R.snap.chain, dEat = c.eat - R.snap.eat, dDodge = c.dodge - R.snap.dodge;
+                if (dChain > 0 && delta <= MAX_CHAIN * dChain) { R.snap.chain = c.chain; R.bonus.push({ t: now, f: R.frame }); return; }
+                if (dEat > 0) {
+                    R.snap.eat = c.eat;
+                    if (delta > MAX_EAT * dEat) {
+                        // Tek yemede en fazla 20 alınabilir. Senin kuralın (2 sn içinde iki kez 21+) bunun içinde:
+                        // koşu boyunca ikinci imkânsız yeme engellenir, tek seferlik olan incelemeye düşer.
+                        R.bigEats.push(now);
+                        mark('eat', R.bigEats.length >= 2 ? 'blocked' : 'review');
+                    }
+                    return;
+                }
+                if (dDodge > 0) { R.snap.dodge = c.dodge; if (delta > MAX_PASS * dDodge) mark('pass', 'blocked'); return; }
+                if (!enemies.length) {   // bomba: tahtadaki bütün taşlar bir anda gitti
+                    R.bombFrames.add(R.frame); R.bonus.push({ t: now, f: R.frame });
+                    R.bombs = R.bombs.filter(t => now - t < 2000); R.bombs.push(now);
+                    if (R.bombs.length >= 2) mark('bombs2s', 'blocked');
+                    if (delta > MAX_EAT * (R.preEnemies + 2)) mark('bomb', 'blocked');
+                    return;
+                }
+                if (dChain > 0) { R.snap.chain = c.chain; mark('chain', 'blocked'); return; }
+                mark('unknown', 'review');
+            }
+            function finalize() {
+                if (!R.active) return null;
+                R.active = false;
+                const gt = Math.max(0, Math.round(gameTime)), sc = Math.floor(score) || 0, t = gt / 1000;
+                if (score !== R.seen) mark('ledger', 'blocked');
+                const realP = performance.now() - R.p0, realD = Date.now() - R.d0;
+                if (gt > realP + 1500) mark('speed', 'blocked');
+                if (Math.abs(realD - realP) > realP * 0.05 + 2000) mark('clock', 'review');
+                if (sc > HARD.base + HARD.rate * t) mark('hard', 'blocked');
+                else if (sc > REVIEW[R.mode](t)) mark('rate', 'review');
+                // Zincir ve bomba bonusları: 2 saniye içinde farklı karelerde birden fazla bonus (bombanın kırdığı zincirler sayılmaz)
+                const ev = R.bonus;   // aynı karedeki bonuslar (bomba + kırdığı zincirler) tek olay sayılır
+                for (let i = 0; i < ev.length; i++) {
+                    const frames = new Set();
+                    for (let j = i; j < ev.length && ev[j].t - ev[i].t < 2000; j++) frames.add(ev[j].f);
+                    if (frames.size >= 2) { mark('chains2s', 'review'); break; }
+                }
+                return { mode: R.mode, sc, gt, level: R.level, reasons: R.reasons.slice(), diff: matchStats.diff, uid: R.uid,
+                    bosses: R.mode === 'classic' ? { queen: runBoss.queen || 0, king: runBoss.king || 0 } : null };
+            }
+
+            const acReset = resetGame;
+            resetGame = function () { startRun(); const r = acReset.apply(this, arguments); setTimeout(arm, 0); return r; };
+            const acUpdate = update;
+            update = function () {
+                if (R.active && gameState === 'PLAYING') {
+                    if (score !== R.lastExit) { mark('outside', 'blocked'); R.lastExit = score; }
+                    R.frame++; R.preEnemies = enemies.length;
+                }
+                const r = acUpdate.apply(this, arguments);
+                if (R.active) R.lastExit = score;
+                return r;
+            };
+            const acScore = onScoreChanged;
+            onScoreChanged = function () { if (R.active) classify(); return acScore.apply(this, arguments); };
+            const acEnd = endGame;
+            endGame = function () {
+                const run = finalize();
+                const r = acEnd.apply(this, arguments);
+                if (run) afterRun(run);
+                return r;
+            };
+            startRun();
+
+            // ---------- Firebase: koşu bileti, skor gönderme, işaretler ----------
+            function signedIn() { return !!(ACC.fb && ACC.state === 'ready' && ACC.user && ACC.profile); }
+            function writeTicket(mode) {
+                if (!signedIn() || S.banned) return;
+                const { F, db } = ACC.fb, uid = ACC.user.uid;
+                const go = () => F.setDoc(F.doc(db, 'runs', uid), { t: F.serverTimestamp(), m: mode }).catch(e => console.warn('Koşu bileti yazılamadı:', e));
+                PENDING = PENDING.then(go, go);   // önceki koşunun gönderimi bitmeden yeni bilet yazılmaz
+            }
+            function myLookLB() {
+                return { piece: String(save.equipped.piece), pawn: String(save.equipped.pawn), hat: String(save.equipped.hat), face: String(save.equipped.face), cape: String(save.equipped.cape) };
+            }
+            async function submitRun(run) {
+                if (run.sc <= 0) return 'skip';
+                const { F, db } = ACC.fb, m = run.mode;
+                const ref = F.doc(db, 'leaderboard', m, 'scores', run.uid);
+                let wrote = false;
+                try {
+                    await F.runTransaction(db, async tx => {
+                        const cur = await tx.get(ref);
+                        if (cur.exists() && (Number(cur.data().score) || 0) >= run.sc) return;
+                        tx.set(ref, {
+                            username: ACC.profile.username, score: run.sc, gt: run.gt, level: Math.floor(save.level) || 1, diff: String(run.diff || ''),
+                            ...(run.bosses ? { bosses: run.bosses } : {}),
+                            card: String(save.equipped.card || 'card-classic'), look: myLookLB(), updatedAt: F.serverTimestamp()
+                        });
+                        wrote = true;
+                    });
+                } catch (e) {
+                    if (e && e.code === 'permission-denied') return 'denied';
+                    console.warn('Skor gönderilemedi:', e);
+                    return 'error';
+                }
+                if (wrote) {
+                    LB.remote[m] = run.sc; LB.lastDiff[m] = run.diff;
+                    delete LB.cache[m];
+                    if (lbModal.style.display === 'flex' && LB.mode === m && !LB.view) lbLoad(m, true);
+                }
+                return wrote ? 'ok' : 'skip';
+            }
+            async function writeFlag(run) {
+                const { F, db } = ACC.fb;
+                const id = `${run.uid}_${run.mode}_${run.level}`;
+                try {
+                    await F.setDoc(F.doc(db, 'flags', id), {
+                        u: run.uid, n: ACC.profile.username, m: run.mode, s: run.sc, gt: run.gt, lv: run.level, r: run.reasons.slice(0, 12),
+                        x: { diff: String(run.diff || ''), level: Math.floor(save.level) || 1, card: String(save.equipped.card || 'card-classic'), look: myLookLB(), ...(run.bosses ? { bosses: run.bosses } : {}) },
+                        t: F.serverTimestamp()
+                    });
+                } catch (e) { console.warn('İşaret yazılamadı:', e); }
+            }
+            function afterRun(run) {
+                LAST = run;
+                showVerdict(run);
+                if (!run.uid || !signedIn() || ACC.user.uid !== run.uid || S.banned) return;
+                const job = (async () => {
+                    if (run.level !== 'blocked') {
+                        const res = await submitRun(run);
+                        if (res === 'denied') { run.level = 'blocked'; if (!run.reasons.includes('rule')) run.reasons.push('rule'); showVerdict(run); }
+                    }
+                    if (run.level !== 'ok') await writeFlag(run);
+                })();
+                PENDING = job.catch(() => {});
+            }
+            // Eski skor gönderimi kapatıldı: artık sadece az önce biten koşu gönderilir (kayıttaki rekor değil).
+            // Bu çağrı sadece hesabın tablodaki skorlarını okur (listede olmayanın sırası için).
+            lbSubmitAll = async function () {
+                if (!signedIn() || LB.remoteLoaded) return;
+                const { F, db } = ACC.fb, uid = ACC.user.uid;
+                try {
+                    for (const m of LB_MODES) {
+                        const s = await F.getDoc(F.doc(db, 'leaderboard', m.id, 'scores', uid));
+                        if (s.exists()) { LB.remote[m.id] = Number(s.data().score) || 0; LB.lastDiff[m.id] = s.data().diff || ''; }
+                    }
+                    LB.remoteLoaded = true;
+                } catch (e) {}
+            };
+            // Engellenen koşunun boss bilgisi tabloya yazılmasın
+            const acBoss = lbBossUpdate;
+            lbBossUpdate = function () { if (LAST && LAST.level === 'blocked') return; return acBoss.apply(this, arguments); };
+
+            // ---------- Oyun bitti ekranında not ----------
+            const acStyle = document.createElement('style');
+            acStyle.textContent = `#over-ac{margin:0 auto 10px;max-width:320px;padding:8px 12px;border-radius:12px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.4);color:#fecaca;font-size:.8rem;font-weight:700;display:none}
+                .ac-ban{margin:10px 0 4px;padding:8px 12px;border-radius:12px;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.45);color:#fecaca;font-size:.8rem;font-weight:700;text-align:left}
+                .ac-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+                .ac-actions .ac-q{width:100%;font-size:.75rem;font-weight:800;color:#cbd5e1;text-align:center}
+                .ac-btn{font-size:.75rem;font-weight:800;padding:6px 12px;border-radius:9999px;border:1px solid rgba(255,255,255,.2);background:rgba(15,23,42,.7);color:#e2e8f0;cursor:pointer}
+                .ac-btn.red{border-color:rgba(248,113,113,.6);color:#fca5a5}.ac-btn.green{border-color:rgba(52,211,153,.6);color:#6ee7b7}.ac-btn.amber{border-color:rgba(251,191,36,.6);color:#fcd34d}
+                .ac-btn:disabled{opacity:.5}
+                .ac-done{font-size:.78rem;font-weight:800;color:#6ee7b7;text-align:center;width:100%}
+                #ac-modal .glass-panel{width:min(96vw,470px);padding:1rem;text-align:left}
+                .ac-body{flex:1;min-height:140px;overflow-y:auto;margin:8px 0;overscroll-behavior:contain}
+                .ac-row{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 10px;margin-bottom:6px}
+                .ac-row.blocked{border-color:rgba(248,113,113,.5)}.ac-row.review{border-color:rgba(251,191,36,.5)}
+                .ac-top{display:flex;justify-content:space-between;gap:8px;font-weight:800;color:#fff;font-size:.9rem}
+                .ac-meta{font-size:.72rem;color:#94a3b8;margin-top:2px}
+                .ac-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}.ac-tags span{font-size:.65rem;font-weight:800;padding:1px 7px;border-radius:9999px;background:rgba(248,113,113,.15);color:#fca5a5}
+                .ac-tags span.y{background:rgba(251,191,36,.15);color:#fcd34d}
+                .ac-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+                .ac-empty{color:#94a3b8;font-size:.85rem;text-align:center;padding:20px 0}
+                .ac-help{font-size:.72rem;color:#94a3b8;margin:0 0 6px}
+                #ac-tabs{display:grid!important;grid-template-columns:repeat(4,1fr);gap:6px}#ac-sub{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:6px}
+                #ac-tabs .lb-tab,#ac-sub .lb-tab{font-size:.74rem;padding:8px 2px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}`;
+            document.head.appendChild(acStyle);
+            (function placeNote() {
+                const mode = document.getElementById('over-mode');
+                const p = document.createElement('p'); p.id = 'over-ac';
+                mode.insertAdjacentElement('afterend', p);
+            })();
+            function showVerdict(run) {
+                const el = document.getElementById('over-ac');
+                if (!el) return;
+                const show = run.level === 'blocked' && !!run.uid;
+                el.textContent = show ? T('Bu koşu doğrulanamadı, skor tablosuna gönderilmedi.') : '';
+                el.style.display = show ? 'block' : 'none';
+            }
+
+            // ---------- Yönetici ve ban durumu ----------
+            async function checkStatus() {
+                if (!ACC.user) { S.admin = false; S.banned = false; S.statusUid = null; return; }
+                if (!ACC.fb || ACC.state !== 'ready') return;
+                const uid = ACC.user.uid;
+                if (S.statusUid === uid) return;
+                S.statusUid = uid;
+                const { F, db } = ACC.fb;
+                try { S.admin = (await F.getDoc(F.doc(db, 'admins', uid))).exists(); } catch (e) { S.admin = false; }
+                try { S.banned = (await F.getDoc(F.doc(db, 'bans', uid))).exists(); } catch (e) { S.banned = false; }
+                try { accRender(); } catch (e) {}
+            }
+            const acAcc = accRender;
+            accRender = function () {
+                acAcc.apply(this, arguments);
+                checkStatus();
+                if (accModal.style.display !== 'flex' || ACC.state !== 'ready' || !ACC.profile) return;
+                const slot = document.getElementById('acc-card-slot');
+                if (!slot) return;
+                let anchor = document.getElementById('acc-rename') || slot;
+                if (S.banned && !document.getElementById('acc-ban-note')) {
+                    const p = document.createElement('p'); p.className = 'ac-ban'; p.id = 'acc-ban-note';
+                    p.textContent = T('Hesabın kurallara aykırı davranış nedeniyle skor tablolarından çıkarıldı.');
+                    anchor.insertAdjacentElement('afterend', p); anchor = p;
+                }
+                if (S.admin && !document.getElementById('acc-admin-btn')) {
+                    const b = document.createElement('button'); b.id = 'acc-admin-btn'; b.className = 'btn btn-small w-full';
+                    b.style.marginTop = '8px'; b.setAttribute('translate', 'no');
+                    b.textContent = 'Yönetici paneli';
+                    b.onclick = () => openAdmin();
+                    anchor.insertAdjacentElement('afterend', b);
+                }
+            };
+
+            // ---------- Skor tablosu oyuncu kartı: bildir / yönetici işlemleri ----------
+            const acCard = buildPlayerCard;
+            buildPlayerCard = function (entry) {
+                const el = acCard.apply(this, arguments);
+                try { cardActions(el, entry); } catch (e) {}
+                return el;
+            };
+            function cardActions(el, entry) {
+                if (!signedIn() || !entry || !entry.uid || entry.uid === ACC.user.uid) return;
+                const box = document.createElement('div'); box.className = 'ac-actions';
+                const mode = LB.mode;
+                if (S.admin) {
+                    box.setAttribute('translate', 'no');
+                    const del = btn('Skoru sil', 'amber', async () => { if (await adminDeleteScore(entry.uid, mode, entry.username)) { LB.view = null; lbRender(); lbLoad(mode, true); } });
+                    const ban = btn('Banla', 'red', async () => { if (await adminBan(entry.uid, entry.username, 'Skor tablosundan')) { LB.view = null; lbRender(); lbLoad(mode, true); } });
+                    const nm = btn('İsmi sıfırla', '', async () => { if (await adminResetName(entry.uid, entry.username)) { LB.view = null; delete LB.cache[mode]; lbRender(); lbLoad(mode, true); } });
+                    box.append(del, ban, nm);
+                } else {
+                    const rep = btn(T('Bildir'), '', () => {
+                        box.innerHTML = '';
+                        const q = document.createElement('div'); q.className = 'ac-q'; q.textContent = T('Neden bildiriyorsun?');
+                        const done = () => { box.innerHTML = `<div class="ac-done">${accEsc(T('Bildirildi, teşekkürler.'))}</div>`; };
+                        box.append(q, btn(T('Hile'), 'red', async () => { await sendReport(entry, 'cheat'); done(); }), btn(T('Uygunsuz isim'), 'amber', async () => { await sendReport(entry, 'name'); done(); }));
+                    });
+                    box.append(rep);
+                }
+                el.appendChild(box);
+            }
+            function btn(label, cls, fn) {
+                const b = document.createElement('button');
+                b.className = 'ac-btn' + (cls ? ' ' + cls : '');
+                b.textContent = label;
+                b.onclick = async e => { e.stopPropagation(); b.disabled = true; try { await fn(); } finally { b.disabled = false; } };
+                return b;
+            }
+            async function sendReport(entry, reason) {
+                if (!signedIn()) return;
+                const { F, db } = ACC.fb, me = ACC.user.uid;
+                try {
+                    await F.setDoc(F.doc(db, 'reports', `${me}_${entry.uid}`), {
+                        by: me, byn: ACC.profile.username, tg: entry.uid, tgn: String(entry.username || '').slice(0, 16), r: reason,
+                        m: String(LB.mode || ''), s: Math.floor(Number(entry.score) || 0), t: F.serverTimestamp()
+                    });
+                } catch (e) { /* aynı oyuncuyu daha önce bildirdiysen yeniden yazılamaz */ }
+            }
+
+            // ---------- Yönetici işlemleri ----------
+            async function ensureRtdb() {
+                if (!ON.R || !ON.db) { try { await onStart(); } catch (e) {} }
+                return !!(ON.R && ON.db);
+            }
+            const DLB_KEYS = ['3', '5', 'a3', 't3', 't5', 'c'];
+            async function adminDeleteScore(uid, mode, name) {
+                if (!S.admin) return false;
+                const ok = await askConfirm({ title: 'Skoru sil', text: `${name || '?'} oyuncusunun ${mode} skoru silinsin mi?`, yes: 'Sil', no: 'Vazgeç' });
+                if (!ok) return false;
+                const { F, db } = ACC.fb;
+                try { await F.deleteDoc(F.doc(db, 'leaderboard', mode, 'scores', uid)); delete LB.cache[mode]; showToast('Skor silindi', '', 'check'); return true; }
+                catch (e) { console.warn(e); showToast('Silinemedi', '', 'lock'); return false; }
+            }
+            async function adminBan(uid, name, why) {
+                if (!S.admin) return false;
+                const ok = await askConfirm({ title: 'Banla', text: `${name || '?'} banlansın mı? Skorları, rütbesi, düello ve hayalet kayıtları silinir; skor gönderemez.`, yes: 'Banla', no: 'Vazgeç' });
+                if (!ok) return false;
+                const { F, db } = ACC.fb;
+                try {
+                    await F.setDoc(F.doc(db, 'bans', uid), { n: String(name || '').slice(0, 16), r: String(why || '').slice(0, 80), by: ACC.user.uid, t: F.serverTimestamp() });
+                } catch (e) { console.warn(e); showToast('Banlanamadı', '', 'lock'); return false; }
+                for (const m of LB_MODES) { try { await F.deleteDoc(F.doc(db, 'leaderboard', m.id, 'scores', uid)); } catch (e) {} delete LB.cache[m.id]; }
+                if (await ensureRtdb()) {
+                    try { await ON.R.set(onRef('bans/' + uid), true); } catch (e) { console.warn('RTDB ban yazılamadı:', e); }
+                    const upd = { ['elo/' + uid]: null, ['ghostmeta/' + uid]: null, ['ghosts/' + uid]: null };
+                    for (const k of DLB_KEYS) for (let i = 0; i < 3; i++) upd[`dlb/${k}/${uid}_${i}`] = null;
+                    try { await ON.R.update(onRef(), upd); } catch (e) { console.warn('RTDB kayıtları silinemedi:', e); }
+                    try { DLB.cache = {}; } catch (e) {}
+                }
+                showToast('Banlandı', String(name || ''), 'check');
+                return true;
+            }
+            async function adminUnban(uid, name) {
+                if (!S.admin) return false;
+                const ok = await askConfirm({ title: 'Banı kaldır', text: `${name || '?'} oyuncusunun banı kaldırılsın mı?`, yes: 'Kaldır', no: 'Vazgeç' });
+                if (!ok) return false;
+                const { F, db } = ACC.fb;
+                try { await F.deleteDoc(F.doc(db, 'bans', uid)); } catch (e) { console.warn(e); return false; }
+                if (await ensureRtdb()) { try { await ON.R.remove(onRef('bans/' + uid)); } catch (e) {} }
+                showToast('Ban kaldırıldı', String(name || ''), 'check');
+                return true;
+            }
+            async function adminResetName(uid, oldName) {
+                if (!S.admin) return false;
+                const ok = await askConfirm({ title: 'İsmi sıfırla', text: `${oldName || '?'} ismi "oyuncu_" ile başlayan rastgele bir isimle değiştirilsin mi?`, yes: 'Sıfırla', no: 'Vazgeç' });
+                if (!ok) return false;
+                const { F, db } = ACC.fb;
+                let name = null;
+                try {
+                    const u = await F.getDoc(F.doc(db, 'users', uid));
+                    const oldLower = u.exists() ? (u.data().usernameLower || String(u.data().username || '').toLowerCase()) : String(oldName || '').toLowerCase();
+                    for (let i = 0; i < 6 && !name; i++) {
+                        const cand = 'oyuncu_' + (1000 + Math.floor(Math.random() * 899000));
+                        try {
+                            await F.runTransaction(db, async tx => {
+                                const ref = F.doc(db, 'usernames', cand);
+                                if ((await tx.get(ref)).exists()) throw { code: 'taken' };
+                                tx.set(ref, { uid });
+                                if (oldLower) tx.delete(F.doc(db, 'usernames', oldLower));
+                                tx.update(F.doc(db, 'users', uid), { username: cand, usernameLower: cand });
+                            });
+                            name = cand;
+                        } catch (e) { if (!e || e.code !== 'taken') throw e; }
+                    }
+                } catch (e) { console.warn(e); showToast('İsim sıfırlanamadı', '', 'lock'); return false; }
+                if (!name) return false;
+                try { await F.updateDoc(F.doc(db, 'profiles', uid), { username: name }); } catch (e) {}
+                for (const m of LB_MODES) { try { const ref = F.doc(db, 'leaderboard', m.id, 'scores', uid); if ((await F.getDoc(ref)).exists()) await F.updateDoc(ref, { username: name }); } catch (e) {} }
+                if (await ensureRtdb()) {
+                    for (const p of ['elo', 'ghostmeta']) { try { if ((await ON.R.get(onRef(`${p}/${uid}`))).exists()) await ON.R.set(onRef(`${p}/${uid}/n`), name); } catch (e) {} }
+                }
+                showToast('İsim sıfırlandı', name, 'check');
+                return true;
+            }
+            async function adminApprove(f) {
+                if (!S.admin) return false;
+                const ok = await askConfirm({ title: 'Skoru onayla', text: `${f.n || '?'} oyuncusunun ${f.s} skoru tabloya yazılsın mı? (Mevcut skoru daha düşükse)`, yes: 'Onayla', no: 'Vazgeç' });
+                if (!ok) return false;
+                const { F, db } = ACC.fb, x = f.x || {};
+                const ref = F.doc(db, 'leaderboard', f.m, 'scores', f.u);
+                try {
+                    await F.runTransaction(db, async tx => {
+                        const cur = await tx.get(ref);
+                        if (cur.exists() && (Number(cur.data().score) || 0) >= f.s) return;
+                        tx.set(ref, { username: f.n, score: f.s, gt: f.gt || 0, level: x.level || 1, diff: x.diff || '', ...(x.bosses ? { bosses: x.bosses } : {}),
+                            card: x.card || 'card-classic', look: x.look || {}, updatedAt: F.serverTimestamp() });
+                    });
+                    await F.deleteDoc(F.doc(db, 'flags', f.id));
+                    delete LB.cache[f.m];
+                    showToast('Skor onaylandı', '', 'check');
+                    return true;
+                } catch (e) { console.warn(e); showToast('Onaylanamadı', '', 'lock'); return false; }
+            }
+            async function adminDismiss(col, id) {
+                const { F, db } = ACC.fb;
+                try { await F.deleteDoc(F.doc(db, col, id)); return true; } catch (e) { console.warn(e); return false; }
+            }
+
+            // ---------- Yönetici paneli ----------
+            const AP = { tab: 'flags', mode: 'classic' };
+            const apModal = document.createElement('div');
+            apModal.id = 'ac-modal';
+            apModal.className = 'ui-layer interactive vivid';
+            apModal.setAttribute('translate', 'no');
+            apModal.style.cssText = 'display: none; background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(8px); z-index: 45;';
+            apModal.innerHTML = `<div class="glass-panel"><h2 class="text-2xl font-black text-white" style="text-align:center">Yönetici</h2>
+                <div id="ac-tabs" class="lb-tabs"></div><div id="ac-sub" class="lb-tabs" style="display:none"></div>
+                <div id="ac-body" class="ac-body"></div>
+                <button id="ac-close" class="btn btn-secondary w-full !mt-0">KAPAT</button></div>`;
+            document.body.appendChild(apModal);
+            document.getElementById('ac-close').addEventListener('click', () => { apModal.style.display = 'none'; });
+            MENU_CLOSE['ac-modal'] = 'ac-close';
+            function openAdmin() {
+                if (!S.admin) return;
+                accModal.style.display = 'none';
+                apModal.style.display = 'flex';
+                apRender();
+            }
+            const fmtT = ts => { try { const d = ts && ts.toDate ? ts.toDate() : null; return d ? d.toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''; } catch (e) { return ''; } };
+            const fmtDur = ms => { const s = Math.round((Number(ms) || 0) / 1000); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+            const MODE_TR = { classic: 'Klasik', timeAttack: 'Zamana Karşı', dodge: 'Sadece Kaç' };
+            function apRender() {
+                const tabs = document.getElementById('ac-tabs');
+                tabs.innerHTML = '';
+                for (const [id, name] of [['flags', 'Şüpheli'], ['table', 'Tablo'], ['reports', 'Bildirimler'], ['bans', 'Banlılar']]) {
+                    const b = document.createElement('button');
+                    b.className = 'lb-tab' + (AP.tab === id ? ' on' : '');
+                    b.textContent = name;
+                    b.onclick = () => { AP.tab = id; apRender(); };
+                    tabs.appendChild(b);
+                }
+                const sub = document.getElementById('ac-sub');
+                sub.style.display = AP.tab === 'table' ? 'grid' : 'none';
+                sub.innerHTML = '';
+                if (AP.tab === 'table') for (const m of JUDGED) {
+                    const b = document.createElement('button');
+                    b.className = 'lb-tab' + (AP.mode === m ? ' on' : '');
+                    b.textContent = MODE_TR[m];
+                    b.onclick = () => { AP.mode = m; apRender(); };
+                    sub.appendChild(b);
+                }
+                const body = document.getElementById('ac-body');
+                body.innerHTML = '<p class="ac-empty">Yükleniyor…</p>';
+                ({ flags: apFlags, table: apTable, reports: apReports, bans: apBans })[AP.tab](body).catch(e => {
+                    console.warn(e);
+                    body.innerHTML = '<p class="ac-empty">Okunamadı. Firebase kurallarını ve admins kaydını kontrol et.</p>';
+                });
+            }
+            function row(cls, top, right, meta, tags, acts) {
+                const d = document.createElement('div'); d.className = 'ac-row ' + (cls || '');
+                d.innerHTML = `<div class="ac-top"><span>${top}</span><span>${right}</span></div>${meta ? `<div class="ac-meta">${meta}</div>` : ''}${tags && tags.length ? `<div class="ac-tags">${tags.join('')}</div>` : ''}`;
+                if (acts && acts.length) { const a = document.createElement('div'); a.className = 'ac-acts'; a.append(...acts); d.appendChild(a); }
+                return d;
+            }
+            async function apFlags(body) {
+                const { F, db } = ACC.fb;
+                const snap = await F.getDocs(F.query(F.collection(db, 'flags'), F.orderBy('t', 'desc'), F.limit(60)));
+                body.innerHTML = '<p class="ac-help">Kırmızı: tabloya gönderilmedi (Onayla ile yazabilirsin). Sarı: tabloya girdi, incelemen gerekiyor.</p>';
+                if (snap.empty) { body.innerHTML += '<p class="ac-empty">Şüpheli koşu yok.</p>'; return; }
+                snap.forEach(d => {
+                    const f = Object.assign({ id: d.id }, d.data());
+                    const rate = f.gt ? (f.s / (f.gt / 1000)).toFixed(1) : '?';
+                    const tags = (f.r || []).map(c => `<span class="${f.lv === 'review' ? 'y' : ''}">${accEsc(REASONS[c] || c)}</span>`);
+                    const acts = [];
+                    if (f.lv === 'blocked') acts.push(btn('Onayla', 'green', async () => { if (await adminApprove(f)) apRender(); }));
+                    else acts.push(btn('Skoru sil', 'amber', async () => { if (await adminDeleteScore(f.u, f.m, f.n)) apRender(); }));
+                    acts.push(btn('Banla', 'red', async () => { if (await adminBan(f.u, f.n, (f.r || []).join(', '))) apRender(); }));
+                    acts.push(btn('Yoksay', '', async () => { if (await adminDismiss('flags', f.id)) apRender(); }));
+                    body.appendChild(row(f.lv, accEsc(f.n || '?'), `${f.s}`, `${MODE_TR[f.m] || f.m} · ${fmtDur(f.gt)} · ${rate} puan/sn · ${fmtT(f.t)}`, tags, acts));
+                });
+            }
+            async function apTable(body) {
+                const { F, db } = ACC.fb, m = AP.mode;
+                const snap = await F.getDocs(F.query(F.collection(db, 'leaderboard', m, 'scores'), F.orderBy('score', 'desc'), F.limit(50)));
+                body.innerHTML = '<p class="ac-help">İlk 50. Sarı: ölçülen en iyi oyunun çok üstünde (incele). Gri etiket: hile önleminden önce girilmiş, süre bilgisi yok.</p>';
+                if (snap.empty) { body.innerHTML += '<p class="ac-empty">Tablo boş.</p>'; return; }
+                let i = 0;
+                snap.forEach(d => {
+                    i++;
+                    const v = d.data(), uid = d.id, s = Number(v.score) || 0, gt = Number(v.gt) || 0;
+                    const tags = [];
+                    let cls = '';
+                    if (!gt) tags.push('<span class="y" style="background:rgba(148,163,184,.15);color:#cbd5e1">Süre bilgisi yok</span>');
+                    else if (s > REVIEW[m](gt / 1000)) { tags.push('<span class="y">Şüpheli hız</span>'); cls = 'review'; }
+                    const acts = [
+                        btn('Skoru sil', 'amber', async () => { if (await adminDeleteScore(uid, m, v.username)) apRender(); }),
+                        btn('Banla', 'red', async () => { if (await adminBan(uid, v.username, 'Tablo taraması')) apRender(); })
+                    ];
+                    body.appendChild(row(cls, `${i}. ${accEsc(v.username || '?')}`, `${s}`, gt ? `${fmtDur(gt)} · ${(s / (gt / 1000)).toFixed(1)} puan/sn` : '', tags, acts));
+                });
+            }
+            async function apReports(body) {
+                const { F, db } = ACC.fb;
+                const snap = await F.getDocs(F.query(F.collection(db, 'reports'), F.orderBy('t', 'desc'), F.limit(80)));
+                body.innerHTML = '';
+                if (snap.empty) { body.innerHTML = '<p class="ac-empty">Bildirim yok.</p>'; return; }
+                // Aynı oyuncu için gelen bildirimler bir arada
+                const by = {};
+                snap.forEach(d => { const v = d.data(); (by[v.tg] = by[v.tg] || { name: v.tgn, list: [] }).list.push(Object.assign({ id: d.id }, v)); });
+                for (const [tg, g] of Object.entries(by)) {
+                    const cheat = g.list.filter(x => x.r === 'cheat').length, name = g.list.length - cheat;
+                    const tags = [];
+                    if (cheat) tags.push(`<span>Hile × ${cheat}</span>`);
+                    if (name) tags.push(`<span class="y">Uygunsuz isim × ${name}</span>`);
+                    const who = g.list.map(x => accEsc(x.byn || '?')).slice(0, 6).join(', ');
+                    const acts = [
+                        btn('Banla', 'red', async () => { if (await adminBan(tg, g.name, cheat ? 'Hile bildirimi' : 'İsim bildirimi')) apRender(); }),
+                        btn('İsmi sıfırla', '', async () => { if (await adminResetName(tg, g.name)) apRender(); }),
+                        btn('Yoksay', '', async () => { for (const x of g.list) await adminDismiss('reports', x.id); apRender(); })
+                    ];
+                    body.appendChild(row(cheat ? 'blocked' : 'review', accEsc(g.name || '?'), `${g.list.length}`, `Bildirenler: ${who}`, tags, acts));
+                }
+            }
+            async function apBans(body) {
+                const { F, db } = ACC.fb;
+                const snap = await F.getDocs(F.query(F.collection(db, 'bans'), F.orderBy('t', 'desc'), F.limit(100)));
+                body.innerHTML = '';
+                if (snap.empty) { body.innerHTML = '<p class="ac-empty">Banlı oyuncu yok.</p>'; return; }
+                snap.forEach(d => {
+                    const v = d.data();
+                    body.appendChild(row('blocked', accEsc(v.n || '?'), '', `${accEsc(v.r || '')} · ${fmtT(v.t)}`, [], [
+                        btn('Banı kaldır', 'green', async () => { if (await adminUnban(d.id, v.n)) apRender(); })
+                    ]));
+                });
+            }
+
+            if (location.protocol === 'file:') window.__AC_TEST = { last: () => LAST, state: () => ({ active: R.active, level: R.level, reasons: R.reasons.slice(), mode: R.mode }), setAdmin: v => { S.admin = v; } };
+        })();
+
+        (function acI18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {"Bu koşu doğrulanamadı, skor tablosuna gönderilmedi.": ["This run couldn't be verified, so it wasn't sent to the leaderboard.", "Hindi ma-verify ang takbong ito, kaya hindi ito naipadala sa leaderboard.", "Этот забег не прошёл проверку и не отправлен в таблицу рекордов.", "Cette partie n'a pas pu être vérifiée, elle n'a pas été envoyée au classement.", "Dieser Lauf konnte nicht überprüft werden und wurde nicht an die Bestenliste gesendet.", "No se pudo verificar esta partida, así que no se envió a la clasificación.", "Questa partita non è stata verificata, quindi non è stata inviata alla classifica.", "Não foi possível verificar esta partida, por isso não foi enviada para a classificação.", "Permainan ini tidak bisa diverifikasi, jadi tidak dikirim ke papan skor.", "Bu oyun təsdiqlənmədi, xal cədvəlinə göndərilmədi.", "本局无法验证，未提交到排行榜。", "このプレイは確認できなかったため、ランキングに送信されませんでした。", "이번 판은 확인되지 않아 순위표에 보내지 않았어요.", "تعذّر التحقق من هذه الجولة، لذلك لم تُرسل إلى لوحة الصدارة.", "ما قدرناش نتأكدو من هاد الجولة، داكشي علاش ما تصيفطاتش للترتيب."], "Bildir": ["Report", "I-report", "Пожаловаться", "Signaler", "Melden", "Denunciar", "Segnala", "Denunciar", "Laporkan", "Şikayət et", "举报", "報告", "신고", "إبلاغ", "بلّغ"], "Neden bildiriyorsun?": ["Why are you reporting this player?", "Bakit mo ito ini-report?", "Почему ты жалуешься?", "Pourquoi signales-tu ce joueur ?", "Warum meldest du diesen Spieler?", "¿Por qué denuncias a este jugador?", "Perché segnali questo giocatore?", "Porque estás a denunciar este jogador?", "Kenapa kamu melaporkan pemain ini?", "Niyə şikayət edirsən?", "你为什么要举报？", "報告する理由は？", "왜 신고하나요?", "لماذا تبلغ عن هذا اللاعب؟", "علاش كتبلّغ على هاد اللاعب؟"], "Hile": ["Cheating", "Pandaraya", "Читерство", "Triche", "Schummeln", "Trampas", "Imbroglio", "Batota", "Curang", "Hiylə", "作弊", "チート", "부정행위", "غش", "الغش"], "Uygunsuz isim": ["Inappropriate name", "Hindi angkop na pangalan", "Неприемлемое имя", "Nom inapproprié", "Unangemessener Name", "Nombre inapropiado", "Nome inappropriato", "Nome inadequado", "Nama tidak pantas", "Uyğunsuz ad", "不当名称", "不適切な名前", "부적절한 이름", "اسم غير لائق", "سمية ماشي مناسبة"], "Bildirildi, teşekkürler.": ["Reported, thanks.", "Na-report na, salamat.", "Жалоба отправлена, спасибо.", "Signalé, merci.", "Gemeldet, danke.", "Denunciado, gracias.", "Segnalato, grazie.", "Denunciado, obrigado.", "Sudah dilaporkan, terima kasih.", "Şikayət göndərildi, təşəkkürlər.", "已举报，谢谢。", "報告しました。ありがとう。", "신고했어요. 고마워요.", "تم الإبلاغ، شكرًا.", "تبلّغ، شكرا."], "Hesabın kurallara aykırı davranış nedeniyle skor tablolarından çıkarıldı.": ["Your account has been removed from the leaderboards for breaking the rules.", "Inalis ang account mo sa mga leaderboard dahil sa paglabag sa mga patakaran.", "Твой аккаунт удалён из таблиц рекордов за нарушение правил.", "Ton compte a été retiré des classements pour non-respect des règles.", "Dein Konto wurde wegen Regelverstößen aus den Bestenlisten entfernt.", "Tu cuenta ha sido retirada de las clasificaciones por incumplir las normas.", "Il tuo account è stato rimosso dalle classifiche per violazione delle regole.", "A tua conta foi removida das classificações por violar as regras.", "Akunmu dihapus dari papan skor karena melanggar aturan.", "Hesabın qaydaları pozduğu üçün xal cədvəllərindən çıxarıldı.", "你的账号因违反规则已被移出排行榜。", "ルール違反のため、あなたのアカウントはランキングから外されました。", "규칙 위반으로 계정이 순위표에서 제외되었어요.", "أُزيل حسابك من لوحات الصدارة بسبب مخالفة القواعد.", "الحساب ديالك تحيّد من الترتيب حيت خالفتي القوانين."]};
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
+        })();
 
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
