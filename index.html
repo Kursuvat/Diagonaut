@@ -36344,6 +36344,116 @@
                 return r;
             };
         })();
+        // ===================== SİYAH AT (YENİ BOSS) =====================
+        // Döngünün ilk ve en kolay boss'u: At -> Vezir -> Şah -> (döngü baştan). 150 can.
+        // Saldırılar at hareketine dayanır ve hepsinden tek adımla kaçılır:
+        //  - Atın inişi: bulunduğun kare + oradan at hamlesiyle gidilen 8 kare. Bir kare sağa/sola (ya da ileri/geri) kay.
+        //  - L darbesi: bulunduğun sütunda yukarı doğru 3 kare + bulunduğun satırda bir yana 2 kare (L harfi). L'nin açık tarafına kay.
+        //  - Süvariler: iki normal at çağırır; onları yersen boss'a hasar verirsin.
+        // Uyarı süresi Vezir ve Şah'tan uzun, saldırılar daha seyrek.
+        BOSS_STATS.knight = { name: 'SİYAH AT', symbol: '♞', hp: 150, reward: 100, color: '#2dd4bf', rgb: '45, 212, 191', interval: 2800, warn: 1150, active: 420, speed: 1.2 };
+        (function knightBoss() {
+            const KN = { done: false };
+            const KNIGHT_TO_QUEEN_GAP = 40;   // At yenilince Vezir için gereken ek skor
+            const st = document.createElement('style');
+            st.textContent = `#boss-bar.knight #boss-name{color:#5eead4}#boss-bar.knight #boss-hp-fill{background:linear-gradient(90deg,#0f766e,#5eead4)}`;
+            document.head.appendChild(st);
+
+            const resetK = resetGame;
+            resetGame = function () { KN.done = false; return resetK.apply(this, arguments); };
+
+            const spawnK = spawnBoss;
+            spawnBoss = function (type) {
+                if (type === 'queen' && !KN.done && !tutorial.active) {
+                    KN.done = true;
+                    const r = spawnK.call(this, 'knight');
+                    bossBar.classList.add('knight');
+                    return r;
+                }
+                bossBar.classList.remove('knight');
+                return spawnK.apply(this, arguments);
+            };
+
+            const rewardK = bossReward;
+            bossReward = function (s) {
+                if (s === BOSS_STATS.knight) return Math.round(diffOf(matchStats.diff).boss.queen * 0.6);
+                return rewardK.apply(this, arguments);
+            };
+
+            const defeatK = defeatBoss;
+            defeatBoss = function () {
+                if (!boss || boss.type !== 'knight') {
+                    const wasKing = boss && boss.type === 'king';
+                    const r = defeatK.apply(this, arguments);
+                    if (wasKing) KN.done = false;   // yeni döngü yine Atla başlar
+                    return r;
+                }
+                const s = boss.stats, reward = bossReward(s);
+                const cx = boss.x + TS / 2, cy = boss.y + TS / 2;
+                for (let k = 0; k < 4; k++) createParticles(cx, cy, k % 2 ? s.color : '#fbbf24');
+                floatingTexts.push({ x: cx, y: cy + TS, text: `+${reward} TOKEN`, life: 1.6, rgb: '251, 191, 36' });
+                addTokens(reward); writeSave(); updateTokenUI();
+                showBanner(`${s.name} YENİLDİ! +${reward} TOKEN`, '#fbbf24');
+                playSound('win'); vibrate([60, 40, 60]);
+                bossZones = []; bolts = [];
+                save.stats.knightBosses = (save.stats.knightBosses || 0) + 1;
+                nextBossScore = score + KNIGHT_TO_QUEEN_GAP;
+                checkAchievements();
+                boss = null;
+                bossBar.style.display = 'none';
+                bossBar.classList.remove('knight');
+            };
+
+            const attackK = bossAttack;
+            bossAttack = function () {
+                if (!boss || boss.type !== 'knight') return attackK.apply(this, arguments);
+                const pc = player.targetCol, pr = player.targetRow;
+                const enraged = boss.hp < boss.maxHp / 2;
+                const r = Math.random();
+                if (r < (enraged ? 0.45 : 0.55)) {
+                    // Atın inişi
+                    const cells = [{ col: pc, row: pr }];
+                    for (const [dc, dr] of [[1, 2], [2, 1], [2, -1], [1, -2], [-1, -2], [-2, -1], [-2, 1], [-1, 2]]) cells.push({ col: pc + dc, row: pr + dr });
+                    addBossZone(cells);
+                } else if (r < (enraged ? 0.85 : 0.85)) {
+                    // L darbesi: açık taraf tahtanın içinde kalsın
+                    let dir = Math.random() < 0.5 ? 1 : -1;
+                    if (pc + dir * 2 > COLS - 1 || pc + dir * 2 < 0) dir = -dir;
+                    const cells = [];
+                    for (let k = 0; k < 4; k++) cells.push({ col: pc, row: pr - k });
+                    for (let k = 1; k <= 2; k++) cells.push({ col: pc + dir * k, row: pr });
+                    addBossZone(cells);
+                } else {
+                    spawnEnemy('knight');
+                    setTimeout(() => { if (gameState === 'PLAYING' && boss && boss.type === 'knight') spawnEnemy('knight'); }, 450);
+                    floatingTexts.push({ x: boss.x + TS / 2, y: boss.y + TS, text: T('Süvariler!'), life: 1.0, rgb: '45, 212, 191' });
+                }
+            };
+        })();
+        // Rehberdeki boss adımı ve Nasıl Oynanır: Siyah At da anlatılır
+        (function knightTexts() {
+            const step = TUTORIAL_STEPS.find(s => s.id === 'boss');
+            if (step) step.text = "Belli bir skora ulaşınca önce Siyah At gelir, sonra Siyah Vezir ve Siyah Şah. Boss'a dokunamazsın: taş yedikçe aldığın puan kadar ona hasar verirsin. Boss saldırmadan önce kareler yanıp söner, sonra dolar. Dolu renkli karelerden hemen çık!";
+            const ps = [...document.querySelectorAll('#how-to-play-modal p')];
+            const anchor = ps.find(p => p.textContent.includes('♛') && p.textContent.includes('250') && p.textContent.includes('500'));
+            if (anchor) {
+                const p = document.createElement('p');
+                p.innerHTML = '<b>Siyah At (♞, 150 can):</b> Döngünün ilk ve en kolay boss\'u. Turkuaz kareler gönderir: bulunduğun kare ve oradan at hamlesiyle gidilen kareler, ya da L harfi şeklinde bir darbe. Bir kare yana kayman yeter. Bazen iki at çağırır, onları yiyerek boss\'a hasar verirsin.';
+                const key = i18nNorm(p.innerHTML), HOWTO = ["<b>Black Knight (♞, 150 HP):</b> the first and easiest boss of each cycle. It sends turquoise squares: the square you're on plus the squares a knight could jump to from there, or an L-shaped strike. Sliding one square sideways is enough. Sometimes it calls two knights; capture them to damage the boss.", "<b>Itim na Kabayo (♞, 150 HP):</b> ang una at pinakamadaling boss sa bawat ikot. Nagpapadala ito ng turquoise na kahon: ang kahong kinatatayuan mo at ang mga kahong matatalunan ng kabayo mula roon, o isang hampas na hugis L. Sapat na ang umusog ng isang kahon. Minsan tumatawag ito ng dalawang kabayo; kainin sila para masaktan ang boss.", "<b>Чёрный конь (♞, 150 ед. здоровья):</b> первый и самый лёгкий босс в каждом круге. Отправляет бирюзовые клетки: твою клетку и клетки, куда отсюда мог бы прыгнуть конь, или удар в форме буквы Г. Достаточно сдвинуться на одну клетку. Иногда призывает двух коней — съешь их, чтобы ранить босса.", "<b>Cavalier noir (♞, 150 PV) :</b> le premier boss de chaque cycle, et le plus facile. Il envoie des cases turquoise : ta case et celles où un cavalier pourrait sauter, ou une frappe en forme de L. Il suffit de te décaler d'une case. Parfois il appelle deux cavaliers : prends-les pour blesser le boss.", "<b>Schwarzer Springer (♞, 150 LP):</b> der erste und leichteste Boss jeder Runde. Er schickt türkise Felder: dein Feld und die Felder, auf die ein Springer von dort springen könnte, oder einen L-förmigen Schlag. Ein Feld zur Seite zu rutschen reicht. Manchmal ruft er zwei Springer; schlag sie, um dem Boss Schaden zuzufügen.", "<b>Caballo Negro (♞, 150 PV):</b> el primer jefe de cada ciclo y el más fácil. Envía casillas turquesa: tu casilla y las casillas a las que saltaría un caballo desde ahí, o un golpe en forma de L. Basta con moverte una casilla. A veces llama a dos caballos; cómetelos para dañar al jefe.", "<b>Cavallo Nero (♞, 150 PV):</b> il primo boss di ogni ciclo e il più facile. Manda caselle turchesi: la tua casella e quelle dove salterebbe un cavallo da lì, oppure un colpo a forma di L. Basta spostarti di una casella. A volte chiama due cavalli: mangiali per danneggiare il boss.", "<b>Cavalo Negro (♞, 150 PV):</b> o primeiro chefe de cada ciclo e o mais fácil. Envia casas turquesa: a tua casa e as casas para onde um cavalo saltaria a partir daí, ou um golpe em forma de L. Basta deslizares uma casa. Às vezes chama dois cavalos; captura-os para causar dano ao chefe.", "<b>Kuda Hitam (♞, 150 HP):</b> bos pertama dan termudah di setiap putaran. Ia mengirim kotak toska: kotak tempatmu berdiri dan kotak yang bisa dilompati kuda dari sana, atau serangan berbentuk L. Cukup bergeser satu kotak. Kadang ia memanggil dua kuda; makan mereka untuk melukai bos.", "<b>Qara At (♞, 150 can):</b> hər dövrün ilk və ən asan bossu. Firuzəyi xanalar göndərir: dayandığın xana və atın oradan tullana biləcəyi xanalar, ya da L şəkilli zərbə. Bir xana yana keçmək kifayətdir. Bəzən iki at çağırır; onları vuraraq bossa zərbə vurursan.", "<b>黑马（♞，150 生命）：</b>每轮的第一个、也是最简单的首领。它会发出青绿色格子：你所在的格子以及马从那里能跳到的格子，或者一记 L 形攻击。横移一格就够了。有时它会召唤两匹马，吃掉它们就能伤害首领。", "<b>黒のナイト（♞、HP 150）：</b>各サイクル最初の、いちばん簡単なボス。ターコイズのマスを出す：今いるマスと、そこからナイトが跳べるマス、またはL字の攻撃。1マス横にずれれば十分。ときどきナイトを2体呼ぶ。取ればボスにダメージ。", "<b>흑기사 (♞, 체력 150):</b> 매 순환의 첫 번째이자 가장 쉬운 보스. 청록색 칸을 보내요: 지금 있는 칸과 거기서 나이트가 뛸 수 있는 칸, 또는 L자 공격. 옆으로 한 칸만 옮기면 돼요. 가끔 나이트 두 개를 불러요. 잡으면 보스에게 피해를 줘요.", "<b>الحصان الأسود (♞، 150 نقطة صحة):</b> أول زعيم في كل دورة وأسهلها. يرسل مربعات فيروزية: المربع الذي تقف عليه والمربعات التي يقفز إليها الحصان من هناك، أو ضربة على شكل L. يكفي أن تنتقل مربعًا واحدًا. أحيانًا يستدعي حصانين؛ كُلهما لتضر الزعيم.", "<b>العود الكحل (♞، 150 ديال الصحة):</b> أول زعيم فكل دورة وأسهل واحد. كيصيفط خانات فيروزية: الخانة اللي واقف فيها والخانات اللي يقدر العود ينقز ليهم من تما، ولا ضربة بشكل L. يكفي تزيح خانة وحدة. بعض المرات كيعيط على جوج عودات؛ كولهم باش تضر الزعيم."];
+                const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+                const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+                ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = HOWTO[i]; });
+                anchor.insertAdjacentElement('afterend', p);
+                if (LANG !== 'tr' && typeof i18nTree === 'function') i18nTree(p);
+            }
+        })();
+        (function knightI18n() {
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {"SİYAH AT": ["BLACK KNIGHT", "ITIM NA KABAYO", "ЧЁРНЫЙ КОНЬ", "CAVALIER NOIR", "SCHWARZER SPRINGER", "CABALLO NEGRO", "CAVALLO NERO", "CAVALO NEGRO", "KUDA HITAM", "QARA AT", "黑马", "黒のナイト", "흑기사", "الحصان الأسود", "العود الكحل"], "♞ SİYAH AT GELDİ!": ["♞ THE BLACK KNIGHT IS HERE!", "♞ NARITO NA ANG ITIM NA KABAYO!", "♞ ЧЁРНЫЙ КОНЬ ЗДЕСЬ!", "♞ LE CAVALIER NOIR EST LÀ !", "♞ DER SCHWARZE SPRINGER IST DA!", "♞ ¡LLEGÓ EL CABALLO NEGRO!", "♞ È ARRIVATO IL CAVALLO NERO!", "♞ CHEGOU O CAVALO NEGRO!", "♞ KUDA HITAM DATANG!", "♞ QARA AT GƏLDİ!", "♞ 黑马来了！", "♞ 黒のナイトが現れた！", "♞ 흑기사가 나타났다!", "♞ وصل الحصان الأسود!", "♞ العود الكحل وصل!"], "SİYAH AT YENİLDİ! +{0} TOKEN": ["BLACK KNIGHT DEFEATED! +{0} TOKENS", "NATALO ANG ITIM NA KABAYO! +{0} TOKEN", "ЧЁРНЫЙ КОНЬ ПОВЕРЖЕН! +{0} ТОКЕНОВ", "CAVALIER NOIR VAINCU ! +{0} JETONS", "SCHWARZER SPRINGER BESIEGT! +{0} TOKEN", "¡CABALLO NEGRO DERROTADO! +{0} TOKENS", "CAVALLO NERO SCONFITTO! +{0} TOKEN", "CAVALO NEGRO DERROTADO! +{0} TOKENS", "KUDA HITAM DIKALAHKAN! +{0} TOKEN", "QARA AT MƏĞLUB OLDU! +{0} TOKEN", "黑马被击败！+{0} 代币", "黒のナイトを倒した！+{0}トークン", "흑기사 처치! +{0} 토큰", "هُزم الحصان الأسود! +{0} رمز", "العود الكحل طاح! +{0} توكن"], "SİYAH AT saldırısından kaçamadın!": ["You couldn't escape the BLACK KNIGHT's attack!", "Hindi mo naiwasan ang atake ng ITIM NA KABAYO!", "Вы не увернулись от атаки ЧЁРНОГО КОНЯ!", "Tu n'as pas esquivé l'attaque du CAVALIER NOIR !", "Du konntest dem Angriff des SCHWARZEN SPRINGERS nicht ausweichen!", "¡No esquivaste el ataque del CABALLO NEGRO!", "Non hai schivato l'attacco del CAVALLO NERO!", "Não conseguiste fugir ao ataque do CAVALO NEGRO!", "Kamu tidak bisa menghindari serangan KUDA HITAM!", "QARA ATIN hücumundan qaça bilmədin!", "你没能躲开黑马的攻击！", "黒のナイトの攻撃をかわせなかった！", "흑기사의 공격을 피하지 못했어요!", "لم تتفادَ هجوم الحصان الأسود!", "ما قدرتيش تهرب من الهجوم ديال العود الكحل!"], "Süvariler!": ["Cavalry!", "Mga kabalyero!", "Конница!", "Cavalerie !", "Kavallerie!", "¡Caballería!", "Cavalleria!", "Cavalaria!", "Pasukan berkuda!", "Süvarilər!", "骑兵来了！", "騎兵だ！", "기병대!", "الفرسان!", "الخيالة!"], "Belli bir skora ulaşınca önce Siyah At gelir, sonra Siyah Vezir ve Siyah Şah. Boss'a dokunamazsın: taş yedikçe aldığın puan kadar ona hasar verirsin. Boss saldırmadan önce kareler yanıp söner, sonra dolar. Dolu renkli karelerden hemen çık!": ["At a certain score the Black Knight arrives first, then the Black Queen and the Black King. You can't touch a boss: every piece you capture deals as much damage as the points you earn. Before a boss attacks, squares blink, then fill in. Get out of filled colored squares right away!", "Sa isang tiyak na score, unang darating ang Itim na Kabayo, saka ang Itim na Reyna at Itim na Hari. Hindi mo mahahawakan ang boss: bawat piyesang kinain mo ay tatama rito nang kasinlaki ng puntos mo. Bago umatake ang boss, kumikislap muna ang mga kahon, saka napupuno. Umalis agad sa punong may kulay na kahon!", "При определённом счёте сначала появляется Чёрный конь, затем Чёрный ферзь и Чёрный король. Босса нельзя коснуться: каждая съеденная фигура наносит ему столько урона, сколько очков ты получил. Перед атакой клетки мигают, а потом заполняются. Сразу уходи с заполненных цветных клеток!", "À un certain score, le Cavalier noir arrive d'abord, puis la Dame noire et le Roi noir. Tu ne peux pas toucher un boss : chaque pièce prise lui inflige autant de dégâts que les points gagnés. Avant une attaque, des cases clignotent puis se remplissent. Quitte tout de suite les cases colorées pleines !", "Ab einem bestimmten Punktestand kommt zuerst der Schwarze Springer, dann die Schwarze Dame und der Schwarze König. Bosse kannst du nicht berühren: Jede geschlagene Figur richtet so viel Schaden an, wie du Punkte bekommst. Vor einem Angriff blinken Felder und füllen sich dann. Verlass gefüllte farbige Felder sofort!", "Al llegar a cierta puntuación aparece primero el Caballo Negro, luego la Dama Negra y el Rey Negro. No puedes tocar al jefe: cada pieza que capturas le hace tanto daño como los puntos que ganas. Antes de atacar, las casillas parpadean y luego se llenan. ¡Sal enseguida de las casillas de color llenas!", "A un certo punteggio arriva prima il Cavallo Nero, poi la Regina Nera e il Re Nero. Non puoi toccare un boss: ogni pezzo catturato gli infligge tanti danni quanti punti guadagni. Prima di un attacco le caselle lampeggiano, poi si riempiono. Esci subito dalle caselle colorate piene!", "A partir de certa pontuação chega primeiro o Cavalo Negro, depois a Dama Negra e o Rei Negro. Não podes tocar num chefe: cada peça que capturas causa-lhe tanto dano quanto os pontos que ganhas. Antes de um ataque, as casas piscam e depois enchem-se. Sai logo das casas coloridas cheias!", "Di skor tertentu Kuda Hitam datang lebih dulu, lalu Ratu Hitam dan Raja Hitam. Kamu tidak bisa menyentuh bos: setiap bidak yang kamu makan memberi kerusakan sebesar poin yang kamu dapat. Sebelum bos menyerang, kotak berkedip lalu terisi. Segera keluar dari kotak berwarna yang terisi!", "Müəyyən xala çatanda əvvəlcə Qara At gəlir, sonra Qara Vəzir və Qara Şah. Bossa toxuna bilməzsən: vurduğun hər fiqur qazandığın xal qədər ona zərbə vurur. Boss hücum etməzdən əvvəl xanalar yanıb-sönür, sonra dolur. Dolu rəngli xanalardan dərhal çıx!", "达到一定分数时先出现黑马，然后是黑后和黑王。你不能碰到首领：每吃掉一枚棋子，就会对它造成与所得分数相同的伤害。首领攻击前，格子会先闪烁，然后被填满。立刻离开已填满的彩色格子！", "一定のスコアに達すると、まず黒のナイト、次に黒のクイーンと黒のキングが現れる。ボスには触れない。駒を取るたびに、得た点数と同じダメージを与える。ボスの攻撃前はマスが点滅し、その後塗りつぶされる。塗られた色付きのマスからすぐ出よう！", "일정 점수에 도달하면 먼저 흑기사가, 그다음 흑색 퀸과 흑색 킹이 나와요. 보스는 만질 수 없어요. 말을 잡을 때마다 얻은 점수만큼 피해를 줘요. 보스가 공격하기 전에 칸이 깜빡이다가 채워져요. 채워진 색깔 칸에서 바로 나오세요!", "عند الوصول إلى نتيجة معينة يظهر الحصان الأسود أولًا، ثم الوزير الأسود والملك الأسود. لا يمكنك لمس الزعيم: كل قطعة تأكلها تُلحق به ضررًا بقدر النقاط التي تكسبها. قبل الهجوم تومض المربعات ثم تمتلئ. اخرج فورًا من المربعات الملونة الممتلئة!", "ملي توصل لواحد السكور كيجي العود الكحل الأول، ومن بعد الوزير الكحل والملك الكحل. ما تقدرش تقيس الزعيم: كل قطعة كتاكلها كتضربو بقد النقط اللي ربحتي. قبل ما يهجم، الخانات كيضويو وكيطفاو ومن بعد كيتعمرو. خرج دغيا من الخانات الملونين العامرين!"]};
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
+        })();
+
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
         accInit();
