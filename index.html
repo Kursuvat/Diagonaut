@@ -36313,6 +36313,37 @@
             for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
         })();
 
+
+        // ===================== ÜST ÜSTE DOĞAN TAŞLAR =====================
+        // Yeni doğan taş (ya da zincir) başka bir taşın üstüne denk gelirse en yakın boş sütuna kaydırılır,
+        // hiç boş sütun yoksa bir kare yukarı alınır. Kale, uyarısı bitince yeri doluysa yer açılana kadar biraz bekler.
+        // Rastgele sayı kullanılmaz: düello ve hayalet yarışındaki ortak taş sırası bozulmaz. Bulmacalara dokunulmaz.
+        (function noOverlapSpawns() {
+            const laneOf = e => Math.round(e.x / TS);
+            const busy = (col, y, skip) => enemies.some(o => !skip.has(o) && laneOf(o) === col && Math.abs(o.y - y) < TS * 0.95);
+            const spawnNoOverlap = spawnEnemy;
+            spawnEnemy = function (forcedType, forcedCol) {
+                if (puzzle) return spawnNoOverlap.apply(this, arguments);
+                if (forcedType === 'rook' && forcedCol !== undefined && busy(forcedCol, spawnRowY(), new Set())) {
+                    rookWarnings.push({ col: forcedCol, t: ROOK_WARN_TIME - 120 });   // biraz daha uyar, sonra tekrar dene
+                    return;
+                }
+                const before = new Set(enemies);
+                const r = spawnNoOverlap.apply(this, arguments);
+                const fresh = enemies.filter(e => !before.has(e));
+                if (!fresh.length) return r;
+                const others = new Set(fresh);
+                const clashes = (dc, dy) => fresh.some(e => { const c = laneOf(e) + dc; return c < 0 || c >= COLS || busy(c, e.y + dy, others); });
+                if (!clashes(0, 0)) return r;
+                for (const dc of [1, -1, 2, -2, 3, -3, 4, -4]) {
+                    if (!clashes(dc, 0)) { for (const e of fresh) { e.x += dc * TS; e.col += dc; e.spawnCol += dc; } return r; }
+                }
+                for (let k = 1; k <= 3; k++) {
+                    if (!clashes(0, -k * TS)) { for (const e of fresh) { e.y -= k * TS; e.spawnedY = e.y; } return r; }
+                }
+                return r;
+            };
+        })();
         if (LANG !== 'tr') applyLanguage(LANG);
         accRender();
         accInit();
