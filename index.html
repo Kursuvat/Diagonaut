@@ -7402,19 +7402,26 @@
 
         function markCaptureTargets(prevCol) {
             const pcy = player.y + TS / 2;
+            // "Eski şerit" = piyonun ŞU AN fiziksel olarak durduğu sütun.
+            // Hızlı art arda kaydırmada önceki hedef sütun (prevCol) henüz ulaşılmamış olabilir;
+            // onu eski şerit saymak, yandan geçtiğin taşı "önünden düz gelen" sanıp canını götürüyordu.
+            const fromCol = prevCol === undefined ? undefined : Math.round(player.x / TS);
             for (const e of enemies) {
                 const rel = (e.y + TS / 2) - pcy; // eksi = piyonun üstünde
+                const inReach = rel >= -TS * CAPTURE_REACH_UP && rel <= TS * CAPTURE_REACH_DOWN;
                 // Kale yana kaydığı için tam şeritte olmasa da şeride değiyorsa sayılır
                 const inLane = e.type === 'rook'
                     ? Math.abs(e.x - player.targetCol * TS) < TS
                     : Math.round(e.x / TS) === player.targetCol;
-                e.capturable = inLane &&
-                               rel >= -TS * CAPTURE_REACH_UP && rel <= TS * CAPTURE_REACH_DOWN;
+                // Zaten çaprazdan yemeye gittiğin taş, ona değmeden yeniden kaydırınca
+                // birden "düz tehdit"e dönüşmesin: hâlâ menzildeyse yenebilir kalır.
+                e.keepCapture = !inLane && !!e.capturable && inReach;
+                e.capturable = (inLane && inReach) || e.keepCapture;
                 // Eski şeridinde tam önünden düz gelen taş: kaçarken sana değerse yenmez.
                 // Şeridinden yarıdan fazla çıkmışsan kurtulursun, çıkamadıysan düz çarpmış sayılırsın.
-                const inOldLane = prevCol !== undefined && (e.type === 'rook'
-                    ? Math.abs(e.x - prevCol * TS) < TS * 0.5
-                    : Math.round(e.x / TS) === prevCol);
+                const inOldLane = fromCol !== undefined && (e.type === 'rook'
+                    ? Math.abs(e.x - fromCol * TS) < TS * 0.5
+                    : Math.round(e.x / TS) === fromCol);
                 e.straightThreat = !e.capturable && inOldLane && rel >= -TS * 2 && rel <= TS * CAPTURE_REACH_DOWN;
             }
         }
@@ -8542,7 +8549,7 @@
                 let enemyCol = Math.round(e.x / TS);
                 // Kayarken serbest yeme yok: sadece yandan/çapraz değen ya da çapraz av için işaretlenen taş yenir
                 let canEat = Math.abs(dx) > TS * 0.2 && player.targetCol !== enemyCol;
-                let diagonalCapture = e.capturable && (e.type === 'rook' || enemyCol === player.targetCol);
+                let diagonalCapture = e.capturable && (e.type === 'rook' || e.keepCapture || enemyCol === player.targetCol);
 
                 if (distance < TS * 0.75) {
                     // Önünden düz gelen taştan kaçıyordun: yarıdan fazla çıktıysan kurtuldun, çıkamadıysan düz çarptın
@@ -8744,6 +8751,7 @@
                 player.dangerTimerGreen = 0;
                 player.dangerTimerBoss = 0;
                 floatingTexts.push({ x: player.x + TS / 2, y: player.y, text: 'YEDEK CAN!', life: 1.3, rgb: '244, 114, 182' });
+                if (reason) showToast(reason);   // canın neden gittiğini göster
                 createParticles(player.x + TS / 2, player.y + TS / 2, '#f472b6');
                 playSound('life');
                 vibrate([40, 30, 40]);
@@ -31311,6 +31319,7 @@
                 effects.shield = Math.max(effects.shield, 3000);
                 player.dangerTimerRed = 0; player.dangerTimerYellow = 0; player.dangerTimerGreen = 0; player.dangerTimerBoss = 0;
                 floatingTexts.push({ x: player.x + TS / 2, y: player.y, text: DUEL.lives === 1 ? 'SON CAN!' : 'BİR CAN GİTTİ!', life: 1.4, rgb: '248, 113, 113' });
+                if (reason) showToast(reason);   // canın neden gittiğini göster
                 createParticles(player.x + TS / 2, player.y + TS / 2, '#f87171');
                 playSound('warn');
                 vibrate([60, 40, 60]);
