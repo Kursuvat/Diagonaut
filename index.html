@@ -1864,6 +1864,10 @@
         .toast { background: #212328 !important; border: 1px solid var(--wood-line) !important; color: var(--ivory) !important; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.9) !important; }
         .toast .toast-reward { color: var(--brass-hi) !important; }
         .toast-ico { color: var(--brass); margin-right: 6px; }
+        /* Canın neden gittiğini anlatan bildirim: arkasındaki taşlar görünsün diye saydam */
+        .toast.toast-life { background: rgba(33, 35, 40, 0.28) !important; border-color: rgba(219, 138, 120, 0.35) !important;
+            box-shadow: none !important; opacity: 0.8; font-size: 0.8rem; padding: 6px 12px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); backdrop-filter: none; }
 
         /* Metin renkleri: soğuk griler yerine sıcak tonlar */
         .ui-layer .text-white, .ui-layer .text-slate-200 { color: var(--ivory) !important; }
@@ -3408,17 +3412,17 @@
         // Bildirimler: aynı anda en fazla 2 tane görünür, fazlası sırayla gelir
         const toastQueue = [];
         let toastsVisible = 0;
-        function showToast(text, reward, icon) {
-            toastQueue.push({ text, reward, icon });
+        function showToast(text, reward, icon, cls) {
+            toastQueue.push({ text, reward, icon, cls });
             pumpToasts();
         }
 
         function pumpToasts() {
             const area = document.getElementById('toast-area');
             while (toastsVisible < 2 && toastQueue.length) {
-                const { text, reward, icon } = toastQueue.shift();
+                const { text, reward, icon, cls } = toastQueue.shift();
                 const el = document.createElement('div');
-                el.className = 'toast';
+                el.className = cls ? 'toast ' + cls : 'toast';
                 el.innerHTML = `${icon ? `<span class="toast-ico">${ico(icon)}</span>` : ''}<span>${text}</span>${reward ? `<span class="toast-reward">${reward}</span>` : ''}`;
                 area.appendChild(el);
                 toastsVisible++;
@@ -8752,7 +8756,7 @@
                 player.dangerTimerGreen = 0;
                 player.dangerTimerBoss = 0;
                 floatingTexts.push({ x: player.x + TS / 2, y: player.y, text: 'YEDEK CAN!', life: 1.3, rgb: '244, 114, 182' });
-                if (reason) showToast(reason);   // canın neden gittiğini göster
+                if (reason) showToast(reason, '', '', 'toast-life');   // canın neden gittiğini göster (saydam)
                 createParticles(player.x + TS / 2, player.y + TS / 2, '#f472b6');
                 playSound('life');
                 vibrate([40, 30, 40]);
@@ -31320,7 +31324,7 @@
                 effects.shield = Math.max(effects.shield, 3000);
                 player.dangerTimerRed = 0; player.dangerTimerYellow = 0; player.dangerTimerGreen = 0; player.dangerTimerBoss = 0;
                 floatingTexts.push({ x: player.x + TS / 2, y: player.y, text: DUEL.lives === 1 ? 'SON CAN!' : 'BİR CAN GİTTİ!', life: 1.4, rgb: '248, 113, 113' });
-                if (reason) showToast(reason);   // canın neden gittiğini göster
+                if (reason) showToast(reason, '', '', 'toast-life');   // canın neden gittiğini göster (saydam)
                 createParticles(player.x + TS / 2, player.y + TS / 2, '#f87171');
                 playSound('warn');
                 vibrate([60, 40, 60]);
