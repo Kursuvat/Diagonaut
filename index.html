@@ -3146,8 +3146,11 @@
         // Süslü rakipler: rakiplerin %3'ü şapka ya da gözlükle doğar, yiyince +10 token
         const FANCY_CHANCE = 0.03;
         const FANCY_REWARD = 10;
+        // Online Zamana Karşı / Sadece Kaç düellosu oynanıyor mu? (maç modu 'duel', kurallar o modun)
+        function duelRuleIs(kind) { return matchStats.mode === 'duel' && typeof DUEL !== 'undefined' && DUEL.kind === kind && (DUEL.phase === 'playing' || DUEL.phase === 'vs'); }
+        function dodgeRules() { return matchStats.mode === 'dodge' || duelRuleIs('dodge'); }
         function maybeDress(e) {
-            if (tutorial.active || puzzle || matchStats.mode === 'timeAttack' || matchStats.mode === 'dodge' || Math.random() >= FANCY_CHANCE) return e;
+            if (tutorial.active || puzzle || matchStats.mode === 'timeAttack' || dodgeRules() || duelRuleIs('ta') || Math.random() >= FANCY_CHANCE) return e;
             const useHat = Math.random() < 0.5;
             const pool = (useHat ? SHOP.hat.items : SHOP.face.items).filter(i => i.draw && !i.secret);
             e.acc = { kind: useHat ? 'hat' : 'face', id: pool[Math.floor(Math.random() * pool.length)].id };
@@ -8366,13 +8369,15 @@
             gameTime += dt;
 
             // Zamana Karşı: gerçek zamanlı 60 saniye
-            if (matchStats.mode === 'timeAttack') {
+            const taDuel = duelRuleIs('ta');
+            if (matchStats.mode === 'timeAttack' || taDuel) {
                 // Zaman Yavaşlatıcı açıkken geri sayım da yarı hızda akar
                 timeLeft -= effects.slow > 0 ? dt * 0.5 : dt;
                 timeWrap.classList.toggle('slowed', effects.slow > 0);
                 if (timeLeft <= 0) {
                     timeLeft = 0;
                     updateTimeDisplay();
+                    if (taDuel) { duelTimeUp(); return; }   // online: süre bitince koşu biter, rakip beklenir
                     matchStats.taFinished = true;
                     checkAchievements(); // maç bitmeden: ödül "bu maçta" sayılsın
                     endGame('60 saniye doldu!', true, null, true);
@@ -8484,7 +8489,7 @@
                 }
 
                 // Sadece Kaç: yanından geçip giden her taş puan
-                if (matchStats.mode === 'dodge' && !e.passed && e.y > player.y + TS * 0.5) {
+                if (dodgeRules() && !e.passed && e.y > player.y + TS * 0.5) {
                     e.passed = true;
                     save.stats.dodged++;
                     score += effects.mult;
@@ -8562,13 +8567,13 @@
                         if (Math.abs(dx) >= TS * 0.5) continue;
                         dead = true;
                         cause = 'straight';
-                        reason = matchStats.mode === 'dodge'
+                        reason = dodgeRules()
                             ? "Bir taşa çarptın! Bu modda taşları yiyemezsin, sadece kaçabilirsin."
                             : "Düz çarptın! Taşları yemek için sağ/sol yaparak çaprazdan saldırmalısın.";
                         brokeAt = i; break;
                     }
                     // Sadece Kaç: hiçbir taşı yiyemezsin. Kalkan varsa taş zararsızca parçalanır.
-                    if (matchStats.mode === 'dodge') {
+                    if (dodgeRules()) {
                         if (effects.shield > 0) {
                             createParticles(e.x + TS/2, e.y + TS/2, '#38bdf8');
                             enemies.splice(i, 1);
@@ -30459,12 +30464,16 @@
             if (kind === 'attack') return `${lv} can, aynı taş sırası. Her ${ATK_PER} taş yediğinde rakibinin tahtasına bir saldırı taşı gider. İkisinin de canı bitince skoru yüksek olan kazanır.`;
             if (kind === 'raid') return `Zor seviyede klasik kurallar. Baykuş'un ${RAID_HP} canı ikinizin ortak hasarıyla düşer. Biriniz yenilirse ortağını izler.`;
             if (kind === 'team') return `İkiye iki, kişi başı ${lv} can, aynı taş sırası. Takım skorları toplanır, yüksek olan takım kazanır.`;
+            if (kind === 'ta') return `${lv} can, aynı taş sırası, ${TIME_ATTACK_DURATION / 1000} saniye. Süre ya da canların bitince koşun biter, skoru yüksek olan kazanır.`;
+            if (kind === 'dodge') return `${lv} can, aynı taş sırası. Taşları yiyemezsin, yanından geçtiğin her taş puan. İkisinin de canı bitince skoru yüksek olan kazanır.`;
             return `${lv} can, aynı taş sırası. Canı biten rakibini izler. İkisinin de canı bitince skoru yüksek olan kazanır.`;
         }
         function duelModeName(lv, kind) {
             kind = kind || DUEL.kind || 'duel';
             if (kind === 'attack') return 'Saldırı Düellosu';
             if (kind === 'raid') return 'Boss Baskını';
+            if (kind === 'ta') return 'Zamana Karşı Düellosu';
+            if (kind === 'dodge') return 'Sadece Kaç Düellosu';
             if (kind === 'team') return lv === 5 ? 'Uzun Takım Düellosu' : 'Takım Düellosu';
             return lv === 5 ? 'Uzun Düello' : 'Düello';
         }
@@ -30668,7 +30677,7 @@
             vibrate([40, 30, 40]);
             const kind = invKind(inv);
             const lv = kindLives(kind, Number(inv.lv));
-            const title = inv.md === 'tp' ? 'Seni takımına çağırıyor' : kind === 'attack' ? 'Seni saldırı düellosuna çağırıyor' : kind === 'raid' ? 'Seni boss baskınına çağırıyor' : 'Seni düelloya çağırıyor';
+            const title = inv.md === 'tp' ? 'Seni takımına çağırıyor' : kind === 'attack' ? 'Seni saldırı düellosuna çağırıyor' : kind === 'raid' ? 'Seni boss baskınına çağırıyor' : kind === 'ta' ? 'Seni zamana karşı düellosuna çağırıyor' : kind === 'dodge' ? 'Seni sadece kaç düellosuna çağırıyor' : 'Seni düelloya çağırıyor';
             if (typeof chatModal !== 'undefined' && chatModal.style.display === 'flex') chatModal.style.display = 'none';   // davet sohbetin arkasında kalmasın
             duelShow(`<div class="duel-spin still" aria-hidden="true">${ico(KIND_ICON[kind] || 'swords')}</div>
                 <div class="duel-sub big"><span translate="no">${accEsc(inv.n || '?')}</span></div>
@@ -30822,8 +30831,13 @@
             // Düello: Klasik kuralları, boss'lar açık, herkes aynı zorlukta, maça yedek canla başlama yok
             matchStats.mode = 'duel';
             matchStats.diff = DUEL.kind === 'raid' ? RAID_DIFF : DUEL_DIFF;
-            nextBossScore = DUEL.kind === 'raid' ? Infinity : BOSS_FIRST_SCORE;
+            nextBossScore = (DUEL.kind === 'raid' || DUEL.kind === 'ta' || DUEL.kind === 'dodge') ? Infinity : BOSS_FIRST_SCORE;   // tek kişilik modlarda olduğu gibi boss yok
             effects.extraLife = false;
+            // Zamana Karşı düellosu: 60 saniyelik sayaç
+            timeLeft = TIME_ATTACK_DURATION; lastTimeShown = -1;
+            timeWrap.classList.remove('low', 'slowed');
+            timeWrap.style.display = DUEL.kind === 'ta' ? 'inline-flex' : 'none';
+            if (DUEL.kind === 'ta') updateTimeDisplay();
             bestAtStart = 0; recordAnnounced = true;
             gameOverScreen.style.display = 'none';
             duelHud.style.display = 'block';
@@ -31000,13 +31014,19 @@
             });
         }
 
+        // Zamana Karşı düellosunda süre bitti: koşu biter (canlar kalsa da), sonuç ya da rakibi izleme gelir
+        function duelTimeUp() {
+            if (DUEL.myDone) return;
+            showBanner('SÜRE DOLDU!', '#fbbf24', false);
+            duelFinalDeath('', null, true);
+        }
         // Oyuncu bütün canlarını kaybetti
-        function duelFinalDeath(reason, cause) {
+        function duelFinalDeath(reason, cause, timeUp) {
             gameState = 'GAMEOVER';
             touchControls.style.display = 'none';
             pauseBtn.style.display = 'none';
-            playSound('death');
-            vibrate(200);
+            if (timeUp) { playSound('achieve'); vibrate([40, 30, 40]); }
+            else { playSound('death'); vibrate(200); }
             DUEL.myDone = true;
             DUEL.myFinal = Math.floor(score) || 0;
             duelPushNow();
@@ -32916,17 +32936,18 @@
         // ===================== ONLINE 2: YENİ MODLAR, RÜTBE, GÖREVLER, MESAJLAŞMA =====================
         // Düello motoru dört türü taşır: düello, saldırı düellosu, boss baskını (2 kişilik ortak) ve takım düellosu (2'ye 2).
         // Hayalet yarışı tek kişilik ama başkasının kayıtlı koşusuna karşı oynanır.
-        const KIND_CODE = { duel: 'd', attack: 'a', raid: 'c' };
-        const KIND_OF = { d: 'duel', a: 'attack', c: 'raid' };
-        const KIND_ICON = { duel: 'swords', attack: 'bolt', raid: 'crown', team: 'users', ghost: 'ghost' };
+        // ta: Zamana Karşı düellosu (60 sn), dodge: Sadece Kaç düellosu. İkisi de 3 can.
+        const KIND_CODE = { duel: 'd', attack: 'a', raid: 'c', ta: 'ta', dodge: 'dg' };
+        const KIND_OF = { d: 'duel', a: 'attack', c: 'raid', ta: 'ta', dg: 'dodge' };
+        const KIND_ICON = { duel: 'swords', attack: 'bolt', raid: 'crown', team: 'users', ghost: 'ghost', ta: 'clock', dodge: 'run' };
         const ATK_PER = 3;                      // saldırı düellosu: her 3 yenen taşta rakibe bir saldırı taşı
         const RAID_HP = 2000, RAID_DIFF = 'hard', RAID_BOSS_SCORE = 25, RAID_BOSS_TIME = 20000;
-        function kindLives(kind, lv) { return kind === 'raid' ? 1 : kind === 'attack' ? 3 : (Number(lv) === 5 ? 5 : 3); }
-        function duelQueue(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c1' : 'w' + (Number(lv) === 5 ? 5 : 3); }
+        function kindLives(kind, lv) { return kind === 'raid' ? 1 : (kind === 'attack' || kind === 'ta' || kind === 'dodge') ? 3 : (Number(lv) === 5 ? 5 : 3); }
+        function duelQueue(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c1' : kind === 'ta' ? 'ta3' : kind === 'dodge' ? 'dg3' : 'w' + (Number(lv) === 5 ? 5 : 3); }
         function invPath(kind) { return (!kind || kind === 'duel') ? 'invites' : 'invites2'; }
         function invOf(inv) { return (inv && inv._p) || 'invites'; }
         function invKind(inv) { return inv && inv.md === 'tp' ? 'team' : (KIND_OF[inv && inv.md] || 'duel'); }
-        function dlbKey(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c' : kind === 'team' ? 't' + (Number(lv) === 5 ? 5 : 3) : String(Number(lv) === 5 ? 5 : 3); }
+        function dlbKey(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c' : kind === 'ta' ? 'ta3' : kind === 'dodge' ? 'dg3' : kind === 'team' ? 't' + (Number(lv) === 5 ? 5 : 3) : String(Number(lv) === 5 ? 5 : 3); }
 
         ICON_PATHS.chat = '<path d="M4.5 5.5h15a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5h-1A1.5 1.5 0 0 1 3 16V7a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M7.5 10h9M7.5 13.5h6"/>';
         ICON_PATHS.send = '<path d="M4 11.5 20 4l-6.5 16-2.5-6.5z"/><path d="M11 13.5 20 4"/>';
@@ -33055,7 +33076,8 @@
             const win = w === uid, draw = w === 'draw';
             return { win, draw, title: win ? 'Kazandın!' : draw ? 'Berabere' : 'Kaybettin' };
         }
-        const REC_KEYS = { duel: ['duelW', 'duelL', 'duelD'], attack: ['atkW', 'atkL', 'atkD'], raid: ['raidW', 'raidL', null], team: ['teamW', 'teamL', 'teamD'] };
+        const REC_KEYS = { duel: ['duelW', 'duelL', 'duelD'], attack: ['atkW', 'atkL', 'atkD'], raid: ['raidW', 'raidL', null], team: ['teamW', 'teamL', 'teamD'],
+                           ta: ['taDuelW', 'taDuelL', 'taDuelD'], dodge: ['dgDuelW', 'dgDuelL', 'dgDuelD'] };
         function duelCountResult(res) {
             const keys = REC_KEYS[DUEL.kind] || REC_KEYS.duel;
             const k = res.win ? keys[0] : res.draw ? keys[2] : keys[1];
@@ -33063,7 +33085,7 @@
         }
         function duelRecordHTML(kind) {
             const keys = REC_KEYS[kind] || REC_KEYS.duel, st = save.stats;
-            const label = { duel: 'Düello', attack: 'Saldırı', raid: 'Baskın', team: 'Takım' }[kind] || 'Düello';
+            const label = { duel: 'Düello', attack: 'Saldırı', raid: 'Baskın', team: 'Takım', ta: 'Zamana Karşı', dodge: 'Sadece Kaç' }[kind] || 'Düello';
             if (kind === 'raid') return `<div class="fr-record small"><span>${label}</span><b class="fr-w">${st.raidW || 0}</b><small>Galibiyet</small><b class="fr-l">${st.raidL || 0}</b><small>Mağlubiyet</small></div>`;
             return `<div class="fr-record small"><span>${label}</span><b class="fr-w">${st[keys[0]] || 0}</b><small>Galibiyet</small><b class="fr-l">${st[keys[1]] || 0}</b><small>Mağlubiyet</small><b>${st[keys[2]] || 0}</b><small>Beraberlik</small></div>`;
         }
@@ -34240,6 +34262,8 @@
         const ONL_MODES = [
             { id: 'duel', name: 'Düello', desc: 'Aynı taşlar, yüksek skor kazanır. Rastgele eşleşmeler rütbeli.', icon: 'swords', lives: true },
             { id: 'attack', name: 'Saldırı Düellosu', desc: 'Yediğin taşlar rakibinin tahtasına saldırı olarak düşer.', icon: 'bolt' },
+            { id: 'ta', name: 'Zamana Karşı Düellosu', desc: '3 can, 60 saniye. Süre bitince skoru yüksek olan kazanır.', icon: 'clock' },
+            { id: 'dodge', name: 'Sadece Kaç Düellosu', desc: '3 can. Taş yemek yok, yanından geçtiğin her taş puan.', icon: 'run' },
             { id: 'team', name: 'Takım Düellosu', desc: 'İkiye iki, takım skorları toplanır. Rütbeli.', icon: 'users', lives: true },
             { id: 'raid', name: 'Boss Baskını', desc: 'Bir ortakla Baykuş\'u birlikte yen.', icon: 'crown' },
             { id: 'ghost', name: 'Hayalet Yarışı', desc: 'Bir oyuncunun en iyi koşusuna karşı yarış.', icon: 'ghost' }
@@ -34266,9 +34290,9 @@
             if (DUEL.phase !== 'idle' || TEAM.phase !== 'idle') return false;
             return onlSel().id === 'ghost' ? true : f.state === 'menu';
         }
-        function friendPlayText() { return { duel: 'Düello', attack: 'Saldırı', team: 'Takım', raid: 'Baskın', ghost: 'Yarış' }[onlSel().id] || 'Düello'; }
+        function friendPlayText() { return { duel: 'Düello', attack: 'Saldırı', team: 'Takım', raid: 'Baskın', ghost: 'Yarış', ta: 'Zaman', dodge: 'Kaç' }[onlSel().id] || 'Düello'; }
         function friendPlayIcon() { return KIND_ICON[onlSel().id] || 'swords'; }
-        function friendPlayLabel() { return { duel: 'Düelloya çağır', attack: 'Saldırı düellosuna çağır', team: 'Takımına çağır', raid: 'Boss baskınına çağır', ghost: 'Hayaletiyle yarış' }[onlSel().id] || 'Düelloya çağır'; }
+        function friendPlayLabel() { return { duel: 'Düelloya çağır', attack: 'Saldırı düellosuna çağır', team: 'Takımına çağır', raid: 'Boss baskınına çağır', ghost: 'Hayaletiyle yarış', ta: 'Zamana karşı düellosuna çağır', dodge: 'Sadece kaç düellosuna çağır' }[onlSel().id] || 'Düelloya çağır'; }
         (function onlineExtras() {
             const sub = onlineModal.querySelector('.onl-sub');
             if (sub && !document.getElementById('onl-rank')) sub.insertAdjacentHTML('afterend', '<div id="onl-rank" class="onl-rank"></div>');
@@ -34310,7 +34334,7 @@
                 box.appendChild(b);
             }
             const find = document.getElementById('onl-find');
-            const label = { duel: 'RAKİP BUL', attack: 'RAKİP BUL', team: 'TAKIM MAÇI BUL', raid: 'ORTAK BUL', ghost: 'HAYALET SEÇ' }[sel.id];
+            const label = { duel: 'RAKİP BUL', attack: 'RAKİP BUL', ta: 'RAKİP BUL', dodge: 'RAKİP BUL', team: 'TAKIM MAÇI BUL', raid: 'ORTAK BUL', ghost: 'HAYALET SEÇ' }[sel.id];
             find.innerHTML = `${ico(KIND_ICON[sel.id])}<span class="lbl">${label}</span>`;
             const fr = document.getElementById('onl-friends');
             fr.innerHTML = `${ico('users')}<span>${sel.id === 'team' ? 'Arkadaşınla takım kur' : sel.id === 'ghost' ? 'Arkadaşının hayaleti' : sel.id === 'raid' ? 'Arkadaşını çağır' : 'Arkadaşını davet et'}</span>`;
@@ -34337,6 +34361,8 @@
             { key: '3', name: 'Düello' },
             { key: '5', name: 'Uzun Düello' },
             { key: 'a3', name: 'Saldırı' },
+            { key: 'ta3', name: 'Zamana Karşı' },
+            { key: 'dg3', name: 'Sadece Kaç' },
             { key: 't3', name: 'Takım' },
             { key: 't5', name: 'Uzun Takım' },
             { key: 'c', name: 'Boss Baskını', time: true },
@@ -34348,6 +34374,8 @@
         const DLB_GROUPS = [
             { id: 'duel', name: 'Düello', icon: 'swords', keys: [['3', 3], ['5', 5]] },
             { id: 'attack', name: 'Saldırı', icon: 'bolt', keys: [['a3']] },
+            { id: 'ta', name: 'Zamana Karşı', icon: 'clock', keys: [['ta3']] },
+            { id: 'dodge', name: 'Sadece Kaç', icon: 'run', keys: [['dg3']] },
             { id: 'team', name: 'Takım', icon: 'users', keys: [['t3', 3], ['t5', 5]] },
             { id: 'raid', name: 'Baskın', icon: 'crown', keys: [['c']] },
             { id: 'ghost', name: 'Hayalet', icon: 'ghost', keys: [['g']] },
@@ -37132,6 +37160,14 @@
             }
             window.addEventListener('resize', fitLater);
             fitLater();
+        })();
+
+        (function onlineTaDodgeI18n() {
+            // Online Zamana Karşı ve Sadece Kaç düelloları
+            const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
+            const ROWS = {"Zamana Karşı Düellosu": ["Time Attack Duel", "Laban sa Oras na Duel", "Дуэль на время", "Duel contre-la-montre", "Zeitrennen-Duell", "Duelo contrarreloj", "Duello a tempo", "Duelo contra o tempo", "Duel Lawan Waktu", "Zamana qarşı duel", "限时挑战决斗", "タイムアタック決闘", "타임 어택 결투", "مبارزة سباق مع الزمن", "مبارزة ضد الوقت"], "Sadece Kaç Düellosu": ["Dodge Only Duel", "Iwas Lang na Duel", "Дуэль «Только уклонение»", "Duel esquive seule", "Nur-Ausweichen-Duell", "Duelo solo esquivar", "Duello solo schivare", "Duelo só desviar", "Duel Hanya Menghindar", "Yalnız qaç dueli", "只躲不吃决斗", "よけるだけ決闘", "피하기 전용 결투", "مبارزة التفادي فقط", "مبارزة غير هرب"], "{0} can, {1} saniye. Süre bitince skoru yüksek olan kazanır.": ["{0} lives, {1} seconds. When time runs out, the higher score wins.", "{0} buhay, {1} segundo. Pagkaubos ng oras, panalo ang mas mataas na score.", "{0} жизни, {1} секунд. Когда время выходит, побеждает больший счёт.", "{0} vies, {1} secondes. À la fin du temps, le meilleur score gagne.", "{0} Leben, {1} Sekunden. Wenn die Zeit um ist, gewinnt der höhere Punktestand.", "{0} vidas, {1} segundos. Cuando se acaba el tiempo, gana la puntuación más alta.", "{0} vite, {1} secondi. Allo scadere del tempo vince il punteggio più alto.", "{0} vidas, {1} segundos. Quando o tempo acaba, ganha a pontuação mais alta.", "{0} nyawa, {1} detik. Saat waktu habis, skor tertinggi menang.", "{0} can, {1} saniyə. Vaxt bitəndə xalı yüksək olan qalib gəlir.", "{0} 条命，{1} 秒。时间到时分数高者获胜。", "ライフ{0}、{1}秒。時間切れでスコアが高い方の勝ち。", "목숨 {0}개, {1}초. 시간이 끝나면 점수가 높은 쪽이 이겨요.", "{0} أرواح، {1} ثانية. عند انتهاء الوقت يفوز صاحب النتيجة الأعلى.", "{0} ديال الأرواح، {1} ثانية. ملي يسالي الوقت كيربح اللي عندو سكور كثر."], "{0} can. Taş yemek yok, yanından geçtiğin her taş puan.": ["{0} lives. No capturing: every piece you slip past is a point.", "{0} buhay. Bawal kumain: puntos ang bawat pirasong malampasan mo.", "{0} жизни. Есть фигуры нельзя: каждая фигура, мимо которой проскочил, — очко.", "{0} vies. Pas de prise : chaque pièce que tu esquives rapporte un point.", "{0} Leben. Kein Schlagen: Jede Figur, an der du vorbeikommst, gibt einen Punkt.", "{0} vidas. No se captura: cada pieza que esquivas es un punto.", "{0} vite. Niente catture: ogni pezzo che superi vale un punto.", "{0} vidas. Sem capturas: cada peça que passas vale um ponto.", "{0} nyawa. Tidak boleh makan: setiap bidak yang kamu lewati jadi poin.", "{0} can. Daş yemək yoxdur, yanından keçdiyin hər daş xaldır.", "{0} 条命。不能吃子：每躲过一枚棋子得一分。", "ライフ{0}。駒は取れない。すり抜けた駒ごとに1点。", "목숨 {0}개. 잡기 없음: 지나친 기물마다 1점이에요.", "{0} أرواح. لا أكل للقطع: كل قطعة تتجاوزها نقطة.", "{0} ديال الأرواح. ما كاينش الماكلة: كل حجرة دوزتيها بنقطة."], "{0} can, aynı taş sırası, {1} saniye. Süre ya da canların bitince koşun biter, skoru yüksek olan kazanır.": ["{0} lives, same piece order, {1} seconds. Your run ends when time or your lives run out; the higher score wins.", "{0} buhay, parehong ayos ng piyesa, {1} segundo. Tapos ang takbo mo pag naubos ang oras o buhay; panalo ang mas mataas na score.", "{0} жизни, одинаковый порядок фигур, {1} секунд. Забег кончается, когда выходит время или жизни; побеждает больший счёт.", "{0} vies, même ordre de pièces, {1} secondes. Ta partie s'arrête quand le temps ou tes vies sont épuisés ; le meilleur score gagne.", "{0} Leben, gleiche Figurenreihenfolge, {1} Sekunden. Dein Lauf endet, wenn Zeit oder Leben aufgebraucht sind; der höhere Punktestand gewinnt.", "{0} vidas, mismo orden de piezas, {1} segundos. Tu partida acaba cuando se agota el tiempo o tus vidas; gana la puntuación más alta.", "{0} vite, stesso ordine dei pezzi, {1} secondi. La tua corsa finisce quando scade il tempo o finiscono le vite; vince il punteggio più alto.", "{0} vidas, mesma ordem de peças, {1} segundos. A tua corrida acaba quando o tempo ou as vidas acabam; ganha a pontuação mais alta.", "{0} nyawa, urutan bidak sama, {1} detik. Larimu berakhir saat waktu atau nyawa habis; skor tertinggi menang.", "{0} can, eyni daş sırası, {1} saniyə. Vaxt və ya canların bitəndə qaçışın bitir, xalı yüksək olan qalib gəlir.", "{0} 条命，相同的棋子顺序，{1} 秒。时间或生命用完时本局结束，分数高者获胜。", "ライフ{0}、同じ駒の順番、{1}秒。時間かライフが尽きたら終了、スコアが高い方の勝ち。", "목숨 {0}개, 같은 기물 순서, {1}초. 시간이나 목숨이 다하면 끝나고, 점수가 높은 쪽이 이겨요.", "{0} أرواح، نفس ترتيب القطع، {1} ثانية. تنتهي جولتك عند نفاد الوقت أو الأرواح، ويفوز صاحب النتيجة الأعلى.", "{0} ديال الأرواح، نفس الترتيب ديال الحجر، {1} ثانية. الطّلعة ديالك كتسالا ملي يسالي الوقت ولا الأرواح، واللي عندو سكور كثر كيربح."], "{0} can, aynı taş sırası. Taşları yiyemezsin, yanından geçtiğin her taş puan. İkisinin de canı bitince skoru yüksek olan kazanır.": ["{0} lives, same piece order. You can't capture; every piece you slip past is a point. When both run out of lives, the higher score wins.", "{0} buhay, parehong ayos ng piyesa. Bawal kumain; puntos ang bawat pirasong malampasan mo. Pag ubos na ang buhay ng dalawa, panalo ang mas mataas na score.", "{0} жизни, одинаковый порядок фигур. Есть нельзя, каждая фигура, мимо которой проскочил, — очко. Когда у обоих кончатся жизни, побеждает больший счёт.", "{0} vies, même ordre de pièces. Tu ne peux pas prendre ; chaque pièce esquivée rapporte un point. Quand les deux n'ont plus de vies, le meilleur score gagne.", "{0} Leben, gleiche Figurenreihenfolge. Du kannst nicht schlagen; jede Figur, an der du vorbeikommst, gibt einen Punkt. Wenn beide keine Leben mehr haben, gewinnt der höhere Punktestand.", "{0} vidas, mismo orden de piezas. No puedes capturar; cada pieza que esquivas es un punto. Cuando ambos se quedan sin vidas, gana la puntuación más alta.", "{0} vite, stesso ordine dei pezzi. Non puoi catturare; ogni pezzo che superi vale un punto. Quando entrambi finiscono le vite, vince il punteggio più alto.", "{0} vidas, mesma ordem de peças. Não podes capturar; cada peça que passas vale um ponto. Quando ambos ficam sem vidas, ganha a pontuação mais alta.", "{0} nyawa, urutan bidak sama. Kamu tidak bisa makan; setiap bidak yang kamu lewati jadi poin. Saat nyawa keduanya habis, skor tertinggi menang.", "{0} can, eyni daş sırası. Daşları yeyə bilməzsən, yanından keçdiyin hər daş xaldır. İkisinin də canı bitəndə xalı yüksək olan qalib gəlir.", "{0} 条命，相同的棋子顺序。不能吃子，每躲过一枚棋子得一分。双方生命都用完时，分数高者获胜。", "ライフ{0}、同じ駒の順番。駒は取れず、すり抜けた駒ごとに1点。両者のライフが尽きたらスコアが高い方の勝ち。", "목숨 {0}개, 같은 기물 순서. 잡을 수 없고, 지나친 기물마다 1점이에요. 둘 다 목숨이 다하면 점수가 높은 쪽이 이겨요.", "{0} أرواح، نفس ترتيب القطع. لا يمكنك الأكل، وكل قطعة تتجاوزها نقطة. عندما تنفد أرواح الاثنين يفوز صاحب النتيجة الأعلى.", "{0} ديال الأرواح، نفس الترتيب ديال الحجر. ما تقدرش تاكل، وكل حجرة دوزتيها بنقطة. ملي تساليو الأرواح ديال بجوج، اللي عندو سكور كثر كيربح."], "Seni zamana karşı düellosuna çağırıyor": ["Challenges you to a time attack duel", "Hinahamon ka sa laban sa oras na duel", "Вызывает вас на дуэль на время", "Te défie en duel contre-la-montre", "Fordert dich zum Zeitrennen-Duell heraus", "Te reta a un duelo contrarreloj", "Ti sfida a un duello a tempo", "Desafia-te para um duelo contra o tempo", "Menantangmu duel lawan waktu", "Səni zamana qarşı duelə çağırır", "向你发起限时挑战决斗", "タイムアタック決闘を申し込んでいます", "타임 어택 결투를 신청했어요", "يتحداك في مبارزة سباق مع الزمن", "كيعيط ليك لمبارزة ضد الوقت"], "Seni sadece kaç düellosuna çağırıyor": ["Challenges you to a dodge only duel", "Hinahamon ka sa iwas lang na duel", "Вызывает вас на дуэль «Только уклонение»", "Te défie en duel esquive seule", "Fordert dich zum Nur-Ausweichen-Duell heraus", "Te reta a un duelo solo esquivar", "Ti sfida a un duello solo schivare", "Desafia-te para um duelo só desviar", "Menantangmu duel hanya menghindar", "Səni yalnız qaç duelinə çağırır", "向你发起只躲不吃决斗", "よけるだけ決闘を申し込んでいます", "피하기 전용 결투를 신청했어요", "يتحداك في مبارزة التفادي فقط", "كيعيط ليك لمبارزة غير هرب"], "Zamana karşı düellosuna çağır": ["Challenge to a time attack duel", "Hamunin sa laban sa oras na duel", "Вызвать на дуэль на время", "Défier en duel contre-la-montre", "Zum Zeitrennen-Duell herausfordern", "Retar a un duelo contrarreloj", "Sfida a un duello a tempo", "Desafiar para um duelo contra o tempo", "Tantang duel lawan waktu", "Zamana qarşı duelə çağır", "发起限时挑战决斗", "タイムアタック決闘を申し込む", "타임 어택 결투 신청", "تحدَّ في مبارزة سباق مع الزمن", "عيط ليه لمبارزة ضد الوقت"], "Sadece kaç düellosuna çağır": ["Challenge to a dodge only duel", "Hamunin sa iwas lang na duel", "Вызвать на дуэль «Только уклонение»", "Défier en duel esquive seule", "Zum Nur-Ausweichen-Duell herausfordern", "Retar a un duelo solo esquivar", "Sfida a un duello solo schivare", "Desafiar para um duelo só desviar", "Tantang duel hanya menghindar", "Yalnız qaç duelinə çağır", "发起只躲不吃决斗", "よけるだけ決闘を申し込む", "피하기 전용 결투 신청", "تحدَّ في مبارزة التفادي فقط", "عيط ليه لمبارزة غير هرب"], "Zaman": ["Time", "Oras", "Время", "Temps", "Zeit", "Tiempo", "Tempo", "Tempo", "Waktu", "Zaman", "限时", "タイム", "타임", "الزمن", "الوقت"], "Kaç": ["Dodge", "Iwas", "Уклон", "Esquive", "Ausweichen", "Esquivar", "Schiva", "Desviar", "Hindar", "Qaç", "躲避", "よける", "피하기", "تفادٍ", "هرب"]};
+            const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
+            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
         })();
 
         if (LANG !== 'tr') applyLanguage(LANG);
