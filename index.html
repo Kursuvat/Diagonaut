@@ -1864,10 +1864,6 @@
         .toast { background: #212328 !important; border: 1px solid var(--wood-line) !important; color: var(--ivory) !important; box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.9) !important; }
         .toast .toast-reward { color: var(--brass-hi) !important; }
         .toast-ico { color: var(--brass); margin-right: 6px; }
-        /* Canın neden gittiğini anlatan bildirim: arkasındaki taşlar görünsün diye saydam */
-        .toast.toast-life { background: rgba(33, 35, 40, 0.28) !important; border-color: rgba(219, 138, 120, 0.35) !important;
-            box-shadow: none !important; opacity: 0.8; font-size: 0.8rem; padding: 6px 12px;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95); backdrop-filter: none; }
 
         /* Metin renkleri: soğuk griler yerine sıcak tonlar */
         .ui-layer .text-white, .ui-layer .text-slate-200 { color: var(--ivory) !important; }
@@ -1876,7 +1872,6 @@
         .ui-layer .text-slate-500 { color: var(--faint) !important; }
         .ui-layer .text-amber-300, .ui-layer .text-amber-400, .ui-layer .text-yellow-400 { color: var(--brass-hi) !important; }
         .ui-layer .text-emerald-400 { color: #93c9a1 !important; }
-        .text-bomb { color: #4ade80; } .ui-layer .text-bomb { color: #8fd694 !important; }
         .ui-layer .text-red-400, .ui-layer .text-red-500, .ui-layer .text-rose-400 { color: #db8a78 !important; }
         .ui-layer .text-sky-400 { color: #a7c7d8 !important; }
         .ui-layer .text-violet-400, .ui-layer .text-purple-400 { color: #c0abd9 !important; }
@@ -2600,7 +2595,7 @@
                     <p><span class="text-sky-400 font-bold">Kalkan (5 sn, geliştirmeyle 8 sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.</p>
                     <p><span class="text-amber-400 font-bold">Puan Çarpanı (15 sn, geliştirmeyle 21 sn'ye kadar):</span> Kazandığın puanları çarpar: %60 ihtimalle <strong>x2</strong>, %30 ihtimalle <strong>x3</strong>, %10 ihtimalle <strong>x4</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.</p>
                     <p><span class="text-violet-400 font-bold">Zaman Yavaşlatıcı (6 sn, geliştirmeyle 10,5 sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>2 katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.</p>
-                    <p><span class="text-bomb font-bold">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.</p>
+                    <p><span class="text-red-400 font-bold">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.</p>
                     <p><span class="text-pink-400 font-bold">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve 3 saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.</p>
                     <p><span class="text-yellow-400 font-bold">Token Kesesi:</span> Anında token kazandırır: %70 ihtimalle <strong>20</strong>, %20 ihtimalle <strong>40</strong>, %10 ihtimalle <strong>75 token</strong>. "Dolu Kese" geliştirmesi bunları artırır.</p>
                     <hr class="border-slate-600">
@@ -3108,7 +3103,7 @@
             shield: { name: 'KALKAN',            icon: 'shield', color: '#38bdf8', weight: 25 },
             mult:   { name: 'ÇARPAN',            icon: 'x?', color: '#fbbf24', weight: 20 },
             slow:   { name: 'ZAMAN YAVAŞLADI',   icon: 'hourglass', color: '#a78bfa', weight: 18 },
-            bomb:   { name: 'BOMBA',             icon: 'bomb', color: '#4ade80', weight: 14 },
+            bomb:   { name: 'BOMBA',             icon: 'bomb', color: '#f87171', weight: 14 },
             life:   { name: 'YEDEK CAN',         icon: 'heart', color: '#f472b6', weight: 10 },
             token:  { name: '+15 TOKEN',         icon: 'coin', color: '#facc15', weight: 13 }
         };
@@ -3146,11 +3141,8 @@
         // Süslü rakipler: rakiplerin %3'ü şapka ya da gözlükle doğar, yiyince +10 token
         const FANCY_CHANCE = 0.03;
         const FANCY_REWARD = 10;
-        // Online Zamana Karşı / Sadece Kaç düellosu oynanıyor mu? (maç modu 'duel', kurallar o modun)
-        function duelRuleIs(kind) { return matchStats.mode === 'duel' && typeof DUEL !== 'undefined' && DUEL.kind === kind && (DUEL.phase === 'playing' || DUEL.phase === 'vs'); }
-        function dodgeRules() { return matchStats.mode === 'dodge' || duelRuleIs('dodge'); }
         function maybeDress(e) {
-            if (tutorial.active || puzzle || matchStats.mode === 'timeAttack' || dodgeRules() || duelRuleIs('ta') || Math.random() >= FANCY_CHANCE) return e;
+            if (tutorial.active || puzzle || matchStats.mode === 'timeAttack' || matchStats.mode === 'dodge' || Math.random() >= FANCY_CHANCE) return e;
             const useHat = Math.random() < 0.5;
             const pool = (useHat ? SHOP.hat.items : SHOP.face.items).filter(i => i.draw && !i.secret);
             e.acc = { kind: useHat ? 'hat' : 'face', id: pool[Math.floor(Math.random() * pool.length)].id };
@@ -3415,17 +3407,17 @@
         // Bildirimler: aynı anda en fazla 2 tane görünür, fazlası sırayla gelir
         const toastQueue = [];
         let toastsVisible = 0;
-        function showToast(text, reward, icon, cls) {
-            toastQueue.push({ text, reward, icon, cls });
+        function showToast(text, reward, icon) {
+            toastQueue.push({ text, reward, icon });
             pumpToasts();
         }
 
         function pumpToasts() {
             const area = document.getElementById('toast-area');
             while (toastsVisible < 2 && toastQueue.length) {
-                const { text, reward, icon, cls } = toastQueue.shift();
+                const { text, reward, icon } = toastQueue.shift();
                 const el = document.createElement('div');
-                el.className = cls ? 'toast ' + cls : 'toast';
+                el.className = 'toast';
                 el.innerHTML = `${icon ? `<span class="toast-ico">${ico(icon)}</span>` : ''}<span>${text}</span>${reward ? `<span class="toast-reward">${reward}</span>` : ''}`;
                 area.appendChild(el);
                 toastsVisible++;
@@ -7410,26 +7402,19 @@
 
         function markCaptureTargets(prevCol) {
             const pcy = player.y + TS / 2;
-            // "Eski şerit" = piyonun ŞU AN fiziksel olarak durduğu sütun.
-            // Hızlı art arda kaydırmada önceki hedef sütun (prevCol) henüz ulaşılmamış olabilir;
-            // onu eski şerit saymak, yandan geçtiğin taşı "önünden düz gelen" sanıp canını götürüyordu.
-            const fromCol = prevCol === undefined ? undefined : Math.round(player.x / TS);
             for (const e of enemies) {
                 const rel = (e.y + TS / 2) - pcy; // eksi = piyonun üstünde
-                const inReach = rel >= -TS * CAPTURE_REACH_UP && rel <= TS * CAPTURE_REACH_DOWN;
                 // Kale yana kaydığı için tam şeritte olmasa da şeride değiyorsa sayılır
                 const inLane = e.type === 'rook'
                     ? Math.abs(e.x - player.targetCol * TS) < TS
                     : Math.round(e.x / TS) === player.targetCol;
-                // Zaten çaprazdan yemeye gittiğin taş, ona değmeden yeniden kaydırınca
-                // birden "düz tehdit"e dönüşmesin: hâlâ menzildeyse yenebilir kalır.
-                e.keepCapture = !inLane && !!e.capturable && inReach;
-                e.capturable = (inLane && inReach) || e.keepCapture;
+                e.capturable = inLane &&
+                               rel >= -TS * CAPTURE_REACH_UP && rel <= TS * CAPTURE_REACH_DOWN;
                 // Eski şeridinde tam önünden düz gelen taş: kaçarken sana değerse yenmez.
                 // Şeridinden yarıdan fazla çıkmışsan kurtulursun, çıkamadıysan düz çarpmış sayılırsın.
-                const inOldLane = fromCol !== undefined && (e.type === 'rook'
-                    ? Math.abs(e.x - fromCol * TS) < TS * 0.5
-                    : Math.round(e.x / TS) === fromCol);
+                const inOldLane = prevCol !== undefined && (e.type === 'rook'
+                    ? Math.abs(e.x - prevCol * TS) < TS * 0.5
+                    : Math.round(e.x / TS) === prevCol);
                 e.straightThreat = !e.capturable && inOldLane && rel >= -TS * 2 && rel <= TS * CAPTURE_REACH_DOWN;
             }
         }
@@ -8257,7 +8242,7 @@
                         save.stats.fancyEaten = (save.stats.fancyEaten || 0) + 1;
                         floatingTexts.push({ x: e.x + TS / 2, y: e.y - 18, text: `+${FANCY_REWARD} TOKEN`, life: 1.3, rgb: '251, 191, 36' });
                     }
-                    createParticles(e.x + TS / 2, e.y + TS / 2, '#4ade80');
+                    createParticles(e.x + TS / 2, e.y + TS / 2, '#f87171');
                     if (boss) bolts.push({ sx: e.x + TS / 2, sy: e.y + TS / 2, t: 0, dur: 320, dmg: pts });
                 }
                 matchStats.bombMax = Math.max(matchStats.bombMax, enemies.length);
@@ -8369,15 +8354,13 @@
             gameTime += dt;
 
             // Zamana Karşı: gerçek zamanlı 60 saniye
-            const taDuel = duelRuleIs('ta');
-            if (matchStats.mode === 'timeAttack' || taDuel) {
+            if (matchStats.mode === 'timeAttack') {
                 // Zaman Yavaşlatıcı açıkken geri sayım da yarı hızda akar
                 timeLeft -= effects.slow > 0 ? dt * 0.5 : dt;
                 timeWrap.classList.toggle('slowed', effects.slow > 0);
                 if (timeLeft <= 0) {
                     timeLeft = 0;
                     updateTimeDisplay();
-                    if (taDuel) { duelTimeUp(); return; }   // online: süre bitince koşu biter, rakip beklenir
                     matchStats.taFinished = true;
                     checkAchievements(); // maç bitmeden: ödül "bu maçta" sayılsın
                     endGame('60 saniye doldu!', true, null, true);
@@ -8489,7 +8472,7 @@
                 }
 
                 // Sadece Kaç: yanından geçip giden her taş puan
-                if (dodgeRules() && !e.passed && e.y > player.y + TS * 0.5) {
+                if (matchStats.mode === 'dodge' && !e.passed && e.y > player.y + TS * 0.5) {
                     e.passed = true;
                     save.stats.dodged++;
                     score += effects.mult;
@@ -8559,7 +8542,7 @@
                 let enemyCol = Math.round(e.x / TS);
                 // Kayarken serbest yeme yok: sadece yandan/çapraz değen ya da çapraz av için işaretlenen taş yenir
                 let canEat = Math.abs(dx) > TS * 0.2 && player.targetCol !== enemyCol;
-                let diagonalCapture = e.capturable && (e.type === 'rook' || e.keepCapture || enemyCol === player.targetCol);
+                let diagonalCapture = e.capturable && (e.type === 'rook' || enemyCol === player.targetCol);
 
                 if (distance < TS * 0.75) {
                     // Önünden düz gelen taştan kaçıyordun: yarıdan fazla çıktıysan kurtuldun, çıkamadıysan düz çarptın
@@ -8567,13 +8550,13 @@
                         if (Math.abs(dx) >= TS * 0.5) continue;
                         dead = true;
                         cause = 'straight';
-                        reason = dodgeRules()
+                        reason = matchStats.mode === 'dodge'
                             ? "Bir taşa çarptın! Bu modda taşları yiyemezsin, sadece kaçabilirsin."
                             : "Düz çarptın! Taşları yemek için sağ/sol yaparak çaprazdan saldırmalısın.";
                         brokeAt = i; break;
                     }
                     // Sadece Kaç: hiçbir taşı yiyemezsin. Kalkan varsa taş zararsızca parçalanır.
-                    if (dodgeRules()) {
+                    if (matchStats.mode === 'dodge') {
                         if (effects.shield > 0) {
                             createParticles(e.x + TS/2, e.y + TS/2, '#38bdf8');
                             enemies.splice(i, 1);
@@ -8761,7 +8744,6 @@
                 player.dangerTimerGreen = 0;
                 player.dangerTimerBoss = 0;
                 floatingTexts.push({ x: player.x + TS / 2, y: player.y, text: 'YEDEK CAN!', life: 1.3, rgb: '244, 114, 182' });
-                if (reason) showToast(reason, '', '', 'toast-life');   // canın neden gittiğini göster (saydam)
                 createParticles(player.x + TS / 2, player.y + TS / 2, '#f472b6');
                 playSound('life');
                 vibrate([40, 30, 40]);
@@ -12860,7 +12842,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):<\/span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Shield ({0} s, up to {1} s with upgrades):<\/span> no zone or boss attack can hurt you. You even capture pieces you hit head-on.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):<\/span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}<\/strong>, %{4} ihtimalle <strong>x{5}<\/strong>, %{6} ihtimalle <strong>x{7}<\/strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Score Multiplier ({0} s, up to {1} s with upgrades):<\/span> multiplies the points you earn: <strong>x{3}<\/strong> {2}% of the time, <strong>x{5}<\/strong> {4}% of the time, <strong>x{7}<\/strong> {6}% of the time. Boss damage is multiplied too. No new multiplier appears while one is active.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):<\/span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına<\/strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Slow-mo ({0} s, up to {1} s with upgrades):<\/span> the board, the pieces, bosses and their attacks run at half speed. Meanwhile, the time you can spend on colored squares (red, yellow, green, purple, orange) is <strong>{2}x longer<\/strong>. Your own piece keeps moving at normal speed.",
-"<span class=\"text-bomb font-bold\">Bomba:<\/span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bomb:<\/span> instantly destroys every black piece and boss attack on screen. You earn the points (and boss damage) for the destroyed pieces.",
+"<span class=\"text-red-400 font-bold\">Bomba:<\/span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bomb:<\/span> instantly destroys every black piece and boss attack on screen. You earn the points (and boss damage) for the destroyed pieces.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:<\/span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Extra Life:<\/span> saves you the next time you'd be defeated and gives you a {0}-second shield. You can only carry one at a time.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:<\/span> Anında token kazandırır: %{0} ihtimalle <strong>{1}<\/strong>, %{2} ihtimalle <strong>{3}<\/strong>, %{4} ihtimalle <strong>{5} token<\/strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Token Pouch:<\/span> gives tokens instantly: <strong>{1}<\/strong> {0}% of the time, <strong>{3}<\/strong> {2}% of the time, <strong>{5} tokens<\/strong> {4}% of the time. The \"Full Pouch\" upgrade increases them.",
 "Market'in <strong>Geliştirmeler<\/strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Buy permanent powers with your tokens in the <strong>Upgrades<\/strong> tab of the shop. Each has {0} levels and works in every mode:",
@@ -13915,7 +13897,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Kalasag ({0} s, hanggang {1} s may upgrade):</span> walang zone o atake ng boss na makakasakit sa iyo. Nakukuha mo pa ang mga piyesang nabangga mo nang diretso.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Score Multiplier ({0} s, hanggang {1} s may upgrade):</span> pinaparami ang puntos na nakukuha mo: <strong>x{3}</strong> {2}% ng oras, <strong>x{5}</strong> {4}% ng oras, <strong>x{7}</strong> {6}% ng oras. Pinaparami rin ang pinsala sa boss. Walang bagong multiplier habang may aktibo.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Slow-mo ({0} s, hanggang {1} s may upgrade):</span> kalahating bilis ang board, mga piyesa, boss at mga atake nila. Samantala, <strong>{2}x mas mahaba</strong> ang oras na puwede kang manatili sa may kulay na parisukat (pula, dilaw, berde, lila, kahel). Normal ang bilis ng sarili mong piyesa.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bomba:</span> agad na winawasak ang bawat itim na piyesa at atake ng boss sa screen. Makukuha mo ang puntos (at pinsala sa boss) ng mga nawasak na piyesa.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bomba:</span> agad na winawasak ang bawat itim na piyesa at atake ng boss sa screen. Makukuha mo ang puntos (at pinsala sa boss) ng mga nawasak na piyesa.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Dagdag na Buhay:</span> ililigtas ka sa susunod na matatalo ka sana at bibigyan ka ng {0}-segundong kalasag. Isa lang ang puwede mong dalhin sa isang pagkakataon.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Supot ng Token:</span> agad na nagbibigay ng token: <strong>{1}</strong> {0}% ng oras, <strong>{3}</strong> {2}% ng oras, <strong>{5} token</strong> {4}% ng oras. Pinalalaki ito ng upgrade na \"Punong Supot\".",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Bumili ng permanenteng kapangyarihan gamit ang token sa tab na <strong>Mga Upgrade</strong> ng tindahan. Bawat isa ay may {0} level at gumagana sa lahat ng mode:",
@@ -14967,7 +14949,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Щит ({0} с, до {1} с с улучшениями):</span> ни зоны, ни атаки босса вам не страшны. Вы даже берёте фигуры при лобовом столкновении.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Множитель очков ({0} с, до {1} с с улучшениями):</span> умножает получаемые очки: <strong>x{3}</strong> в {2}% случаев, <strong>x{5}</strong> в {4}%, <strong>x{7}</strong> в {6}%. Урон боссу тоже умножается. Пока множитель активен, новый не появляется.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Замедление ({0} с, до {1} с с улучшениями):</span> доска, фигуры, боссы и их атаки движутся вдвое медленнее. При этом на цветных клетках (красных, жёлтых, зелёных, фиолетовых, оранжевых) можно стоять <strong>в {2} раза дольше</strong>. Ваша фигура двигается с обычной скоростью.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Бомба:</span> мгновенно уничтожает все чёрные фигуры и атаки босса на экране. Вы получаете очки (и урон боссу) за уничтоженные фигуры.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Бомба:</span> мгновенно уничтожает все чёрные фигуры и атаки босса на экране. Вы получаете очки (и урон боссу) за уничтоженные фигуры.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Запасная жизнь:</span> спасает при следующем поражении и даёт щит на {0} секунды. Носить можно только одну.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Кошель токенов:</span> сразу даёт токены: <strong>{1}</strong> в {0}% случаев, <strong>{3}</strong> в {2}%, <strong>{5} токенов</strong> в {4}%. Улучшение «Полный кошель» их увеличивает.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Покупайте постоянные усиления за токены на вкладке <strong>Улучшения</strong> в магазине. У каждого {0} уровня, действуют во всех режимах:",
@@ -16445,7 +16427,7 @@
                             card: String(eq.card || 'card-classic'),
                             look: { piece: String(eq.piece), pawn: String(eq.pawn), hat: String(eq.hat), face: String(eq.face), cape: String(eq.cape) },
                             updatedAt: F.serverTimestamp()
-                        });
+                        }, { merge: true });
                     }
                 });
                 CLOUD.base = out; CLOUD.baseAt = Number(out.savedAt) || 0;
@@ -17443,7 +17425,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Bouclier ({0} s, jusqu'à {1} s avec les améliorations) :</span> aucune zone ni attaque de boss ne peut te blesser. Tu captures même les pièces que tu touches de face.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Multiplicateur de score ({0} s, jusqu'à {1} s avec les améliorations) :</span> multiplie les points gagnés : <strong>x{3}</strong> {2} % du temps, <strong>x{5}</strong> {4} % du temps, <strong>x{7}</strong> {6} % du temps. Les dégâts aux boss sont aussi multipliés. Aucun nouveau multiplicateur n'apparaît tant qu'un est actif.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Ralenti ({0} s, jusqu'à {1} s avec les améliorations) :</span> le plateau, les pièces, les boss et leurs attaques vont à moitié vitesse. Pendant ce temps, le temps que tu peux passer sur les cases colorées (rouge, jaune, vert, violet, orange) est <strong>{2} fois plus long</strong>. Ta propre pièce garde sa vitesse normale.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bombe :</span> détruit instantanément toutes les pièces noires et attaques de boss à l'écran. Tu gagnes les points (et les dégâts aux boss) des pièces détruites.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bombe :</span> détruit instantanément toutes les pièces noires et attaques de boss à l'écran. Tu gagnes les points (et les dégâts aux boss) des pièces détruites.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Vie en plus :</span> te sauve la prochaine fois que tu devrais perdre et te donne un bouclier de {0} secondes. Tu ne peux en porter qu'une à la fois.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Bourse de jetons :</span> donne des jetons instantanément : <strong>{1}</strong> {0} % du temps, <strong>{3}</strong> {2} % du temps, <strong>{5} jetons</strong> {4} % du temps. L'amélioration « Bourse pleine » les augmente.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Achète des pouvoirs permanents avec tes jetons dans l'onglet <strong>Améliorations</strong> de la boutique. Chacun a {0} niveaux et fonctionne dans tous les modes :",
@@ -18612,7 +18594,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Schild ({0} s, bis zu {1} s mit Upgrades):</span> Keine Zone und kein Boss-Angriff kann dir schaden. Du schlägst sogar Figuren, die du frontal triffst.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Punkte-Multiplikator ({0} s, bis zu {1} s mit Upgrades):</span> vervielfacht deine Punkte: <strong>x{3}</strong> in {2} % der Fälle, <strong>x{5}</strong> in {4} % der Fälle, <strong>x{7}</strong> in {6} % der Fälle. Auch Boss-Schaden wird vervielfacht. Solange einer aktiv ist, erscheint kein neuer Multiplikator.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Zeitlupe ({0} s, bis zu {1} s mit Upgrades):</span> Brett, Figuren, Bosse und ihre Angriffe laufen mit halber Geschwindigkeit. Währenddessen darfst du <strong>{2}-mal länger</strong> auf farbigen Feldern (rot, gelb, grün, lila, orange) stehen. Deine eigene Figur bewegt sich normal schnell.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bombe:</span> zerstört sofort alle schwarzen Figuren und Boss-Angriffe auf dem Bildschirm. Du bekommst die Punkte (und den Boss-Schaden) für die zerstörten Figuren.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bombe:</span> zerstört sofort alle schwarzen Figuren und Boss-Angriffe auf dem Bildschirm. Du bekommst die Punkte (und den Boss-Schaden) für die zerstörten Figuren.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Extraleben:</span> rettet dich, wenn du das nächste Mal verlieren würdest, und gibt dir {0} Sekunden Schild. Du kannst nur eins gleichzeitig haben.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Tokenbeutel:</span> gibt sofort Token: <strong>{1}</strong> in {0} % der Fälle, <strong>{3}</strong> in {2} % der Fälle, <strong>{5} Token</strong> in {4} % der Fälle. Das Upgrade „Voller Beutel“ erhöht sie.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Kauf dir mit deinen Token dauerhafte Kräfte im Reiter <strong>Upgrades</strong> im Shop. Jedes hat {0} Stufen und wirkt in jedem Modus:",
@@ -19678,7 +19660,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Escudo ({0} s, hasta {1} s con mejoras):</span> ninguna zona ni ataque de jefe puede hacerte daño. Incluso comes las piezas con las que chocas de frente.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Multiplicador de puntos ({0} s, hasta {1} s con mejoras):</span> multiplica los puntos que ganas: <strong>x{3}</strong> el {2} % de las veces, <strong>x{5}</strong> el {4} %, <strong>x{7}</strong> el {6} %. También multiplica el daño a los jefes. No aparece otro multiplicador mientras haya uno activo.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Cámara lenta ({0} s, hasta {1} s con mejoras):</span> el tablero, las piezas, los jefes y sus ataques van a mitad de velocidad. Mientras tanto, el tiempo que puedes estar en casillas de color (rojas, amarillas, verdes, moradas, naranjas) es <strong>{2} veces mayor</strong>. Tu pieza se mueve a velocidad normal.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bomba:</span> destruye al instante todas las piezas negras y ataques de jefe en pantalla. Ganas los puntos (y el daño al jefe) de las piezas destruidas.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bomba:</span> destruye al instante todas las piezas negras y ataques de jefe en pantalla. Ganas los puntos (y el daño al jefe) de las piezas destruidas.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Vida extra:</span> te salva la próxima vez que vayas a perder y te da un escudo de {0} segundos. Solo puedes llevar una a la vez.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Bolsa de fichas:</span> da fichas al instante: <strong>{1}</strong> el {0} % de las veces, <strong>{3}</strong> el {2} %, <strong>{5} fichas</strong> el {4} %. La mejora «Bolsa llena» las aumenta.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Compra poderes permanentes con tus fichas en la pestaña <strong>Mejoras</strong> de la tienda. Cada uno tiene {0} niveles y funciona en todos los modos:",
@@ -20744,7 +20726,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Scudo ({0} s, fino a {1} s con i potenziamenti):</span> nessuna zona o attacco dei boss può colpirti. Catturi anche i pezzi che urti frontalmente.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Moltiplicatore di punti ({0} s, fino a {1} s con i potenziamenti):</span> moltiplica i punti che fai: <strong>x{3}</strong> il {2}% delle volte, <strong>x{5}</strong> il {4}%, <strong>x{7}</strong> il {6}%. Moltiplica anche i danni ai boss. Finché ne hai uno attivo non ne compaiono altri.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Rallentatore ({0} s, fino a {1} s con i potenziamenti):</span> scacchiera, pezzi, boss e i loro attacchi vanno a metà velocità. Intanto il tempo che puoi passare sulle caselle colorate (rosse, gialle, verdi, viola, arancioni) è <strong>{2} volte più lungo</strong>. Il tuo pezzo si muove a velocità normale.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bomba:</span> distrugge subito tutti i pezzi neri e gli attacchi dei boss sullo schermo. Ottieni i punti (e i danni ai boss) dei pezzi distrutti.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bomba:</span> distrugge subito tutti i pezzi neri e gli attacchi dei boss sullo schermo. Ottieni i punti (e i danni ai boss) dei pezzi distrutti.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Vita extra:</span> ti salva la prossima volta che perderesti e ti dà uno scudo di {0} secondi. Puoi averne solo una alla volta.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Borsa di gettoni:</span> dà subito gettoni: <strong>{1}</strong> il {0}% delle volte, <strong>{3}</strong> il {2}%, <strong>{5} gettoni</strong> il {4}%. Il potenziamento «Borsa piena» li aumenta.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Compra poteri permanenti con i gettoni nella scheda <strong>Potenziamenti</strong> del negozio. Ognuno ha {0} livelli e vale in tutte le modalità:",
@@ -21810,7 +21792,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Escudo ({0} s, até {1} s com melhorias):</span> nenhuma zona nem ataque de chefe te faz mal. Até capturas as peças contra as quais bates de frente.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Multiplicador de pontos ({0} s, até {1} s com melhorias):</span> multiplica os teus pontos: <strong>x{3}</strong> em {2}% das vezes, <strong>x{5}</strong> em {4}%, <strong>x{7}</strong> em {6}%. O dano nos chefes também é multiplicado. Não aparece outro multiplicador enquanto um estiver ativo.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Câmara lenta ({0} s, até {1} s com melhorias):</span> o tabuleiro, as peças, os chefes e os ataques ficam a metade da velocidade. Entretanto, o tempo que podes ficar em casas coloridas (vermelhas, amarelas, verdes, roxas, laranja) fica <strong>{2} vezes maior</strong>. A tua peça continua à velocidade normal.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bomba:</span> destrói de imediato todas as peças pretas e ataques de chefe no ecrã. Ganhas os pontos (e o dano no chefe) das peças destruídas.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bomba:</span> destrói de imediato todas as peças pretas e ataques de chefe no ecrã. Ganhas os pontos (e o dano no chefe) das peças destruídas.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Vida extra:</span> salva-te da próxima vez que fores derrotado e dá-te um escudo de {0} segundos. Só podes ter uma de cada vez.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Bolsa de fichas:</span> dá fichas de imediato: <strong>{1}</strong> em {0}% das vezes, <strong>{3}</strong> em {2}%, <strong>{5} fichas</strong> em {4}%. A melhoria \"Bolsa cheia\" aumenta estes valores.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Compra poderes permanentes com as tuas fichas no separador <strong>Melhorias</strong> da loja. Cada um tem {0} níveis e funciona em todos os modos:",
@@ -22876,7 +22858,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Perisai ({0} dtk, sampai {1} dtk dengan peningkatan):</span> tidak ada zona atau serangan bos yang bisa melukaimu. Kamu bahkan memakan bidak yang kamu tabrak dari depan.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Pengali skor ({0} dtk, sampai {1} dtk dengan peningkatan):</span> melipatgandakan poinmu: <strong>x{3}</strong> dengan peluang {2}%, <strong>x{5}</strong> dengan peluang {4}%, <strong>x{7}</strong> dengan peluang {6}%. Kerusakan ke bos juga dilipatgandakan. Selama satu pengali aktif, pengali baru tidak muncul.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Gerak lambat ({0} dtk, sampai {1} dtk dengan peningkatan):</span> papan, bidak, bos, dan serangannya bergerak setengah kecepatan. Selama itu, waktu yang boleh kamu habiskan di kotak berwarna (merah, kuning, hijau, ungu, oranye) jadi <strong>{2}x lebih lama</strong>. Bidakmu sendiri tetap bergerak normal.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bom:</span> langsung menghancurkan semua bidak hitam dan serangan bos di layar. Kamu dapat poin (dan kerusakan ke bos) dari bidak yang hancur.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bom:</span> langsung menghancurkan semua bidak hitam dan serangan bos di layar. Kamu dapat poin (dan kerusakan ke bos) dari bidak yang hancur.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Nyawa tambahan:</span> menyelamatkanmu saat berikutnya kamu akan kalah dan memberimu perisai {0} detik. Kamu hanya bisa membawa satu dalam satu waktu.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Kantong token:</span> langsung memberi token: <strong>{1}</strong> dengan peluang {0}%, <strong>{3}</strong> dengan peluang {2}%, <strong>{5} token</strong> dengan peluang {4}%. Peningkatan \"Kantong penuh\" menambah jumlahnya.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Beli kekuatan permanen dengan tokenmu di tab <strong>Peningkatan</strong> di toko. Masing-masing punya {0} tingkat dan berlaku di semua mode:",
@@ -23942,7 +23924,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">Qalxan ({0} san, təkmilləşdirmə ilə {1} san-a qədər):</span> heç bir zona və boss hücumu sənə zərər verə bilməz. Fiqurlara üz-üzə çırpılsan belə, onları vurursan.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">Xal çoxaldıcısı ({0} san, təkmilləşdirmə ilə {1} san-a qədər):</span> qazandığın xalları çoxaldır: {2}% ehtimalla <strong>x{3}</strong>, {4}% ehtimalla <strong>x{5}</strong>, {6}% ehtimalla <strong>x{7}</strong>. Bossa vurduğun zərbə də artır. Bir çoxaldıcı aktiv olanda yenisi çıxmır.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">Yavaşıtma ({0} san, təkmilləşdirmə ilə {1} san-a qədər):</span> taxta, fiqurlar, bosslar və onların hücumları yarı sürətlə işləyir. Bu müddətdə rəngli xanalarda (qırmızı, sarı, yaşıl, bənövşəyi, narıncı) qala biləcəyin vaxt <strong>{2} dəfə</strong> artır. Sənin fiqurun isə normal sürətlə hərəkət etməyə davam edir.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">Bomba:</span> ekrandakı bütün qara fiqurları və boss hücumlarını dərhal məhv edir. Məhv olan fiqurların xallarını (və boss zərbəsini) qazanırsan.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">Bomba:</span> ekrandakı bütün qara fiqurları və boss hücumlarını dərhal məhv edir. Məhv olan fiqurların xallarını (və boss zərbəsini) qazanırsan.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">Əlavə can:</span> növbəti dəfə uduzanda səni xilas edir və {0} saniyəlik qalxan verir. Eyni anda yalnız birini daşıya bilərsən.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">Token kisəsi:</span> dərhal token qazandırır: {0}% ehtimalla <strong>{1}</strong>, {2}% ehtimalla <strong>{3}</strong>, {4}% ehtimalla <strong>{5} token</strong>. \"Dolu kisə\" təkmilləşdirməsi bunları artırır.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "Mağazanın <strong>Təkmilləşdirmələr</strong> bölməsində tokenlərinlə daimi güclər alırsan. Hər birinin {0} səviyyəsi var və bütün rejimlərdə işləyir:",
@@ -25008,7 +24990,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">护盾（{0} 秒，升级后最多 {1} 秒）：</span>任何区域和 Boss 攻击都伤不到你。就算正面撞上棋子，也能把它吃掉。",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">得分倍率（{0} 秒，升级后最多 {1} 秒）：</span>将你获得的分数乘以倍率：{2}% 几率 <strong>x{3}</strong>，{4}% 几率 <strong>x{5}</strong>，{6}% 几率 <strong>x{7}</strong>。对 Boss 的伤害也会乘以倍率。倍率生效期间不会出现新的倍率。",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">慢动作（{0} 秒，升级后最多 {1} 秒）：</span>棋盘、棋子、Boss 和它们的攻击都以半速运行。此期间你能在彩色格子（红、黄、绿、紫、橙）上停留的时间变为 <strong>{2} 倍</strong>。你自己的棋子仍以正常速度移动。",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">炸弹：</span>立刻消灭屏幕上所有黑棋和 Boss 攻击。被消灭的棋子的分数（和 Boss 伤害）都归你。",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">炸弹：</span>立刻消灭屏幕上所有黑棋和 Boss 攻击。被消灭的棋子的分数（和 Boss 伤害）都归你。",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">额外生命：</span>在你下次出局时救你一命，并给你 {0} 秒护盾。一次只能携带一个。",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">代币钱袋：</span>立即获得代币：{0}% 几率 <strong>{1}</strong>，{2}% 几率 <strong>{3}</strong>，{4}% 几率 <strong>{5} 代币</strong>。“满满钱袋”升级会提高这些数量。",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "在商店的<strong>升级</strong>标签页中用代币购买永久能力。每项有 {0} 级，在所有模式中生效：",
@@ -26074,7 +26056,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">シールド（{0}秒、アップグレードで最大{1}秒）：</span>どのエリアやボスの攻撃もキミを傷つけられません。正面からぶつかった駒も取れます。",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">スコア倍率（{0}秒、アップグレードで最大{1}秒）：</span>獲得ポイントを倍増：{2}%の確率で<strong>x{3}</strong>、{4}%の確率で<strong>x{5}</strong>、{6}%の確率で<strong>x{7}</strong>。ボスへのダメージも倍増します。倍率の発動中は新しい倍率は出ません。",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">スロー（{0}秒、アップグレードで最大{1}秒）：</span>ボード、駒、ボスとその攻撃が半分の速さになります。その間、色付きのマス（赤・黄・緑・紫・オレンジ）にいられる時間が<strong>{2}倍</strong>に。キミの駒は普通の速さで動き続けます。",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">ボム：</span>画面上のすべての黒い駒とボスの攻撃を一瞬で消し去ります。消した駒のポイント（とボスへのダメージ）も獲得できます。",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">ボム：</span>画面上のすべての黒い駒とボスの攻撃を一瞬で消し去ります。消した駒のポイント（とボスへのダメージ）も獲得できます。",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">予備ライフ：</span>次にやられそうなときに助けてくれて、{0}秒のシールドをくれます。同時に持てるのは1つだけです。",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">トークン袋：</span>すぐにトークンがもらえます：{0}%の確率で<strong>{1}</strong>、{2}%の確率で<strong>{3}</strong>、{4}%の確率で<strong>{5}トークン</strong>。「満タンの袋」アップグレードで増えます。",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "ショップの<strong>アップグレード</strong>タブで、トークンを使って永続的なパワーを買えます。それぞれ{0}段階あり、全モードで有効です：",
@@ -27140,7 +27122,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">방패 ({0}초, 강화하면 최대 {1}초):</span> 어떤 구역이나 보스 공격도 피해를 주지 못해요. 정면으로 부딪힌 기물도 잡아요.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">점수 배율 ({0}초, 강화하면 최대 {1}초):</span> 얻는 점수가 곱해져요: {2}% 확률로 <strong>x{3}</strong>, {4}% 확률로 <strong>x{5}</strong>, {6}% 확률로 <strong>x{7}</strong>. 보스 피해도 곱해져요. 배율이 켜져 있는 동안에는 새 배율이 나오지 않아요.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">슬로모션 ({0}초, 강화하면 최대 {1}초):</span> 보드, 기물, 보스와 보스 공격이 절반 속도로 움직여요. 그동안 색깔 칸(빨강, 노랑, 초록, 보라, 주황)에 머무를 수 있는 시간이 <strong>{2}배 길어져요</strong>. 내 기물은 평소 속도로 움직여요.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">폭탄:</span> 화면의 모든 검은 기물과 보스 공격을 즉시 없애요. 없앤 기물의 점수(와 보스 피해)도 얻어요.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">폭탄:</span> 화면의 모든 검은 기물과 보스 공격을 즉시 없애요. 없앤 기물의 점수(와 보스 피해)도 얻어요.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">추가 목숨:</span> 다음에 패배할 때 한 번 구해 주고 {0}초 동안 방패를 줘요. 한 번에 하나만 가질 수 있어요.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">토큰 주머니:</span> 토큰을 바로 줘요: {0}% 확률로 <strong>{1}</strong>, {2}% 확률로 <strong>{3}</strong>, {4}% 확률로 <strong>{5} 토큰</strong>. \"가득 찬 주머니\" 강화로 양이 늘어나요.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "상점의 <strong>강화</strong> 탭에서 토큰으로 영구 능력을 사요. 각각 {0}단계가 있고 모든 모드에서 적용돼요:",
@@ -28206,7 +28188,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">الدرع ({0} ث، حتى {1} ث مع التحسينات):</span> لا يمكن لأي منطقة أو هجوم زعيم أن يؤذيك. بل إنك تأكل القطع التي تصطدم بها مباشرة.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">مضاعِف النقاط ({0} ث، حتى {1} ث مع التحسينات):</span> يضاعف النقاط التي تكسبها: <strong>x{3}</strong> بنسبة {2}%، و<strong>x{5}</strong> بنسبة {4}%، و<strong>x{7}</strong> بنسبة {6}%. ويتضاعف ضرر الزعماء أيضًا. لا يظهر مضاعِف جديد ما دام أحدها نشطًا.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">الإبطاء ({0} ث، حتى {1} ث مع التحسينات):</span> تتحرك الرقعة والقطع والزعماء وهجماتهم بنصف السرعة. وفي الأثناء، يُضرب الوقت المسموح لك على المربعات الملونة (الأحمر، الأصفر، الأخضر، البنفسجي، البرتقالي) <strong>في {2}</strong>. أما قطعتك فتتحرك بسرعتها العادية.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">القنبلة:</span> تدمّر فورًا كل القطع السوداء وهجمات الزعماء على الشاشة. وتكسب نقاط القطع المدمّرة (وضررها على الزعيم).",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">القنبلة:</span> تدمّر فورًا كل القطع السوداء وهجمات الزعماء على الشاشة. وتكسب نقاط القطع المدمّرة (وضررها على الزعيم).",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">حياة إضافية:</span> تنقذك في المرة التالية التي كنت ستخسر فيها وتمنحك درعًا لمدة {0} ثانية. لا يمكنك حمل أكثر من واحدة في آنٍ واحد.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">كيس التوكنات:</span> يمنحك توكنات فورًا: <strong>{1}</strong> بنسبة {0}%، و<strong>{3}</strong> بنسبة {2}%، و<strong>{5} توكن</strong> بنسبة {4}%. تحسين \"كيس ممتلئ\" يزيدها.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "اشترِ قوى دائمة بتوكناتك من تبويب <strong>التحسينات</strong> في المتجر. لكل منها {0} مستويات وتعمل في كل الأوضاع:",
@@ -29272,7 +29254,7 @@
 "<span class=\"text-sky-400 font-bold\">Kalkan ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Hiçbir alan ve boss saldırısı sana zarar veremez. Taşlara düz çarparsan bile onları yersin.": "<span class=\"text-sky-400 font-bold\">الدرع ({0} ث، حتى ل {1} ث بالتطويرات):</span> حتى منطقة ولا هجوم ديال البوس مايقدر يضرك. وحتى القطع اللي كتضربهم من القدام كتاكلهم.",
 "<span class=\"text-amber-400 font-bold\">Puan Çarpanı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Kazandığın puanları çarpar: %{2} ihtimalle <strong>x{3}</strong>, %{4} ihtimalle <strong>x{5}</strong>, %{6} ihtimalle <strong>x{7}</strong>. Boss'a verdiğin hasar da çarpılır. Bir çarpan aktifken yenisi çıkmaz.": "<span class=\"text-amber-400 font-bold\">مضاعف السكور ({0} ث، حتى ل {1} ث بالتطويرات):</span> كيضاعف النقاط اللي كتربح: <strong>x{3}</strong> {2}% من المرات، <strong>x{5}</strong> {4}% من المرات، <strong>x{7}</strong> {6}% من المرات. الضرر ديال البوس حتى هو كيتضاعف. ماكيبانش مضاعف جديد ملي يكون واحد خدام.",
 "<span class=\"text-violet-400 font-bold\">Zaman Yavaşlatıcı ({0} sn, geliştirmeyle {1} sn'ye kadar):</span> Tahta, taşlar, boss ve saldırıları yarı hızda işler. Bu sürede renkli karelerde (kırmızı, sarı, yeşil, mor, turuncu) kalabileceğin süre <strong>{2} katına</strong> çıkar. Senin piyonun ise normal hızında hareket etmeye devam eder.": "<span class=\"text-violet-400 font-bold\">التبطيء ({0} ث، حتى ل {1} ث بالتطويرات):</span> الرقعة، القطع، البوسات والهجومات ديالهم كيمشيو بنص السرعة. فهاد الوقت، الوقت اللي تقدر تبقى فيه فالخانات الملونين (حمر، صفر، خضر، موف، برتقالي) كيولي <strong>{2} مرات كتر</strong>. القطعة ديالك كتبقى تتحرك بالسرعة العادية.",
-"<span class=\"text-bomb font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-bomb font-bold\">البومبة:</span> كتهرس فالحين كاع القطع الكحلين والهجومات ديال البوس اللي فالشاشة. كتربح النقاط (والضرر ديال البوس) ديال القطع اللي تهرسو.",
+"<span class=\"text-red-400 font-bold\">Bomba:</span> Ekrandaki bütün siyah taşları ve boss saldırılarını anında yok eder. Yok olan taşların puanlarını (ve boss hasarını) kazanırsın.": "<span class=\"text-red-400 font-bold\">البومبة:</span> كتهرس فالحين كاع القطع الكحلين والهجومات ديال البوس اللي فالشاشة. كتربح النقاط (والضرر ديال البوس) ديال القطع اللي تهرسو.",
 "<span class=\"text-pink-400 font-bold\">Yedek Can:</span> Bir sonraki elenişinde seni kurtarır ve {0} saniyelik kalkan verir. Aynı anda sadece bir tane taşıyabilirsin.": "<span class=\"text-pink-400 font-bold\">الروح الزايدة:</span> كتنقذك المرة الجاية اللي غادي تخسر فيها وكتعطيك درع ديال {0} ثواني. ماتقدر تهز غير وحدة فمرة.",
 "<span class=\"text-yellow-400 font-bold\">Token Kesesi:</span> Anında token kazandırır: %{0} ihtimalle <strong>{1}</strong>, %{2} ihtimalle <strong>{3}</strong>, %{4} ihtimalle <strong>{5} token</strong>. \"Dolu Kese\" geliştirmesi bunları artırır.": "<span class=\"text-yellow-400 font-bold\">صاك التوكن:</span> كيعطيك التوكن فالحين: <strong>{1}</strong> {0}% من المرات، <strong>{3}</strong> {2}% من المرات، <strong>{5} توكن</strong> {4}% من المرات. التطوير \"صاك عامر\" كيكبّرهم.",
 "Market'in <strong>Geliştirmeler</strong> sekmesinden tokenlarınla kalıcı güçler alırsın. Her birinin {0} seviyesi var ve bütün modlarda geçerlidir:": "شري باورات دايمين بالتوكن ديالك من القسم ديال <strong>التطويرات</strong> فالحانوت. كل واحد فيه {0} مستويات وكيخدم فكاع الأوضاع:",
@@ -30464,16 +30446,12 @@
             if (kind === 'attack') return `${lv} can, aynı taş sırası. Her ${ATK_PER} taş yediğinde rakibinin tahtasına bir saldırı taşı gider. İkisinin de canı bitince skoru yüksek olan kazanır.`;
             if (kind === 'raid') return `Zor seviyede klasik kurallar. Baykuş'un ${RAID_HP} canı ikinizin ortak hasarıyla düşer. Biriniz yenilirse ortağını izler.`;
             if (kind === 'team') return `İkiye iki, kişi başı ${lv} can, aynı taş sırası. Takım skorları toplanır, yüksek olan takım kazanır.`;
-            if (kind === 'ta') return `${lv} can, aynı taş sırası, ${TIME_ATTACK_DURATION / 1000} saniye. Süre ya da canların bitince koşun biter, skoru yüksek olan kazanır.`;
-            if (kind === 'dodge') return `${lv} can, aynı taş sırası. Taşları yiyemezsin, yanından geçtiğin her taş puan. İkisinin de canı bitince skoru yüksek olan kazanır.`;
             return `${lv} can, aynı taş sırası. Canı biten rakibini izler. İkisinin de canı bitince skoru yüksek olan kazanır.`;
         }
         function duelModeName(lv, kind) {
             kind = kind || DUEL.kind || 'duel';
             if (kind === 'attack') return 'Saldırı Düellosu';
             if (kind === 'raid') return 'Boss Baskını';
-            if (kind === 'ta') return 'Zamana Karşı Düellosu';
-            if (kind === 'dodge') return 'Sadece Kaç Düellosu';
             if (kind === 'team') return lv === 5 ? 'Uzun Takım Düellosu' : 'Takım Düellosu';
             return lv === 5 ? 'Uzun Düello' : 'Düello';
         }
@@ -30677,7 +30655,7 @@
             vibrate([40, 30, 40]);
             const kind = invKind(inv);
             const lv = kindLives(kind, Number(inv.lv));
-            const title = inv.md === 'tp' ? 'Seni takımına çağırıyor' : kind === 'attack' ? 'Seni saldırı düellosuna çağırıyor' : kind === 'raid' ? 'Seni boss baskınına çağırıyor' : kind === 'ta' ? 'Seni zamana karşı düellosuna çağırıyor' : kind === 'dodge' ? 'Seni sadece kaç düellosuna çağırıyor' : 'Seni düelloya çağırıyor';
+            const title = inv.md === 'tp' ? 'Seni takımına çağırıyor' : kind === 'attack' ? 'Seni saldırı düellosuna çağırıyor' : kind === 'raid' ? 'Seni boss baskınına çağırıyor' : 'Seni düelloya çağırıyor';
             if (typeof chatModal !== 'undefined' && chatModal.style.display === 'flex') chatModal.style.display = 'none';   // davet sohbetin arkasında kalmasın
             duelShow(`<div class="duel-spin still" aria-hidden="true">${ico(KIND_ICON[kind] || 'swords')}</div>
                 <div class="duel-sub big"><span translate="no">${accEsc(inv.n || '?')}</span></div>
@@ -30831,13 +30809,8 @@
             // Düello: Klasik kuralları, boss'lar açık, herkes aynı zorlukta, maça yedek canla başlama yok
             matchStats.mode = 'duel';
             matchStats.diff = DUEL.kind === 'raid' ? RAID_DIFF : DUEL_DIFF;
-            nextBossScore = (DUEL.kind === 'raid' || DUEL.kind === 'ta' || DUEL.kind === 'dodge') ? Infinity : BOSS_FIRST_SCORE;   // tek kişilik modlarda olduğu gibi boss yok
+            nextBossScore = DUEL.kind === 'raid' ? Infinity : BOSS_FIRST_SCORE;
             effects.extraLife = false;
-            // Zamana Karşı düellosu: 60 saniyelik sayaç
-            timeLeft = TIME_ATTACK_DURATION; lastTimeShown = -1;
-            timeWrap.classList.remove('low', 'slowed');
-            timeWrap.style.display = DUEL.kind === 'ta' ? 'inline-flex' : 'none';
-            if (DUEL.kind === 'ta') updateTimeDisplay();
             bestAtStart = 0; recordAnnounced = true;
             gameOverScreen.style.display = 'none';
             duelHud.style.display = 'block';
@@ -31014,19 +30987,13 @@
             });
         }
 
-        // Zamana Karşı düellosunda süre bitti: koşu biter (canlar kalsa da), sonuç ya da rakibi izleme gelir
-        function duelTimeUp() {
-            if (DUEL.myDone) return;
-            showBanner('SÜRE DOLDU!', '#fbbf24', false);
-            duelFinalDeath('', null, true);
-        }
         // Oyuncu bütün canlarını kaybetti
-        function duelFinalDeath(reason, cause, timeUp) {
+        function duelFinalDeath(reason, cause) {
             gameState = 'GAMEOVER';
             touchControls.style.display = 'none';
             pauseBtn.style.display = 'none';
-            if (timeUp) { playSound('achieve'); vibrate([40, 30, 40]); }
-            else { playSound('death'); vibrate(200); }
+            playSound('death');
+            vibrate(200);
             DUEL.myDone = true;
             DUEL.myFinal = Math.floor(score) || 0;
             duelPushNow();
@@ -31344,7 +31311,6 @@
                 effects.shield = Math.max(effects.shield, 3000);
                 player.dangerTimerRed = 0; player.dangerTimerYellow = 0; player.dangerTimerGreen = 0; player.dangerTimerBoss = 0;
                 floatingTexts.push({ x: player.x + TS / 2, y: player.y, text: DUEL.lives === 1 ? 'SON CAN!' : 'BİR CAN GİTTİ!', life: 1.4, rgb: '248, 113, 113' });
-                if (reason) showToast(reason, '', '', 'toast-life');   // canın neden gittiğini göster (saydam)
                 createParticles(player.x + TS / 2, player.y + TS / 2, '#f87171');
                 playSound('warn');
                 vibrate([60, 40, 60]);
@@ -32936,18 +32902,17 @@
         // ===================== ONLINE 2: YENİ MODLAR, RÜTBE, GÖREVLER, MESAJLAŞMA =====================
         // Düello motoru dört türü taşır: düello, saldırı düellosu, boss baskını (2 kişilik ortak) ve takım düellosu (2'ye 2).
         // Hayalet yarışı tek kişilik ama başkasının kayıtlı koşusuna karşı oynanır.
-        // ta: Zamana Karşı düellosu (60 sn), dodge: Sadece Kaç düellosu. İkisi de 3 can.
-        const KIND_CODE = { duel: 'd', attack: 'a', raid: 'c', ta: 'ta', dodge: 'dg' };
-        const KIND_OF = { d: 'duel', a: 'attack', c: 'raid', ta: 'ta', dg: 'dodge' };
-        const KIND_ICON = { duel: 'swords', attack: 'bolt', raid: 'crown', team: 'users', ghost: 'ghost', ta: 'clock', dodge: 'run' };
+        const KIND_CODE = { duel: 'd', attack: 'a', raid: 'c' };
+        const KIND_OF = { d: 'duel', a: 'attack', c: 'raid' };
+        const KIND_ICON = { duel: 'swords', attack: 'bolt', raid: 'crown', team: 'users', ghost: 'ghost' };
         const ATK_PER = 3;                      // saldırı düellosu: her 3 yenen taşta rakibe bir saldırı taşı
         const RAID_HP = 2000, RAID_DIFF = 'hard', RAID_BOSS_SCORE = 25, RAID_BOSS_TIME = 20000;
-        function kindLives(kind, lv) { return kind === 'raid' ? 1 : (kind === 'attack' || kind === 'ta' || kind === 'dodge') ? 3 : (Number(lv) === 5 ? 5 : 3); }
-        function duelQueue(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c1' : kind === 'ta' ? 'ta3' : kind === 'dodge' ? 'dg3' : 'w' + (Number(lv) === 5 ? 5 : 3); }
+        function kindLives(kind, lv) { return kind === 'raid' ? 1 : kind === 'attack' ? 3 : (Number(lv) === 5 ? 5 : 3); }
+        function duelQueue(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c1' : 'w' + (Number(lv) === 5 ? 5 : 3); }
         function invPath(kind) { return (!kind || kind === 'duel') ? 'invites' : 'invites2'; }
         function invOf(inv) { return (inv && inv._p) || 'invites'; }
         function invKind(inv) { return inv && inv.md === 'tp' ? 'team' : (KIND_OF[inv && inv.md] || 'duel'); }
-        function dlbKey(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c' : kind === 'ta' ? 'ta3' : kind === 'dodge' ? 'dg3' : kind === 'team' ? 't' + (Number(lv) === 5 ? 5 : 3) : String(Number(lv) === 5 ? 5 : 3); }
+        function dlbKey(kind, lv) { return kind === 'attack' ? 'a3' : kind === 'raid' ? 'c' : kind === 'team' ? 't' + (Number(lv) === 5 ? 5 : 3) : String(Number(lv) === 5 ? 5 : 3); }
 
         ICON_PATHS.chat = '<path d="M4.5 5.5h15a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V17.5h-1A1.5 1.5 0 0 1 3 16V7a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M7.5 10h9M7.5 13.5h6"/>';
         ICON_PATHS.send = '<path d="M4 11.5 20 4l-6.5 16-2.5-6.5z"/><path d="M11 13.5 20 4"/>';
@@ -33076,8 +33041,7 @@
             const win = w === uid, draw = w === 'draw';
             return { win, draw, title: win ? 'Kazandın!' : draw ? 'Berabere' : 'Kaybettin' };
         }
-        const REC_KEYS = { duel: ['duelW', 'duelL', 'duelD'], attack: ['atkW', 'atkL', 'atkD'], raid: ['raidW', 'raidL', null], team: ['teamW', 'teamL', 'teamD'],
-                           ta: ['taDuelW', 'taDuelL', 'taDuelD'], dodge: ['dgDuelW', 'dgDuelL', 'dgDuelD'] };
+        const REC_KEYS = { duel: ['duelW', 'duelL', 'duelD'], attack: ['atkW', 'atkL', 'atkD'], raid: ['raidW', 'raidL', null], team: ['teamW', 'teamL', 'teamD'] };
         function duelCountResult(res) {
             const keys = REC_KEYS[DUEL.kind] || REC_KEYS.duel;
             const k = res.win ? keys[0] : res.draw ? keys[2] : keys[1];
@@ -33085,7 +33049,7 @@
         }
         function duelRecordHTML(kind) {
             const keys = REC_KEYS[kind] || REC_KEYS.duel, st = save.stats;
-            const label = { duel: 'Düello', attack: 'Saldırı', raid: 'Baskın', team: 'Takım', ta: 'Zamana Karşı', dodge: 'Sadece Kaç' }[kind] || 'Düello';
+            const label = { duel: 'Düello', attack: 'Saldırı', raid: 'Baskın', team: 'Takım' }[kind] || 'Düello';
             if (kind === 'raid') return `<div class="fr-record small"><span>${label}</span><b class="fr-w">${st.raidW || 0}</b><small>Galibiyet</small><b class="fr-l">${st.raidL || 0}</b><small>Mağlubiyet</small></div>`;
             return `<div class="fr-record small"><span>${label}</span><b class="fr-w">${st[keys[0]] || 0}</b><small>Galibiyet</small><b class="fr-l">${st[keys[1]] || 0}</b><small>Mağlubiyet</small><b>${st[keys[2]] || 0}</b><small>Beraberlik</small></div>`;
         }
@@ -33697,18 +33661,32 @@
         // Koşu sırasında piyonun yeri ve skoru 0,2 sn'de bir kaydedilir. Hayalet, aynı taş sırasıyla (aynı tohum)
         // yeniden oynanan koşuda yarı saydam bir piyon olarak görünür. Her oyuncunun tek hayaleti var: en iyi skoru.
         const GHOST_STEP = 200, GHOST_MAX = 4500;
-        const GHOST = { active: false, seed: 0, k: 0, rec: [], recT: 0, target: null, myBest: 0, myLoaded: false, timer: null, last: null };
+        const GHOST = { active: false, seed: 0, k: 0, rec: [], recT: 0, target: null, myBest: 0, myLoaded: false, timer: null, last: null,
+                        mode: 'classic', pick: 'classic', best: { timeAttack: 0, dodge: 0 }, loaded: {}, starting: false, prevMode: null };
+        // Hayalet yarışı üç modda: her modun hayaletleri ayrı yerde durur
+        const GHOST_MODES = ['classic', 'timeAttack', 'dodge'];
+        const GHOST_PATH = { classic: ['ghosts', 'ghostmeta'], timeAttack: ['ghosts_ta', 'ghostmeta_ta'], dodge: ['ghosts_dk', 'ghostmeta_dk'] };
+        const GHOST_NAME = { classic: 'Klasik', timeAttack: 'Zamana Karşı', dodge: 'Sadece Kaç' };
+        const GHOST_DLB = { classic: 'g', timeAttack: 'gt', dodge: 'gd' };
+        const ghM = m => GHOST_PATH[m] ? m : 'classic';
+        const ghData = m => GHOST_PATH[ghM(m)][0], ghMeta = m => GHOST_PATH[ghM(m)][1];
+        function ghBest(m) { m = ghM(m); return m === 'classic' ? GHOST.myBest : (GHOST.best[m] || 0); }
+        function ghSetBest(m, v) { m = ghM(m); if (m === 'classic') GHOST.myBest = v; else GHOST.best[m] = v; }
+        function ghLoaded(m) { m = ghM(m); return m === 'classic' ? GHOST.myLoaded : !!GHOST.loaded[m]; }
+        // Şu an bir hayalet yarışı oynanıyor mu (Klasik hayalette maç modu 'ghost', diğerlerinde modun kendisi)
+        function ghostOn() { return GHOST.active && (GHOST.mode === 'classic' ? matchStats.mode === 'ghost' : matchStats.mode === GHOST.mode); }
         function ghostEncode(rec) { return rec.map(a => a.map(n => Math.max(0, Math.round(n)).toString(36)).join('.')).join(','); }
         function ghostDecode(str) { return String(str || '').split(',').filter(Boolean).map(s => s.split('.').map(x => parseInt(x, 36) || 0)); }
-        function ghostLoadMine() {
+        function ghostLoadMine(mode) {
             if (!ON.R || !ON.uid) return Promise.resolve();
             const uid = ON.uid;
-            return ON.R.get(onRef('ghostmeta/' + uid)).then(s => {
+            const one = m => ON.R.get(onRef(ghMeta(m) + '/' + uid)).then(s => {
                 if (ON.uid !== uid) return;
                 const v = s.val();
-                GHOST.myBest = v && typeof v.s === 'number' ? v.s : 0;
-                GHOST.myLoaded = true;
+                ghSetBest(m, v && typeof v.s === 'number' ? v.s : 0);
+                if (m === 'classic') GHOST.myLoaded = true; else GHOST.loaded[m] = true;
             }).catch(() => {});
+            return mode ? one(ghM(mode)) : Promise.all(GHOST_MODES.map(one));
         }
         function ghostAt(t) {
             const p = GHOST.target && GHOST.target.p;
@@ -33718,21 +33696,24 @@
             const a = p[Math.max(0, i)], b = p[i + 1], k = f - i;
             return { x: a[0] + (b[0] - a[0]) * k, y: a[1] + (b[1] - a[1]) * k, s: a[2], done: false };
         }
-        function ghostStart(target) {
+        function ghostStart(target, mode) {
             if (!onReady() || DUEL.phase !== 'idle' || TEAM.phase !== 'idle') return;
+            mode = ghM(mode || (target && target.mode) || GHOST.pick);
             for (const id of Object.keys(MENU_CLOSE)) { const el = document.getElementById(id); if (el) el.style.display = 'none'; }
             if (typeof chatModal !== 'undefined') chatModal.style.display = 'none';
             duelHide();
             GHOST.active = true;
             GHOST.target = target || null;
             GHOST.seed = target ? (Number(target.seed) >>> 0) : ((Math.random() * 4294967296) >>> 0);
-            GHOST.k = 0; GHOST.rec = []; GHOST.recT = 0; GHOST.last = target ? { uid: target.u } : { uid: null };
-            const prevMode = gameMode;
-            gameMode = 'classic';
-            try { resetGame(); } finally { gameMode = prevMode; }
-            matchStats.mode = 'ghost';
+            GHOST.k = 0; GHOST.rec = []; GHOST.recT = 0; GHOST.last = target ? { uid: target.u, mode } : { uid: null, mode };
+            GHOST.mode = mode;
+            if (GHOST.prevMode === null) GHOST.prevMode = gameMode;
+            gameMode = mode;
+            GHOST.starting = true;
+            try { resetGame(); } finally { GHOST.starting = false; }
+            // Klasik hayalette maç modu 'ghost'; Zamana Karşı ve Sadece Kaç kendi kurallarıyla oynanır (süre, boss yok)
+            if (mode === 'classic') { gameMode = GHOST.prevMode; matchStats.mode = 'ghost'; nextBossScore = BOSS_FIRST_SCORE; }
             matchStats.diff = 'medium';
-            nextBossScore = BOSS_FIRST_SCORE;
             effects.extraLife = false;
             bestAtStart = Infinity; recordAnnounced = true;
             duelHud.style.display = 'block';
@@ -33742,12 +33723,16 @@
             ghostHudUpdate();
             clearInterval(GHOST.timer);
             GHOST.timer = setInterval(() => { if (GHOST.active) ghostHudUpdate(); }, 200);
-            if (!GHOST.myLoaded) ghostLoadMine();
+            if (!ghLoaded(mode)) ghostLoadMine(mode);
+        }
+        // Yarış bitince menüde seçili mod geri gelsin
+        function ghostRestoreMode() {
+            if (GHOST.prevMode !== null) { gameMode = GHOST.prevMode; GHOST.prevMode = null; }
         }
         function ghostHudUpdate() {
             if (!GHOST.active) return;
             const g = GHOST.target ? ghostAt(gameTime) : null;
-            const mine = Math.floor(score) || 0, theirs = g ? g.s : GHOST.myBest;
+            const mine = Math.floor(score) || 0, theirs = g ? g.s : ghBest(GHOST.mode);
             const sig = [mine, theirs, g && g.done, LANG].join('|');
             if (sig === dhLast) return;
             dhLast = sig;
@@ -33765,7 +33750,7 @@
         // Hayalet taş sırası: aynı tohum
         const spawnEnemyGhost = spawnEnemy;
         spawnEnemy = function () {
-            if (!GHOST.active || matchStats.mode !== 'ghost' || arguments.length || gameState !== 'PLAYING') return spawnEnemyGhost.apply(this, arguments);
+            if (!ghostOn() || arguments.length || gameState !== 'PLAYING') return spawnEnemyGhost.apply(this, arguments);
             const rnd = Math.random;
             Math.random = duelRng(GHOST.seed, GHOST.k++);
             try { return spawnEnemyGhost.apply(this, arguments); } finally { Math.random = rnd; }
@@ -33774,7 +33759,7 @@
         const updateGhost = update;
         update = function () {
             const r = updateGhost.apply(this, arguments);
-            if (GHOST.active && matchStats.mode === 'ghost' && gameState === 'PLAYING' && GHOST.rec.length < GHOST_MAX) {
+            if (ghostOn() && gameState === 'PLAYING' && GHOST.rec.length < GHOST_MAX) {
                 while (gameTime >= GHOST.recT && GHOST.rec.length < GHOST_MAX) {
                     GHOST.rec.push([player.x, player.y, Math.floor(score) || 0]);
                     GHOST.recT += GHOST_STEP;
@@ -33794,7 +33779,7 @@
                     for (const e of enemies) if (e.atk) { ctx.beginPath(); ctx.arc(e.x + TS / 2, e.y + TS / 2 + 4, TS * 0.42, 0, Math.PI * 2); ctx.stroke(); }
                     ctx.restore();
                 }
-                if (GHOST.active && GHOST.target && matchStats.mode === 'ghost' && gameState !== 'START') {
+                if (GHOST.target && (ghostOn() || (GHOST.active && matchStats.mode === 'ghost')) && gameState !== 'START') {
                     const g = ghostAt(gameTime);
                     if (g) {
                         const look = GHOST.target.lk || {};
@@ -33818,7 +33803,9 @@
         };
         const endGameGhost = endGame;
         endGame = function () {
-            const ghostRun = GHOST.active && matchStats.mode === 'ghost';
+            const ghostRun = ghostOn();
+            // Zamana Karşı / Sadece Kaç hayaletinde maç, rekor, skor tablosu ve istatistiklere normal maç gibi sayılmasın
+            if (ghostRun) matchStats.mode = 'ghost';
             const r = endGameGhost.apply(this, arguments);
             if (ghostRun) ghostFinish();
             if (matchStats.mode !== 'duel') dqOnMatchEnd();   // düellolar sonuç ekranında sayılır
@@ -33827,31 +33814,38 @@
         async function ghostFinish() {
             GHOST.active = false;
             clearInterval(GHOST.timer);
-            const mine = Math.floor(score) || 0, target = GHOST.target, rec = GHOST.rec.slice(), seed = GHOST.seed;
-            const om = document.getElementById('over-mode'); if (om) om.textContent = T('Mod: Hayalet Yarışı');
+            const mine = Math.floor(score) || 0, target = GHOST.target, rec = GHOST.rec.slice(), seed = GHOST.seed, mode = GHOST.mode;
+            ghostRestoreMode();
+            const om = document.getElementById('over-mode');
+            if (om) om.textContent = mode === 'classic' ? T('Mod: Hayalet Yarışı') : T('Mod: Hayalet Yarışı') + ' · ' + T(GHOST_NAME[mode]);
             let saved = false;
             dqCount('ghost');
-            if (!GHOST.myLoaded && ON.R && ON.uid) await ghostLoadMine();
+            try { ghostRunDone(mode, mine, target); } catch (e) {}
+            if (!ghLoaded(mode) && ON.R && ON.uid) await ghostLoadMine(mode);
             // Kayıtlı rekor okunamadıysa üzerine yazma (daha kötü bir koşu en iyisinin yerine geçmesin)
-            if (GHOST.myLoaded && mine > 0 && mine > GHOST.myBest && rec.length > 2 && ON.R && ON.uid) {
-                const prevBest = GHOST.myBest;
-                GHOST.myBest = mine;
+            if (ghLoaded(mode) && mine > 0 && mine > ghBest(mode) && rec.length > 2 && ON.R && ON.uid) {
+                const prevBest = ghBest(mode);
+                ghSetBest(mode, mine);
                 try {
-                    await ON.R.set(onRef('ghosts/' + ON.uid), { seed, p: ghostEncode(rec), t: ON.R.serverTimestamp() });
-                    await ON.R.set(onRef('ghostmeta/' + ON.uid), { u: ON.uid, n: ON.name, lk: myLook(), s: mine, d: rec.length * GHOST_STEP, t: ON.R.serverTimestamp() });
+                    await ON.R.set(onRef(ghData(mode) + '/' + ON.uid), { seed, p: ghostEncode(rec), t: ON.R.serverTimestamp() });
+                    await ON.R.set(onRef(ghMeta(mode) + '/' + ON.uid), { u: ON.uid, n: ON.name, lk: myLook(), s: mine, d: rec.length * GHOST_STEP, t: ON.R.serverTimestamp() });
                     saved = true;
-                    delete DLB.cache.g;
-                } catch (e) { GHOST.myBest = prevBest; console.warn('Hayalet kaydedilemedi:', e); }
+                    delete DLB.cache[GHOST_DLB[mode]];
+                    GHL.at = 0;
+                } catch (e) { ghSetBest(mode, prevBest); console.warn('Hayalet kaydedilemedi:', e); }
             }
-            setTimeout(() => ghostShowResult(mine, target, saved), 1200);
+            setTimeout(() => ghostShowResult(mine, target, saved, mode), 1200);
         }
-        function ghostShowResult(mine, target, saved) {
+        // Başarımlar için (sonradan sarılır)
+        let ghostRunDone = function () {};
+        function ghostShowResult(mine, target, saved, mode) {
+            mode = ghM(mode);
             if (DUEL.phase !== 'idle' || GHOST.active || (gameState !== 'GAMEOVER' && gameState !== 'START')) return;
             const won = target ? mine > target.s : false, tie = target && mine === target.s;
             const title = target ? (won ? 'Hayaleti geçtin!' : tie ? 'Berabere' : 'Hayalet kazandı') : 'Koşu bitti';
             const cls = target ? (won ? 'win' : tie ? 'draw' : 'lose') : 'draw';
             const look = target ? (target.lk || {}) : {};
-            duelShow(`<p class="duel-kicker">Hayalet Yarışı</p><h2 class="duel-title ${cls}">${title}</h2>
+            duelShow(`<p class="duel-kicker">${T('Hayalet Yarışı')}${mode !== 'classic' ? ' · ' + T(GHOST_NAME[mode]) : ''}</p><h2 class="duel-title ${cls}">${title}</h2>
                 ${target ? `<div class="duel-score">
                     <div class="duel-side me ${won ? 'top' : ''}">${duelAvatarHTML('me')}<b translate="no">${accEsc(ON.name || '')}</b><span class="duel-pts">${mine}</span></div>
                     <div class="duel-vs-mid">VS</div>
@@ -33861,8 +33855,8 @@
                 <div class="duel-actions col">${duelBtn('gh-again', target ? 'Tekrar yarış' : 'Tekrar oyna')}${duelBtn('gh-list', 'Hayalet listesi', 'btn-secondary')}${duelBtn('gh-menu', 'Ana menü', 'btn-secondary')}</div>`, () => {
                 const cv = duelBody.querySelector('canvas.gh-av');
                 if (cv) { drawLookAvatar(cv, look, 52, 59); cv.style.opacity = '0.55'; }
-                duelOn('gh-again', () => { duelHide(); ghostStart(target); });
-                duelOn('gh-list', () => { duelHide(); showMainMenu(); openGhostPicker(); });
+                duelOn('gh-again', () => { duelHide(); ghostStart(target, mode); });
+                duelOn('gh-list', () => { duelHide(); showMainMenu(); GHOST.pick = mode; openGhostPicker(); });
                 duelOn('gh-menu', () => { duelHide(); showMainMenu(); });
             });
         }
@@ -33870,23 +33864,26 @@
         const showMainMenuGhost = showMainMenu;
         showMainMenu = function () {
             if (GHOST.active) { GHOST.active = false; clearInterval(GHOST.timer); }
+            ghostRestoreMode();
             duelHud.classList.remove('ghost');
             return showMainMenuGhost.apply(this, arguments);
         };
         const resetGameGhost = resetGame;
         resetGame = function () {
             const r = resetGameGhost.apply(this, arguments);
-            if (GHOST.active && matchStats.mode !== 'ghost' && matchStats.mode !== 'classic') { GHOST.active = false; clearInterval(GHOST.timer); }
+            // Hayalet yarışı başlatılırken çağrılan sıfırlama dışında yeni bir maç başlarsa yarış iptal
+            if (GHOST.active && !GHOST.starting) { GHOST.active = false; clearInterval(GHOST.timer); ghostRestoreMode(); }
             return r;
         };
         // Bir oyuncunun hayaletine karşı yarışmayı başlat
-        async function ghostRace(uid) {
+        async function ghostRace(uid, mode) {
             if (!ON.R) return;
+            mode = ghM(mode || GHOST.pick);
             try {
-                const [ms, gs] = await Promise.all([ON.R.get(onRef('ghostmeta/' + uid)), ON.R.get(onRef('ghosts/' + uid))]);
+                const [ms, gs] = await Promise.all([ON.R.get(onRef(ghMeta(mode) + '/' + uid)), ON.R.get(onRef(ghData(mode) + '/' + uid))]);
                 const meta = ms.val(), g = gs.val();
-                if (!meta || !g || !g.p) { duelMessage('Hayalet yok', 'Bu oyuncunun henüz kayıtlı bir hayaleti yok.'); return; }
-                ghostStart({ u: uid, n: meta.n || '?', lk: meta.lk || {}, s: Number(meta.s) || 0, d: Number(meta.d) || 0, seed: Number(g.seed) >>> 0, p: ghostDecode(g.p) });
+                if (!meta || !g || !g.p) { duelMessage('Hayalet yok', mode === 'classic' ? 'Bu oyuncunun henüz kayıtlı bir hayaleti yok.' : T('Bu oyuncunun {0} modunda kayıtlı hayaleti yok.').replace('{0}', T(GHOST_NAME[mode]))); return; }
+                ghostStart({ u: uid, n: meta.n || '?', lk: meta.lk || {}, s: Number(meta.s) || 0, d: Number(meta.d) || 0, seed: Number(g.seed) >>> 0, p: ghostDecode(g.p), mode }, mode);
             } catch (e) { console.warn(e); duelMessage('Hayalet Yarışı', 'Hayalet yüklenemedi. İnternetini kontrol et.'); }
         }
         function ghostRaceFriend(fuid) { ghostRace(fuid); }
@@ -33899,6 +33896,7 @@
         ghostModal.innerHTML = `<div class="glass-panel gh-panel">
             <h2 class="onl-title">Hayalet Yarışı</h2>
             <p class="onl-sub">Bir oyuncunun en iyi koşusuyla aynı taşlarda yarış. Yarı saydam piyon onun hareketlerini tekrarlar.</p>
+            <div id="gh-modes" class="gh-modes"></div>
             <div id="gh-mine" class="gh-mine"></div>
             <div id="gh-list" class="gh-list"></div>
             <button id="gh-close" class="btn btn-secondary w-full">KAPAT</button>
@@ -33906,41 +33904,61 @@
         document.body.appendChild(ghostModal);
         MENU_CLOSE['ghost-modal'] = 'gh-close';
         document.getElementById('gh-close').onclick = () => { ghostModal.style.display = 'none'; };
-        const GHL = { friends: null, top: null, loading: false, at: 0 };
+        const GHL = { friends: null, top: null, loading: false, at: 0, mode: 'classic' };
         function openGhostPicker() {
             if (!onReady()) { duelMessage('Hayalet Yarışı', ON.failed ? 'Arkadaşlar ve düello şu an kullanılamıyor.' : 'Bağlanıyor… Birkaç saniye sonra tekrar dene.'); return; }
             ghostModal.style.display = 'flex';
             if (PG_SPECS.ghost) PG_SPECS.ghost.page = -1;
             ghostListRender();
+            if (GHL.mode !== GHOST.pick) { GHL.top = null; GHL.friends = null; GHL.at = 0; }
             if (!GHL.loading && Date.now() - GHL.at > 20000) ghostListLoad();
+            if (ON.uid) ghostLoadMine(GHOST.pick).then(() => { if (ghostModal.style.display === 'flex') ghostListRender(); });
         }
         async function ghostListLoad() {
             if (!ON.R) return;
             GHL.loading = true;
+            const mode = GHOST.pick;
+            GHL.mode = mode;
             ghostListRender();
             const R = ON.R;
             try {
-                const top = await R.get(R.query(onRef('ghostmeta'), R.orderByChild('s'), R.limitToLast(20)));
+                const top = await R.get(R.query(onRef(ghMeta(mode)), R.orderByChild('s'), R.limitToLast(20)));
+                if (GHOST.pick !== mode) return;
                 const rows = [];
                 top.forEach(ch => { const v = ch.val(); if (v && typeof v.s === 'number') rows.push(Object.assign({ u: ch.key }, v)); });
                 rows.sort((a, b) => b.s - a.s);
                 GHL.top = rows;
                 const fids = Object.keys(ON.friends || {});
-                const fr = await Promise.all(fids.map(f => R.get(onRef('ghostmeta/' + f)).then(s => { const v = s.val(); return v && typeof v.s === 'number' ? Object.assign({ u: f }, v) : null; }).catch(() => null)));
+                const fr = await Promise.all(fids.map(f => R.get(onRef(ghMeta(mode) + '/' + f)).then(s => { const v = s.val(); return v && typeof v.s === 'number' ? Object.assign({ u: f }, v) : null; }).catch(() => null)));
+                if (GHOST.pick !== mode) return;
                 GHL.friends = fr.filter(Boolean).sort((a, b) => b.s - a.s);
                 GHL.at = Date.now();
             } catch (e) { console.warn('Hayaletler yüklenemedi:', e); GHL.error = true; }
-            GHL.loading = false;
+            finally { if (GHL.mode === mode) GHL.loading = false; }
+            if (GHOST.pick !== mode) return;
             ghostListRender();
         }
         function ghostListRender() {
             const mine = document.getElementById('gh-mine'), list = document.getElementById('gh-list');
             if (!mine || !list) return;
-            mine.innerHTML = `<div class="gh-mine-txt"><small>Senin hayaletin</small><b>${GHOST.myBest > 0 ? GHOST.myBest : '—'}</b></div>
-                <button id="gh-solo" class="fr-btn fr-main">${ico('play')}<span>${GHOST.myBest > 0 ? 'Rekorunu geç' : 'Hayalet kaydet'}</span></button>`;
+            const gm = GHOST.pick, myB = ghBest(gm);
+            const tabs = document.getElementById('gh-modes');
+            if (tabs) {
+                tabs.innerHTML = GHOST_MODES.map(m => `<button class="gh-mode${m === gm ? ' on' : ''}" data-m="${m}">${ico(m === 'classic' ? 'trophy' : m === 'timeAttack' ? 'clock' : 'run')}<span>${T(GHOST_NAME[m])}</span></button>`).join('');
+                tabs.querySelectorAll('.gh-mode').forEach(b => b.onclick = () => {
+                    if (b.dataset.m === GHOST.pick) return;
+                    GHOST.pick = b.dataset.m;
+                    GHL.top = null; GHL.friends = null; GHL.at = 0;
+                    ghostListRender();
+                    ghostListLoad();
+                    if (ON.uid && !ghLoaded(GHOST.pick)) ghostLoadMine(GHOST.pick).then(() => { if (ghostModal.style.display === 'flex') ghostListRender(); });
+                });
+            }
+            mine.innerHTML = `<div class="gh-mine-txt"><small>Senin hayaletin</small><b>${myB > 0 ? myB : '—'}</b></div>
+                <button id="gh-solo" class="fr-btn fr-main">${ico('play')}<span>${myB > 0 ? 'Rekorunu geç' : 'Hayalet kaydet'}</span></button>`;
             document.getElementById('gh-solo').onclick = () => {
                 ghostModal.style.display = 'none';
-                if (GHOST.myBest > 0 && ON.uid) ghostRace(ON.uid); else ghostStart(null);
+                if (ghBest(gm) > 0 && ON.uid) ghostRace(ON.uid, gm); else ghostStart(null, gm);
             };
             if (GHL.loading && !GHL.top) { list.innerHTML = `<p class="lb-msg">Yükleniyor…</p>`; return; }
             const row = (g, i) => `<div class="lb-row gh-row" data-u="${accEsc(g.u)}"><span class="lb-rank">${i + 1}</span><canvas class="lb-av" aria-hidden="true"></canvas>
@@ -33960,7 +33978,7 @@
                 const cv = el.querySelector('canvas');
                 if (cv && g) drawLookAvatar(cv, g.lk, 30, 34);
                 const b = el.querySelector('.gh-go');
-                if (b) b.onclick = () => { ghostModal.style.display = 'none'; ghostRace(el.dataset.u); };
+                if (b) b.onclick = () => { ghostModal.style.display = 'none'; ghostRace(el.dataset.u, gm); };
             });
         }
 
@@ -34262,15 +34280,13 @@
         const ONL_MODES = [
             { id: 'duel', name: 'Düello', desc: 'Aynı taşlar, yüksek skor kazanır. Rastgele eşleşmeler rütbeli.', icon: 'swords', lives: true },
             { id: 'attack', name: 'Saldırı Düellosu', desc: 'Yediğin taşlar rakibinin tahtasına saldırı olarak düşer.', icon: 'bolt' },
-            { id: 'ta', name: 'Zamana Karşı Düellosu', desc: '3 can, 60 saniye. Süre bitince skoru yüksek olan kazanır.', icon: 'clock' },
-            { id: 'dodge', name: 'Sadece Kaç Düellosu', desc: '3 can. Taş yemek yok, yanından geçtiğin her taş puan.', icon: 'run' },
             { id: 'team', name: 'Takım Düellosu', desc: 'İkiye iki, takım skorları toplanır. Rütbeli.', icon: 'users', lives: true },
             { id: 'raid', name: 'Boss Baskını', desc: 'Bir ortakla Baykuş\'u birlikte yen.', icon: 'crown' },
             { id: 'ghost', name: 'Hayalet Yarışı', desc: 'Bir oyuncunun en iyi koşusuna karşı yarış.', icon: 'ghost' }
         ];
         function onlSel() { return ONL_MODES.find(m => m.id === save.settings.onlMode) || ONL_MODES[0]; }
         function onlLives(id) { return id === 'team' ? (save.settings.teamLives === 5 ? 5 : 3) : id === 'duel' ? (save.settings.duelLives === 5 ? 5 : 3) : kindLives(id, 3); }
-        function onlineLbKey() { const m = onlSel(); return m.id === 'ghost' ? 'g' : dlbKey(m.id, onlLives(m.id)); }
+        function onlineLbKey() { const m = onlSel(); return m.id === 'ghost' ? GHOST_DLB[ghM(GHOST.pick)] : dlbKey(m.id, onlLives(m.id)); }
         function onlineFind() {
             const m = onlSel();
             if (DUEL.phase === 'waiting') { showToast('Önceki düellonun sonucu bekleniyor', '', 'swords'); return; }
@@ -34282,7 +34298,7 @@
         }
         function onlineInviteFriend(fuid) {
             const m = onlSel();
-            if (m.id === 'ghost') { ghostRaceFriend(fuid); return; }
+            if (m.id === 'ghost') { ghostRace(fuid, GHOST.pick); return; }
             if (m.id === 'team') { teamInviteParty(fuid, onlLives('team')); return; }
             duelInviteFriend(fuid, onlLives(m.id), m.id);
         }
@@ -34290,9 +34306,9 @@
             if (DUEL.phase !== 'idle' || TEAM.phase !== 'idle') return false;
             return onlSel().id === 'ghost' ? true : f.state === 'menu';
         }
-        function friendPlayText() { return { duel: 'Düello', attack: 'Saldırı', team: 'Takım', raid: 'Baskın', ghost: 'Yarış', ta: 'Zaman', dodge: 'Kaç' }[onlSel().id] || 'Düello'; }
+        function friendPlayText() { return { duel: 'Düello', attack: 'Saldırı', team: 'Takım', raid: 'Baskın', ghost: 'Yarış' }[onlSel().id] || 'Düello'; }
         function friendPlayIcon() { return KIND_ICON[onlSel().id] || 'swords'; }
-        function friendPlayLabel() { return { duel: 'Düelloya çağır', attack: 'Saldırı düellosuna çağır', team: 'Takımına çağır', raid: 'Boss baskınına çağır', ghost: 'Hayaletiyle yarış', ta: 'Zamana karşı düellosuna çağır', dodge: 'Sadece kaç düellosuna çağır' }[onlSel().id] || 'Düelloya çağır'; }
+        function friendPlayLabel() { return { duel: 'Düelloya çağır', attack: 'Saldırı düellosuna çağır', team: 'Takımına çağır', raid: 'Boss baskınına çağır', ghost: 'Hayaletiyle yarış' }[onlSel().id] || 'Düelloya çağır'; }
         (function onlineExtras() {
             const sub = onlineModal.querySelector('.onl-sub');
             if (sub && !document.getElementById('onl-rank')) sub.insertAdjacentHTML('afterend', '<div id="onl-rank" class="onl-rank"></div>');
@@ -34334,7 +34350,7 @@
                 box.appendChild(b);
             }
             const find = document.getElementById('onl-find');
-            const label = { duel: 'RAKİP BUL', attack: 'RAKİP BUL', ta: 'RAKİP BUL', dodge: 'RAKİP BUL', team: 'TAKIM MAÇI BUL', raid: 'ORTAK BUL', ghost: 'HAYALET SEÇ' }[sel.id];
+            const label = { duel: 'RAKİP BUL', attack: 'RAKİP BUL', team: 'TAKIM MAÇI BUL', raid: 'ORTAK BUL', ghost: 'HAYALET SEÇ' }[sel.id];
             find.innerHTML = `${ico(KIND_ICON[sel.id])}<span class="lbl">${label}</span>`;
             const fr = document.getElementById('onl-friends');
             fr.innerHTML = `${ico('users')}<span>${sel.id === 'team' ? 'Arkadaşınla takım kur' : sel.id === 'ghost' ? 'Arkadaşının hayaleti' : sel.id === 'raid' ? 'Arkadaşını çağır' : 'Arkadaşını davet et'}</span>`;
@@ -34343,7 +34359,7 @@
             const rec = document.getElementById('onl-rec');
             const kind = sel.id === 'ghost' ? null : sel.id;
             if (kind) rec.outerHTML = duelRecordHTML(kind).replace('class="fr-record small"', 'id="onl-rec" class="fr-record small"');
-            else rec.innerHTML = `<span>Hayaletin</span><b>${GHOST.myBest > 0 ? GHOST.myBest : '—'}</b><small>puan</small>`;
+            else rec.innerHTML = `<span>Hayaletin</span><b>${ghBest(GHOST.pick) > 0 ? ghBest(GHOST.pick) : '—'}</b><small>puan</small>`;
             onlineRankRender();
             if (PG_SPECS.onl) pgSchedule(PG_SPECS.onl);
         };
@@ -34361,12 +34377,12 @@
             { key: '3', name: 'Düello' },
             { key: '5', name: 'Uzun Düello' },
             { key: 'a3', name: 'Saldırı' },
-            { key: 'ta3', name: 'Zamana Karşı' },
-            { key: 'dg3', name: 'Sadece Kaç' },
             { key: 't3', name: 'Takım' },
             { key: 't5', name: 'Uzun Takım' },
             { key: 'c', name: 'Boss Baskını', time: true },
-            { key: 'g', name: 'Hayalet', src: 'ghostmeta' },
+            { key: 'g', name: 'Hayalet', src: 'ghostmeta', ghost: true },
+            { key: 'gt', name: 'Hayalet', src: 'ghostmeta_ta', ghost: true },
+            { key: 'gd', name: 'Hayalet', src: 'ghostmeta_dk', ghost: true },
             { key: 'ed', name: 'Düello rütbesi', src: 'elo', field: 'd' },
             { key: 'et', name: 'Takım rütbesi', src: 'elo', field: 't' }
         ];
@@ -34374,11 +34390,9 @@
         const DLB_GROUPS = [
             { id: 'duel', name: 'Düello', icon: 'swords', keys: [['3', 3], ['5', 5]] },
             { id: 'attack', name: 'Saldırı', icon: 'bolt', keys: [['a3']] },
-            { id: 'ta', name: 'Zamana Karşı', icon: 'clock', keys: [['ta3']] },
-            { id: 'dodge', name: 'Sadece Kaç', icon: 'run', keys: [['dg3']] },
             { id: 'team', name: 'Takım', icon: 'users', keys: [['t3', 3], ['t5', 5]] },
             { id: 'raid', name: 'Baskın', icon: 'crown', keys: [['c']] },
-            { id: 'ghost', name: 'Hayalet', icon: 'ghost', keys: [['g']] },
+            { id: 'ghost', name: 'Hayalet', icon: 'ghost', keys: [['g', 'Klasik'], ['gt', 'Zamana Karşı'], ['gd', 'Sadece Kaç']] },
             { id: 'rank', name: 'Rütbe', icon: 'trophy', keys: [['ed', 'Düello'], ['et', 'Takım']] }
         ];
         function dlbGroupOf(key) { return DLB_GROUPS.find(g => g.keys.some(k => k[0] === key)) || DLB_GROUPS[0]; }
@@ -34402,7 +34416,7 @@
             try {
                 let q;
                 if (b.src === 'elo') q = R.query(onRef('elo'), R.orderByChild(b.field), R.limitToLast(DLB_LIMIT));
-                else if (b.src === 'ghostmeta') q = R.query(onRef('ghostmeta'), R.orderByChild('s'), R.limitToLast(DLB_LIMIT));
+                else if (b.ghost) q = R.query(onRef(b.src), R.orderByChild('s'), R.limitToLast(DLB_LIMIT));
                 else if (b.time) q = R.query(onRef('dlb/' + key), R.orderByChild('s'), R.limitToFirst(DLB_LIMIT));
                 else q = R.query(onRef('dlb/' + key), R.orderByChild('s'), R.limitToLast(DLB_LIMIT));
                 const snap = await R.get(q);
@@ -34411,7 +34425,7 @@
                     const v = ch.val();
                     if (!v) return;
                     if (b.src === 'elo') { if (Number(v[b.field + 'n']) > 0 && Number(v[b.field]) > 0) rows.push({ key: ch.key, u: ch.key, n: v.n, s: Math.round(Number(v[b.field])), lk: v.lk, games: Number(v[b.field + 'n']) }); }
-                    else if (typeof v.s === 'number') rows.push(Object.assign({ key: ch.key }, v, b.src === 'ghostmeta' ? { u: ch.key } : {}));
+                    else if (typeof v.s === 'number') rows.push(Object.assign({ key: ch.key }, v, b.ghost ? { u: ch.key } : {}));
                 });
                 rows.sort((x, y) => b.time ? (x.s - y.s || (Number(x.t) || 0) - (Number(y.t) || 0)) : (y.s - x.s || (Number(x.t) || 0) - (Number(y.t) || 0)));
                 rows.forEach((r, i) => { r.rank = i + 1; });
@@ -34452,7 +34466,7 @@
             }
             const sub = dlbModal.querySelector('.onl-sub');
             const b = dlbBoard(DLB.key);
-            if (sub) sub.textContent = b.src === 'elo' ? T('En yüksek rütbe puanları.') : b.src === 'ghostmeta' ? T('En iyi hayalet koşuları.') : b.time
+            if (sub) sub.textContent = b.src === 'elo' ? T('En yüksek rütbe puanları.') : b.ghost ? T('En iyi hayalet koşuları.') : b.time
                 ? T('Baykuş\'u en hızlı yenen ortaklar. Her oyuncu en fazla {0} koşuyla girer.').replace('{0}', DLB_SLOTS)
                 : T('En iyi {0} koşu. Her oyuncu en fazla {1} koşuyla girer.').replace('{0}', DLB_LIMIT).replace('{1}', DLB_SLOTS);
             const list = document.getElementById('dlb-list');
@@ -34471,7 +34485,7 @@
                 if (b.src === 'elo') {
                     mid = `<span class="lb-name"><span translate="no">${accEsc(r.n || '?')}</span></span>${eloBadge(r.s, r.games, true)}`;
                     right = `<b class="lb-score">${r.s}</b>`;
-                } else if (b.src === 'ghostmeta') {
+                } else if (b.ghost) {
                     mid = `<span class="lb-name"><span translate="no">${accEsc(r.n || '?')}</span></span><small class="dlb-vs">${fmtTime(Number(r.d) || 0)}</small>`;
                     right = `<b class="lb-score">${r.s}</b>`;
                 } else if (b.time) {
@@ -34534,8 +34548,7 @@
                 const uid = ON.uid, upd = {};
                 for (const k of ['a3', 't3', 't5', 'c']) for (let i = 0; i < DLB_SLOTS; i++) upd[`dlb/${k}/${uid}_${i}`] = null;
                 upd['elo/' + uid] = null;
-                upd['ghosts/' + uid] = null;
-                upd['ghostmeta/' + uid] = null;
+                for (const m of GHOST_MODES) { upd[ghData(m) + '/' + uid] = null; upd[ghMeta(m) + '/' + uid] = null; }
                 upd['tparty/' + uid] = null;
                 upd['inbox/' + uid] = null;
                 for (const f in (ON.inv2 || {})) upd[`invites2/${uid}/${f}`] = null;
@@ -35589,7 +35602,7 @@
                 if (ON.R && ON.db) {
                     ON.name = name;
                     const R = ON.R;
-                    for (const p of ['elo', 'ghostmeta']) {
+                    for (const p of ['elo', 'ghostmeta', 'ghostmeta_ta', 'ghostmeta_dk']) {
                         const s = await R.get(onRef(`${p}/${uid}`));
                         if (s.exists()) await R.update(onRef(`${p}/${uid}`), { n: name }).catch(() => {});
                     }
@@ -35865,7 +35878,7 @@
                     offD: 0, offP: 0, hidD: 0, hidP: 0 });
             }
             function arm() {
-                if (!JUDGED.includes(matchStats.mode) || puzzle || tutorial.active) return;
+                if (!JUDGED.includes(matchStats.mode) || puzzle || tutorial.active || GHOST.active) return;
                 R.mode = matchStats.mode; R.active = true;
                 R.seen = score; R.lastExit = score; R.snap = counters();
                 R.d0 = Date.now(); R.p0 = performance.now(); R.offD = 0; R.offP = 0; R.hidD = 0; R.hidP = 0;
@@ -36174,7 +36187,8 @@
                 for (const m of LB_MODES) { try { await F.deleteDoc(F.doc(db, 'leaderboard', m.id, 'scores', uid)); } catch (e) {} delete LB.cache[m.id]; }
                 if (await ensureRtdb()) {
                     try { await ON.R.set(onRef('bans/' + uid), true); } catch (e) { console.warn('RTDB ban yazılamadı:', e); }
-                    const upd = { ['elo/' + uid]: null, ['ghostmeta/' + uid]: null, ['ghosts/' + uid]: null };
+                    const upd = { ['elo/' + uid]: null };
+                    for (const m of GHOST_MODES) { upd[ghData(m) + '/' + uid] = null; upd[ghMeta(m) + '/' + uid] = null; }
                     for (const k of DLB_KEYS) for (let i = 0; i < 3; i++) upd[`dlb/${k}/${uid}_${i}`] = null;
                     try { await ON.R.update(onRef(), upd); } catch (e) { console.warn('RTDB kayıtları silinemedi:', e); }
                     try { DLB.cache = {}; } catch (e) {}
@@ -36219,7 +36233,7 @@
                 try { await F.updateDoc(F.doc(db, 'profiles', uid), { username: name }); } catch (e) {}
                 for (const m of LB_MODES) { try { const ref = F.doc(db, 'leaderboard', m.id, 'scores', uid); if ((await F.getDoc(ref)).exists()) await F.updateDoc(ref, { username: name }); } catch (e) {} }
                 if (await ensureRtdb()) {
-                    for (const p of ['elo', 'ghostmeta']) { try { if ((await ON.R.get(onRef(`${p}/${uid}`))).exists()) await ON.R.set(onRef(`${p}/${uid}/n`), name); } catch (e) {} }
+                    for (const p of ['elo', 'ghostmeta', 'ghostmeta_ta', 'ghostmeta_dk']) { try { if ((await ON.R.get(onRef(`${p}/${uid}`))).exists()) await ON.R.set(onRef(`${p}/${uid}/n`), name); } catch (e) {} }
                 }
                 showToast('İsim sıfırlandı', name, 'check');
                 return true;
@@ -36792,7 +36806,7 @@
                 purple.insertAdjacentElement('beforebegin', p);
                 if (LANG !== 'tr') i18nTree(p);
             }
-            const bomb = ps.find(p => p.querySelector(':scope > span.text-bomb'));
+            const bomb = ps.find(p => p.querySelector(':scope > span.text-red-400'));
             if (bomb) {
                 const p = document.createElement('p');
                 p.innerHTML = K3;
@@ -37162,12 +37176,177 @@
             fitLater();
         })();
 
-        (function onlineTaDodgeI18n() {
-            // Online Zamana Karşı ve Sadece Kaç düelloları
+        // ===================== YENİ BAŞARIMLAR, PROFİLDE BOSS SAYILARI, BOSS YAZISI TAHTADA =====================
+        (function update13() {
             const ORDER = ["en", "fil", "ru", "fr", "de", "es", "it", "pt", "id", "az", "zh", "ja", "ko", "ar", "ary"];
-            const ROWS = {"Zamana Karşı Düellosu": ["Time Attack Duel", "Laban sa Oras na Duel", "Дуэль на время", "Duel contre-la-montre", "Zeitrennen-Duell", "Duelo contrarreloj", "Duello a tempo", "Duelo contra o tempo", "Duel Lawan Waktu", "Zamana qarşı duel", "限时挑战决斗", "タイムアタック決闘", "타임 어택 결투", "مبارزة سباق مع الزمن", "مبارزة ضد الوقت"], "Sadece Kaç Düellosu": ["Dodge Only Duel", "Iwas Lang na Duel", "Дуэль «Только уклонение»", "Duel esquive seule", "Nur-Ausweichen-Duell", "Duelo solo esquivar", "Duello solo schivare", "Duelo só desviar", "Duel Hanya Menghindar", "Yalnız qaç dueli", "只躲不吃决斗", "よけるだけ決闘", "피하기 전용 결투", "مبارزة التفادي فقط", "مبارزة غير هرب"], "{0} can, {1} saniye. Süre bitince skoru yüksek olan kazanır.": ["{0} lives, {1} seconds. When time runs out, the higher score wins.", "{0} buhay, {1} segundo. Pagkaubos ng oras, panalo ang mas mataas na score.", "{0} жизни, {1} секунд. Когда время выходит, побеждает больший счёт.", "{0} vies, {1} secondes. À la fin du temps, le meilleur score gagne.", "{0} Leben, {1} Sekunden. Wenn die Zeit um ist, gewinnt der höhere Punktestand.", "{0} vidas, {1} segundos. Cuando se acaba el tiempo, gana la puntuación más alta.", "{0} vite, {1} secondi. Allo scadere del tempo vince il punteggio più alto.", "{0} vidas, {1} segundos. Quando o tempo acaba, ganha a pontuação mais alta.", "{0} nyawa, {1} detik. Saat waktu habis, skor tertinggi menang.", "{0} can, {1} saniyə. Vaxt bitəndə xalı yüksək olan qalib gəlir.", "{0} 条命，{1} 秒。时间到时分数高者获胜。", "ライフ{0}、{1}秒。時間切れでスコアが高い方の勝ち。", "목숨 {0}개, {1}초. 시간이 끝나면 점수가 높은 쪽이 이겨요.", "{0} أرواح، {1} ثانية. عند انتهاء الوقت يفوز صاحب النتيجة الأعلى.", "{0} ديال الأرواح، {1} ثانية. ملي يسالي الوقت كيربح اللي عندو سكور كثر."], "{0} can. Taş yemek yok, yanından geçtiğin her taş puan.": ["{0} lives. No capturing: every piece you slip past is a point.", "{0} buhay. Bawal kumain: puntos ang bawat pirasong malampasan mo.", "{0} жизни. Есть фигуры нельзя: каждая фигура, мимо которой проскочил, — очко.", "{0} vies. Pas de prise : chaque pièce que tu esquives rapporte un point.", "{0} Leben. Kein Schlagen: Jede Figur, an der du vorbeikommst, gibt einen Punkt.", "{0} vidas. No se captura: cada pieza que esquivas es un punto.", "{0} vite. Niente catture: ogni pezzo che superi vale un punto.", "{0} vidas. Sem capturas: cada peça que passas vale um ponto.", "{0} nyawa. Tidak boleh makan: setiap bidak yang kamu lewati jadi poin.", "{0} can. Daş yemək yoxdur, yanından keçdiyin hər daş xaldır.", "{0} 条命。不能吃子：每躲过一枚棋子得一分。", "ライフ{0}。駒は取れない。すり抜けた駒ごとに1点。", "목숨 {0}개. 잡기 없음: 지나친 기물마다 1점이에요.", "{0} أرواح. لا أكل للقطع: كل قطعة تتجاوزها نقطة.", "{0} ديال الأرواح. ما كاينش الماكلة: كل حجرة دوزتيها بنقطة."], "{0} can, aynı taş sırası, {1} saniye. Süre ya da canların bitince koşun biter, skoru yüksek olan kazanır.": ["{0} lives, same piece order, {1} seconds. Your run ends when time or your lives run out; the higher score wins.", "{0} buhay, parehong ayos ng piyesa, {1} segundo. Tapos ang takbo mo pag naubos ang oras o buhay; panalo ang mas mataas na score.", "{0} жизни, одинаковый порядок фигур, {1} секунд. Забег кончается, когда выходит время или жизни; побеждает больший счёт.", "{0} vies, même ordre de pièces, {1} secondes. Ta partie s'arrête quand le temps ou tes vies sont épuisés ; le meilleur score gagne.", "{0} Leben, gleiche Figurenreihenfolge, {1} Sekunden. Dein Lauf endet, wenn Zeit oder Leben aufgebraucht sind; der höhere Punktestand gewinnt.", "{0} vidas, mismo orden de piezas, {1} segundos. Tu partida acaba cuando se agota el tiempo o tus vidas; gana la puntuación más alta.", "{0} vite, stesso ordine dei pezzi, {1} secondi. La tua corsa finisce quando scade il tempo o finiscono le vite; vince il punteggio più alto.", "{0} vidas, mesma ordem de peças, {1} segundos. A tua corrida acaba quando o tempo ou as vidas acabam; ganha a pontuação mais alta.", "{0} nyawa, urutan bidak sama, {1} detik. Larimu berakhir saat waktu atau nyawa habis; skor tertinggi menang.", "{0} can, eyni daş sırası, {1} saniyə. Vaxt və ya canların bitəndə qaçışın bitir, xalı yüksək olan qalib gəlir.", "{0} 条命，相同的棋子顺序，{1} 秒。时间或生命用完时本局结束，分数高者获胜。", "ライフ{0}、同じ駒の順番、{1}秒。時間かライフが尽きたら終了、スコアが高い方の勝ち。", "목숨 {0}개, 같은 기물 순서, {1}초. 시간이나 목숨이 다하면 끝나고, 점수가 높은 쪽이 이겨요.", "{0} أرواح، نفس ترتيب القطع، {1} ثانية. تنتهي جولتك عند نفاد الوقت أو الأرواح، ويفوز صاحب النتيجة الأعلى.", "{0} ديال الأرواح، نفس الترتيب ديال الحجر، {1} ثانية. الطّلعة ديالك كتسالا ملي يسالي الوقت ولا الأرواح، واللي عندو سكور كثر كيربح."], "{0} can, aynı taş sırası. Taşları yiyemezsin, yanından geçtiğin her taş puan. İkisinin de canı bitince skoru yüksek olan kazanır.": ["{0} lives, same piece order. You can't capture; every piece you slip past is a point. When both run out of lives, the higher score wins.", "{0} buhay, parehong ayos ng piyesa. Bawal kumain; puntos ang bawat pirasong malampasan mo. Pag ubos na ang buhay ng dalawa, panalo ang mas mataas na score.", "{0} жизни, одинаковый порядок фигур. Есть нельзя, каждая фигура, мимо которой проскочил, — очко. Когда у обоих кончатся жизни, побеждает больший счёт.", "{0} vies, même ordre de pièces. Tu ne peux pas prendre ; chaque pièce esquivée rapporte un point. Quand les deux n'ont plus de vies, le meilleur score gagne.", "{0} Leben, gleiche Figurenreihenfolge. Du kannst nicht schlagen; jede Figur, an der du vorbeikommst, gibt einen Punkt. Wenn beide keine Leben mehr haben, gewinnt der höhere Punktestand.", "{0} vidas, mismo orden de piezas. No puedes capturar; cada pieza que esquivas es un punto. Cuando ambos se quedan sin vidas, gana la puntuación más alta.", "{0} vite, stesso ordine dei pezzi. Non puoi catturare; ogni pezzo che superi vale un punto. Quando entrambi finiscono le vite, vince il punteggio più alto.", "{0} vidas, mesma ordem de peças. Não podes capturar; cada peça que passas vale um ponto. Quando ambos ficam sem vidas, ganha a pontuação mais alta.", "{0} nyawa, urutan bidak sama. Kamu tidak bisa makan; setiap bidak yang kamu lewati jadi poin. Saat nyawa keduanya habis, skor tertinggi menang.", "{0} can, eyni daş sırası. Daşları yeyə bilməzsən, yanından keçdiyin hər daş xaldır. İkisinin də canı bitəndə xalı yüksək olan qalib gəlir.", "{0} 条命，相同的棋子顺序。不能吃子，每躲过一枚棋子得一分。双方生命都用完时，分数高者获胜。", "ライフ{0}、同じ駒の順番。駒は取れず、すり抜けた駒ごとに1点。両者のライフが尽きたらスコアが高い方の勝ち。", "목숨 {0}개, 같은 기물 순서. 잡을 수 없고, 지나친 기물마다 1점이에요. 둘 다 목숨이 다하면 점수가 높은 쪽이 이겨요.", "{0} أرواح، نفس ترتيب القطع. لا يمكنك الأكل، وكل قطعة تتجاوزها نقطة. عندما تنفد أرواح الاثنين يفوز صاحب النتيجة الأعلى.", "{0} ديال الأرواح، نفس الترتيب ديال الحجر. ما تقدرش تاكل، وكل حجرة دوزتيها بنقطة. ملي تساليو الأرواح ديال بجوج، اللي عندو سكور كثر كيربح."], "Seni zamana karşı düellosuna çağırıyor": ["Challenges you to a time attack duel", "Hinahamon ka sa laban sa oras na duel", "Вызывает вас на дуэль на время", "Te défie en duel contre-la-montre", "Fordert dich zum Zeitrennen-Duell heraus", "Te reta a un duelo contrarreloj", "Ti sfida a un duello a tempo", "Desafia-te para um duelo contra o tempo", "Menantangmu duel lawan waktu", "Səni zamana qarşı duelə çağırır", "向你发起限时挑战决斗", "タイムアタック決闘を申し込んでいます", "타임 어택 결투를 신청했어요", "يتحداك في مبارزة سباق مع الزمن", "كيعيط ليك لمبارزة ضد الوقت"], "Seni sadece kaç düellosuna çağırıyor": ["Challenges you to a dodge only duel", "Hinahamon ka sa iwas lang na duel", "Вызывает вас на дуэль «Только уклонение»", "Te défie en duel esquive seule", "Fordert dich zum Nur-Ausweichen-Duell heraus", "Te reta a un duelo solo esquivar", "Ti sfida a un duello solo schivare", "Desafia-te para um duelo só desviar", "Menantangmu duel hanya menghindar", "Səni yalnız qaç duelinə çağırır", "向你发起只躲不吃决斗", "よけるだけ決闘を申し込んでいます", "피하기 전용 결투를 신청했어요", "يتحداك في مبارزة التفادي فقط", "كيعيط ليك لمبارزة غير هرب"], "Zamana karşı düellosuna çağır": ["Challenge to a time attack duel", "Hamunin sa laban sa oras na duel", "Вызвать на дуэль на время", "Défier en duel contre-la-montre", "Zum Zeitrennen-Duell herausfordern", "Retar a un duelo contrarreloj", "Sfida a un duello a tempo", "Desafiar para um duelo contra o tempo", "Tantang duel lawan waktu", "Zamana qarşı duelə çağır", "发起限时挑战决斗", "タイムアタック決闘を申し込む", "타임 어택 결투 신청", "تحدَّ في مبارزة سباق مع الزمن", "عيط ليه لمبارزة ضد الوقت"], "Sadece kaç düellosuna çağır": ["Challenge to a dodge only duel", "Hamunin sa iwas lang na duel", "Вызвать на дуэль «Только уклонение»", "Défier en duel esquive seule", "Zum Nur-Ausweichen-Duell herausfordern", "Retar a un duelo solo esquivar", "Sfida a un duello solo schivare", "Desafiar para um duelo só desviar", "Tantang duel hanya menghindar", "Yalnız qaç duelinə çağır", "发起只躲不吃决斗", "よけるだけ決闘を申し込む", "피하기 전용 결투 신청", "تحدَّ في مبارزة التفادي فقط", "عيط ليه لمبارزة غير هرب"], "Zaman": ["Time", "Oras", "Время", "Temps", "Zeit", "Tiempo", "Tempo", "Tempo", "Waktu", "Zaman", "限时", "タイム", "타임", "الزمن", "الوقت"], "Kaç": ["Dodge", "Iwas", "Уклон", "Esquive", "Ausweichen", "Esquivar", "Schiva", "Desviar", "Hindar", "Qaç", "躲避", "よける", "피하기", "تفادٍ", "هرب"]};
             const tables = { en: I18N_EN, fil: I18N_FIL, ru: I18N_RU, fr: I18N_FR };
-            for (const [key, vals] of Object.entries(ROWS)) ORDER.forEach((lang, i) => { const t = tables[lang] || I18N_MORE[lang]; if (t && !(key in t)) t[key] = vals[i]; });
+            const tableOf = lang => tables[lang] || I18N_MORE[lang];
+            const reg = (key, vals) => ORDER.forEach((lang, i) => { const t = tableOf(lang); if (t && !(key in t)) t[key] = vals[i]; });
+
+            // ---------- Baykuş ikonu ----------
+            ICON_PATHS.owl = '<path d="M6 4.5l2.5 2.3a6.5 6.5 0 0 1 7 0L18 4.5v8a6 6 0 0 1-12 0z"/><circle cx="9.5" cy="11" r="1.9"/><circle cx="14.5" cy="11" r="1.9"/><path d="M11.2 14.2 12 15.4l.8-1.2M9 20.5h6"/>';
+
+            // ---------- Hayalet yarışı istatistikleri (başarımlar için) ----------
+            ghostRunDone = function (mode, mine, target) {
+                const st = save.stats;
+                st.ghostRuns = (Number(st.ghostRuns) || 0) + 1;
+                const key = { classic: 'ghostC', timeAttack: 'ghostT', dodge: 'ghostD' }[mode] || 'ghostC';
+                st[key] = (Number(st[key]) || 0) + 1;
+                if (target && target.u && target.u !== ON.uid && mine > (Number(target.s) || 0)) st.ghostWins = (Number(st.ghostWins) || 0) + 1;
+                writeSave();
+                setTimeout(() => { try { checkAchievements(); } catch (e) {} }, 400);
+            };
+
+            // ---------- Yeni başarımlar ----------
+            const S = () => save.stats || {};
+            const n = v => Number(v) || 0;
+            const bossTotal = () => n(S().knightBosses) + n(S().queens) + n(S().kings) + n(S().emperorKills);
+            if (!ACH_GROUPS.includes('Online')) ACH_GROUPS.splice(ACH_GROUPS.indexOf('Genel'), 0, 'Online');
+            const NEW_ACH = [
+                { id: 'knight-slayer', group: 'Klasik', icon: '♞', name: 'At Terbiyecisi', desc: 'Siyah At\'ı yen.', reward: 40, progress: () => [n(S().knightBosses), 1] },
+                { id: 'boss-trio', group: 'Klasik', icon: 'crown', name: 'Üç Taç', desc: 'Tek maçta Siyah At, Siyah Vezir ve Siyah Şah\'ı yen.', reward: 300,
+                  check: () => inClassic() && n(runBoss.knight) > 0 && n(runBoss.queen) > 0 && n(runBoss.king) > 0 },
+                { id: 'ta-120', group: 'Zamana Karşı', icon: 'clock', name: 'Zamanın Efendisi', desc: 'Zamana Karşı\'da 120 skora ulaş.', reward: 200, check: () => inMode('timeAttack') && score >= 120 },
+                { id: 'ta-25', group: 'Zamana Karşı', icon: 'hourglass', name: 'Saat Kulesi', desc: 'Zamana Karşı\'da toplam 25 maç oyna.', reward: 50, progress: () => [n(S().taGames), 25] },
+                { id: 'dodge-150', group: 'Sadece Kaç', icon: 'wind', name: 'Rüzgâr Gibi', desc: 'Sadece Kaç\'ta 150 puan yap.', reward: 200, check: () => inMode('dodge') && score >= 150 },
+                { id: 'dodge-2000', group: 'Sadece Kaç', icon: 'run', name: 'Kaçış Efsanesi', desc: 'Sadece Kaç\'ta toplam 2000 taş atlat.', reward: 150, progress: () => [n(S().dodged), 2000] },
+                { id: 'ghost-first', group: 'Online', icon: 'ghost', name: 'Hayaletle Tanışma', desc: 'Bir hayalet yarışını bitir.', reward: 20, progress: () => [n(S().ghostRuns), 1] },
+                { id: 'ghost-beat', group: 'Online', icon: 'ghost', name: 'Hayalet Avcısı', desc: 'Başka bir oyuncunun hayaletini geç.', reward: 60, progress: () => [n(S().ghostWins), 1] },
+                { id: 'ghost-all', group: 'Online', icon: 'ghost', name: 'Üç Hayalet', desc: 'Hayalet yarışını Klasik, Zamana Karşı ve Sadece Kaç modlarında bitir.', reward: 100,
+                  progress: () => [(n(S().ghostC) > 0) + (n(S().ghostT) > 0) + (n(S().ghostD) > 0), 3] },
+                { id: 'owl-slayer', group: 'Online', icon: 'owl', name: 'Gece Avcısı', desc: 'Boss Baskını\'nda Baykuş\'u yen.', reward: 100, progress: () => [n(S().emperorKills), 1] },
+                { id: 'knight-10', group: 'Genel', icon: '♞', name: 'Süvari Avcısı', desc: 'Siyah At\'ı toplam 10 kez yen.', reward: 500, progress: () => [n(S().knightBosses), 10] },
+                { id: 'boss-100', group: 'Genel', icon: 'skull', name: 'Boss Avcısı', desc: 'Toplam 100 boss yen.', reward: 1000, progress: () => [bossTotal(), 100] }
+            ];
+            for (const a of NEW_ACH) if (!ACHIEVEMENTS.some(x => x.id === a.id)) ACHIEVEMENTS.push(a);
+
+            const A = (key, vals) => reg(key, vals);
+            A('At Terbiyecisi', ['Horse Whisperer', 'Tagapagpaamo ng Kabayo', 'Укротитель коней', 'Dresseur de chevaux', 'Pferdeflüsterer', 'Domador de caballos', 'Domatore di cavalli', 'Domador de cavalos', 'Penjinak Kuda', 'At Təlimçisi', '驯马师', '調教師', '말 조련사', 'مروّض الخيل', 'مروّض العود']);
+            A('Siyah At\'ı yen.', ['Defeat the Black Knight.', 'Talunin ang Itim na Kabayo.', 'Победите Чёрного коня.', 'Bats le Cavalier noir.', 'Besiege den Schwarzen Springer.', 'Derrota al Caballo negro.', 'Sconfiggi il Cavallo nero.', 'Derrota o Cavalo Negro.', 'Kalahkan Kuda Hitam.', 'Qara Atı məğlub et.', '击败黑马。', '黒のナイトを倒す。', '흑기사를 물리치세요.', 'اهزم الحصان الأسود.', 'غلب العود الكحل.']);
+            A('Üç Taç', ['Triple Crown', 'Tatlong Korona', 'Тройная корона', 'Triple couronne', 'Dreifache Krone', 'Triple corona', 'Tripla corona', 'Tripla coroa', 'Tiga Mahkota', 'Üç Tac', '三冠王', '三冠', '트리플 크라운', 'التاج الثلاثي', 'التاج الثلاثي']);
+            A('Tek maçta Siyah At, Siyah Vezir ve Siyah Şah\'ı yen.', ['Defeat the Black Knight, the Black Queen and the Black King in a single match.', 'Talunin ang Itim na Kabayo, Itim na Reyna at Itim na Hari sa iisang laro.', 'Победите Чёрного коня, Чёрного ферзя и Чёрного короля за один матч.', 'Bats le Cavalier noir, la Dame noire et le Roi noir en une seule partie.', 'Besiege den Schwarzen Springer, die Schwarze Dame und den Schwarzen König in einem Spiel.', 'Derrota al Caballo negro, la Dama negra y el Rey negro en una sola partida.', 'Sconfiggi il Cavallo nero, la Regina nera e il Re nero in una sola partita.', 'Derrota o Cavalo Negro, a Dama Negra e o Rei Negro numa só partida.', 'Kalahkan Kuda Hitam, Ratu Hitam, dan Raja Hitam dalam satu pertandingan.', 'Bir oyunda Qara Atı, Qara Vəziri və Qara Şahı məğlub et.', '在一局中击败黑马、黑后和黑王。', '1回のプレイで黒のナイト、黒のクイーン、黒のキングを倒す。', '한 판에서 흑기사, 블랙 퀸, 블랙 킹을 모두 물리치세요.', 'اهزم الحصان الأسود والوزير الأسود والملك الأسود في مباراة واحدة.', 'غلب العود الكحل والوزير الكحل والملك الكحل ف ماتش واحد.']);
+            A('Zamanın Efendisi', ['Master of Time', 'Panginoon ng Oras', 'Повелитель времени', 'Maître du temps', 'Herr der Zeit', 'Señor del tiempo', 'Signore del tempo', 'Senhor do tempo', 'Penguasa Waktu', 'Zamanın Hökmdarı', '时间之主', '時の支配者', '시간의 지배자', 'سيّد الزمن', 'مول الوقت']);
+            A('Zamana Karşı\'da 120 skora ulaş.', ['Reach a score of 120 in Time Attack.', 'Umabot sa iskor na 120 sa Laban sa Oras.', 'Наберите 120 очков в режиме «На время».', 'Atteins un score de 120 en Contre-la-montre.', 'Erreiche 120 Punkte im Zeitrennen.', 'Llega a 120 puntos en Contrarreloj.', 'Raggiungi 120 punti in A tempo.', 'Chega aos 120 pontos em Contra o tempo.', 'Capai skor 120 di Lawan Waktu.', 'Zamana qarşı rejimində 120 xala çat.', '在限时挑战中达到 120 分。', 'タイムアタックで 120 点に到達する。', '타임 어택에서 120점을 달성하세요.', 'حقّق 120 نقطة في سباق مع الزمن.', 'وصل ل 120 نقطة ف ضد الوقت.']);
+            A('Saat Kulesi', ['Clock Tower', 'Tore ng Orasan', 'Часовая башня', "Tour de l'horloge", 'Uhrturm', 'Torre del reloj', "Torre dell'orologio", 'Torre do relógio', 'Menara Jam', 'Saat Qülləsi', '钟楼', '時計塔', '시계탑', 'برج الساعة', 'برج الساعة']);
+            A('Zamana Karşı\'da toplam 25 maç oyna.', ['Play 25 Time Attack matches in total.', 'Maglaro ng kabuuang 25 laro sa Laban sa Oras.', 'Сыграйте 25 матчей в режиме «На время».', 'Joue 25 parties en Contre-la-montre au total.', 'Spiele insgesamt 25 Partien im Zeitrennen.', 'Juega 25 partidas de Contrarreloj en total.', 'Gioca in totale 25 partite in A tempo.', 'Joga 25 partidas de Contra o tempo no total.', 'Mainkan total 25 pertandingan Lawan Waktu.', 'Zamana qarşı rejimində cəmi 25 oyun oyna.', '累计玩 25 局限时挑战。', 'タイムアタックを合計 25 回プレイする。', '타임 어택을 총 25판 플레이하세요.', 'العب 25 مباراة في سباق مع الزمن إجمالًا.', 'لعب 25 ماتش ف ضد الوقت فالمجموع.']);
+            A('Rüzgâr Gibi', ['Like the Wind', 'Parang Hangin', 'Как ветер', 'Comme le vent', 'Wie der Wind', 'Como el viento', 'Come il vento', 'Como o vento', 'Bagai Angin', 'Külək Kimi', '疾风', '風のように', '바람처럼', 'كالريح', 'بحال الريح']);
+            A('Sadece Kaç\'ta 150 puan yap.', ['Score 150 points in Dodge Only.', 'Makakuha ng 150 puntos sa Iwas Lang.', 'Наберите 150 очков в режиме «Только уклонение».', 'Marque 150 points en Esquive seule.', 'Erziele 150 Punkte in Nur Ausweichen.', 'Consigue 150 puntos en Solo esquivar.', 'Fai 150 punti in Solo schivare.', 'Faz 150 pontos em Só desviar.', 'Raih 150 poin di Hanya Menghindar.', 'Yalnız qaç rejimində 150 xal topla.', '在只躲不吃中拿到 150 分。', 'よけるだけで 150 点取る。', '피하기 전용에서 150점을 얻으세요.', 'اجمع 150 نقطة في تفادٍ فقط.', 'دير 150 نقطة ف غير هرب.']);
+            A('Kaçış Efsanesi', ['Escape Legend', 'Alamat ng Pagtakas', 'Легенда побега', "Légende de l'évasion", 'Fluchtlegende', 'Leyenda de la huida', 'Leggenda della fuga', 'Lenda da fuga', 'Legenda Pelarian', 'Qaçış Əfsanəsi', '闪避传奇', '回避の伝説', '회피의 전설', 'أسطورة الهروب', 'أسطورة الهروب']);
+            A('Sadece Kaç\'ta toplam 2000 taş atlat.', ['Dodge 2000 pieces in total in Dodge Only.', 'Umiwas sa kabuuang 2000 piyesa sa Iwas Lang.', 'Увернитесь в сумме от 2000 фигур в режиме «Только уклонение».', 'Esquive 2000 pièces au total en Esquive seule.', 'Weiche in Nur Ausweichen insgesamt 2000 Figuren aus.', 'Esquiva 2000 piezas en total en Solo esquivar.', 'Schiva in totale 2000 pezzi in Solo schivare.', 'Desvia-te de 2000 peças no total em Só desviar.', 'Hindari total 2000 bidak di Hanya Menghindar.', 'Yalnız qaç rejimində cəmi 2000 daşdan yayın.', '在只躲不吃中累计躲过 2000 个棋子。', 'よけるだけで合計 2000 個の駒をよける。', '피하기 전용에서 총 2000개의 말을 피하세요.', 'تفادَ 2000 قطعة إجمالًا في تفادٍ فقط.', 'هرب من 2000 حجرة فالمجموع ف غير هرب.']);
+            A('Hayaletle Tanışma', ['Meet the Ghost', 'Kilalanin ang Ghost', 'Знакомство с призраком', 'Rencontre fantôme', 'Begegnung mit dem Geist', 'Encuentro fantasmal', 'Incontro col fantasma', 'Encontro fantasma', 'Kenalan dengan Hantu', 'Kölgə ilə Tanışlıq', '初遇幽灵', 'ゴーストとの出会い', '고스트와의 만남', 'لقاء الشبح', 'تعرّف على الشبح']);
+            A('Bir hayalet yarışını bitir.', ['Finish a ghost race.', 'Tapusin ang isang ghost race.', 'Завершите гонку с призраком.', 'Termine une course fantôme.', 'Beende ein Geisterrennen.', 'Termina una carrera fantasma.', 'Completa una gara fantasma.', 'Termina uma corrida fantasma.', 'Selesaikan satu balapan hantu.', 'Bir kölgə yarışını bitir.', '完成一场幽灵赛跑。', 'ゴーストレースを 1 回終える。', '고스트 레이스를 한 번 끝내세요.', 'أكمل سباق شبح واحدًا.', 'كمّل سباق شبح واحد.']);
+            A('Hayalet Avcısı', ['Ghost Hunter', 'Mangangaso ng Ghost', 'Охотник за призраками', 'Chasseur de fantômes', 'Geisterjäger', 'Cazafantasmas', 'Acchiappafantasmi', 'Caça-fantasmas', 'Pemburu Hantu', 'Kölgə Ovçusu', '幽灵猎人', 'ゴーストハンター', '고스트 헌터', 'صائد الأشباح', 'صياد الأشباح']);
+            A('Başka bir oyuncunun hayaletini geç.', ["Beat another player's ghost.", 'Talunin ang ghost ng ibang player.', 'Обгоните призрака другого игрока.', "Bats le fantôme d'un autre joueur.", 'Schlage den Geist eines anderen Spielers.', 'Supera al fantasma de otro jugador.', 'Batti il fantasma di un altro giocatore.', 'Supera o fantasma de outro jogador.', 'Kalahkan hantu pemain lain.', 'Başqa oyunçunun kölgəsini keç.', '超过另一位玩家的幽灵。', '他のプレイヤーのゴーストに勝つ。', '다른 플레이어의 고스트를 이기세요.', 'تغلّب على شبح لاعب آخر.', 'فوت الشبح ديال شي لاعب آخر.']);
+            A('Üç Hayalet', ['Three Ghosts', 'Tatlong Ghost', 'Три призрака', 'Trois fantômes', 'Drei Geister', 'Tres fantasmas', 'Tre fantasmi', 'Três fantasmas', 'Tiga Hantu', 'Üç Kölgə', '三重幽灵', '三つのゴースト', '세 개의 고스트', 'ثلاثة أشباح', 'ثلاثة د الأشباح']);
+            A('Hayalet yarışını Klasik, Zamana Karşı ve Sadece Kaç modlarında bitir.', ['Finish a ghost race in Classic, Time Attack and Dodge Only.', 'Tapusin ang ghost race sa Klasiko, Laban sa Oras at Iwas Lang.', 'Завершите гонку с призраком в режимах «Классика», «На время» и «Только уклонение».', 'Termine une course fantôme en Classique, Contre-la-montre et Esquive seule.', 'Beende ein Geisterrennen in Klassisch, Zeitrennen und Nur Ausweichen.', 'Termina una carrera fantasma en Clásico, Contrarreloj y Solo esquivar.', 'Completa una gara fantasma in Classica, A tempo e Solo schivare.', 'Termina uma corrida fantasma em Clássico, Contra o tempo e Só desviar.', 'Selesaikan balapan hantu di mode Klasik, Lawan Waktu, dan Hanya Menghindar.', 'Kölgə yarışını Klassik, Zamana qarşı və Yalnız qaç rejimlərində bitir.', '在经典、限时挑战和只躲不吃中各完成一场幽灵赛跑。', 'クラシック、タイムアタック、よけるだけでゴーストレースを終える。', '클래식, 타임 어택, 피하기 전용에서 고스트 레이스를 끝내세요.', 'أكمل سباق شبح في الكلاسيكي وسباق مع الزمن وتفادٍ فقط.', 'كمّل سباق شبح ف كلاسيك وضد الوقت وغير هرب.']);
+            A('Gece Avcısı', ['Night Hunter', 'Mangangaso sa Gabi', 'Ночной охотник', 'Chasseur nocturne', 'Nachtjäger', 'Cazador nocturno', 'Cacciatore notturno', 'Caçador noturno', 'Pemburu Malam', 'Gecə Ovçusu', '暗夜猎手', '夜の狩人', '밤의 사냥꾼', 'صائد الليل', 'صياد الليل']);
+            A('Boss Baskını\'nda Baykuş\'u yen.', ['Defeat the Owl in a Boss Raid.', 'Talunin ang Kuwago sa Boss Raid.', 'Победите Сову в рейде на босса.', 'Bats le Hibou lors d\'un Raid de boss.', 'Besiege die Eule im Boss-Raid.', 'Derrota al Búho en un Asalto al jefe.', 'Sconfiggi il Gufo in un Raid del boss.', 'Derrota a Coruja num Ataque ao chefe.', 'Kalahkan Burung Hantu di Serbuan Bos.', 'Boss Basqınında Bayquşu məğlub et.', '在首领突袭中击败猫头鹰。', 'ボスレイドでフクロウを倒す。', '보스 레이드에서 부엉이를 물리치세요.', 'اهزم البومة في غارة الزعيم.', 'غلب الموكة ف الغارة على الزعيم.']);
+            A('Süvari Avcısı', ['Cavalry Hunter', 'Mangangaso ng Kabalyero', 'Охотник на кавалерию', 'Chasseur de cavalerie', 'Reiterjäger', 'Cazador de caballería', 'Cacciatore di cavalieri', 'Caçador de cavalaria', 'Pemburu Kavaleri', 'Süvari Ovçusu', '骑兵猎手', '騎兵ハンター', '기병 사냥꾼', 'صائد الفرسان', 'صياد الفرسان']);
+            A('Siyah At\'ı toplam 10 kez yen.', ['Defeat the Black Knight 10 times in total.', 'Talunin ang Itim na Kabayo nang 10 beses sa kabuuan.', 'Победите Чёрного коня 10 раз.', 'Bats le Cavalier noir 10 fois au total.', 'Besiege den Schwarzen Springer insgesamt 10-mal.', 'Derrota al Caballo negro 10 veces en total.', 'Sconfiggi il Cavallo nero 10 volte in totale.', 'Derrota o Cavalo Negro 10 vezes no total.', 'Kalahkan Kuda Hitam total 10 kali.', 'Qara Atı cəmi 10 dəfə məğlub et.', '累计击败黑马 10 次。', '黒のナイトを合計 10 回倒す。', '흑기사를 총 10번 물리치세요.', 'اهزم الحصان الأسود 10 مرات إجمالًا.', 'غلب العود الكحل 10 د المرات فالمجموع.']);
+            A('Boss Avcısı', ['Boss Hunter', 'Mangangaso ng Boss', 'Охотник на боссов', 'Chasseur de boss', 'Bossjäger', 'Cazador de jefes', 'Cacciatore di boss', 'Caçador de chefes', 'Pemburu Bos', 'Boss Ovçusu', '首领猎人', 'ボスハンター', '보스 헌터', 'صائد الزعماء', 'صياد الزعماء']);
+            A('Toplam 100 boss yen.', ['Defeat 100 bosses in total.', 'Talunin ang kabuuang 100 boss.', 'Победите 100 боссов в сумме.', 'Bats 100 boss au total.', 'Besiege insgesamt 100 Bosse.', 'Derrota 100 jefes en total.', 'Sconfiggi 100 boss in totale.', 'Derrota 100 chefes no total.', 'Kalahkan total 100 bos.', 'Cəmi 100 boss məğlub et.', '累计击败 100 个首领。', 'ボスを合計 100 体倒す。', '보스를 총 100번 물리치세요.', 'اهزم 100 زعيم إجمالًا.', 'غلب 100 زعيم فالمجموع.']);
+
+            // ---------- Hayalet modları için yazılar ----------
+            A('Bu oyuncunun {0} modunda kayıtlı hayaleti yok.', ['This player has no saved ghost in {0} yet.', 'Wala pang naka-save na ghost ang player na ito sa {0}.', 'У этого игрока пока нет сохранённого призрака в режиме «{0}».', "Ce joueur n'a pas encore de fantôme enregistré en mode {0}.", 'Dieser Spieler hat noch keinen gespeicherten Geist im Modus {0}.', 'Este jugador aún no tiene un fantasma guardado en {0}.', 'Questo giocatore non ha ancora un fantasma salvato in {0}.', 'Este jogador ainda não tem um fantasma guardado em {0}.', 'Pemain ini belum punya hantu tersimpan di mode {0}.', 'Bu oyunçunun {0} rejimində hələ yadda saxlanmış kölgəsi yoxdur.', '该玩家在{0}模式中还没有保存的幽灵。', 'このプレイヤーには{0}モードのゴーストがまだありません。', '이 플레이어는 아직 {0} 모드에 저장된 고스트가 없어요.', 'لا يملك هذا اللاعب شبحًا محفوظًا في وضع {0} بعد.', 'هاد اللاعب باقي ما عندوش شبح مسجّل ف {0}.']);
+            A('Bir oyuncunun en iyi koşusuyla aynı taşlarda yarış. Klasik, Zamana Karşı ve Sadece Kaç modlarında oynanır.', ["Race a player's best run on the same pieces. Play it in Classic, Time Attack and Dodge Only.", 'Makipagkarera sa pinakamahusay na takbo ng isang player gamit ang parehong mga piyesa. Malalaro sa Klasiko, Laban sa Oras at Iwas Lang.', 'Соревнуйтесь с лучшим забегом игрока на тех же фигурах. Доступно в режимах «Классика», «На время» и «Только уклонение».', "Affronte la meilleure partie d'un joueur avec les mêmes pièces. Disponible en Classique, Contre-la-montre et Esquive seule.", 'Tritt gegen den besten Lauf eines Spielers mit denselben Figuren an. Spielbar in Klassisch, Zeitrennen und Nur Ausweichen.', 'Compite contra la mejor partida de un jugador con las mismas piezas. Se juega en Clásico, Contrarreloj y Solo esquivar.', 'Sfida la miglior partita di un giocatore con gli stessi pezzi. Si gioca in Classica, A tempo e Solo schivare.', 'Corre contra a melhor partida de um jogador com as mesmas peças. Joga-se em Clássico, Contra o tempo e Só desviar.', 'Balapan melawan permainan terbaik seorang pemain dengan bidak yang sama. Bisa dimainkan di Klasik, Lawan Waktu, dan Hanya Menghindar.', 'Bir oyunçunun ən yaxşı qaçışı ilə eyni daşlarda yarış. Klassik, Zamana qarşı və Yalnız qaç rejimlərində oynanılır.', '用相同的棋子和玩家的最佳成绩比赛。可在经典、限时挑战和只躲不吃中进行。', '同じ駒でプレイヤーのベストランと競争。クラシック、タイムアタック、よけるだけで遊べます。', '같은 말로 플레이어의 최고 기록과 경주하세요. 클래식, 타임 어택, 피하기 전용에서 플레이할 수 있어요.', 'سابق أفضل جولة للاعب بنفس القطع. متاح في الكلاسيكي وسباق مع الزمن وتفادٍ فقط.', 'تسابق مع أحسن جولة ديال شي لاعب بنفس الحجر. كتلعب ف كلاسيك وضد الوقت وغير هرب.']);
+            const ghSub = document.querySelector('#ghost-modal .onl-sub');
+            if (ghSub) ghSub.textContent = 'Bir oyuncunun en iyi koşusuyla aynı taşlarda yarış. Klasik, Zamana Karşı ve Sadece Kaç modlarında oynanır.';
+
+            // ---------- Profil kartında boss sayıları ----------
+            A('Kesilen bosslar', ['Bosses defeated', 'Mga natalong boss', 'Побеждённые боссы', 'Boss vaincus', 'Besiegte Bosse', 'Jefes derrotados', 'Boss sconfitti', 'Chefes derrotados', 'Bos yang dikalahkan', 'Məğlub edilən bosslar', '击败的首领', '倒したボス', '물리친 보스', 'الزعماء المهزومون', 'الزعماء اللي تغلبو']);
+            function myBosses() { const st = save.stats || {}; return { kn: n(st.knightBosses), q: n(st.queens), k: n(st.kings), o: n(st.emperorKills) }; }
+            function bossGridHTML(b) {
+                if (!b) return '';
+                const v = x => Math.max(0, Math.floor(Number(x) || 0));
+                const knC = BOSS_STATS.knight ? BOSS_STATS.knight.color : '#2dd4bf';
+                const cell = (sym, num, col, name) => `<div class="pcard-boss" title="${name}"><span class="pb-sym" style="color:${col}">${sym}</span><b>${num}</b><small>${name}</small></div>`;
+                return `<div class="pcard-bosses"><div class="pcard-ach-top"><span>Kesilen bosslar</span></div><div class="pcard-boss-grid">
+                    ${cell('<span class="lb-bsym">♞︎</span>', v(b.kn), knC, 'At')}
+                    ${cell('<span class="lb-bsym">♛︎</span>', v(b.q), BOSS_STATS.queen.color, 'Vezir')}
+                    ${cell('<span class="lb-bsym">♚︎</span>', v(b.k), BOSS_STATS.king.color, 'Şah')}
+                    ${cell(ico('owl'), v(b.o), '#c4b5fd', 'Baykuş')}
+                </div></div>`;
+            }
+            const playerProgressHTML13 = playerProgressHTML;
+            playerProgressHTML = function (uid) {
+                const base = playerProgressHTML13.apply(this, arguments);
+                const me = ACC.user && uid === ACC.user.uid;
+                const p = LB_PROFILES[uid];
+                const b = me ? myBosses() : (p && !p.loading && p.bosses && typeof p.bosses === 'object' ? p.bosses : null);
+                return base + bossGridHTML(b);
+            };
+            // Kendi profil kartımızda (hesap ekranı) da görünsün
+            const buildProfileCard13 = buildProfileCard;
+            buildProfileCard = function (cardItem, name) {
+                const el = buildProfileCard13.apply(this, arguments);
+                try { if (!cardItem && el) el.insertAdjacentHTML('beforeend', bossGridHTML(myBosses())); } catch (e) {}
+                return el;
+            };
+            // Herkese açık profile yaz (kurallar izin vermezse sessizce atlanır, kayıt bozulmaz)
+            let lastBossSig = '';
+            async function pushProfileBosses() {
+                if (!ACC.fb || !ACC.user || !ACC.profile || ACC.state !== 'ready') return;
+                const b = myBosses(), sig = ACC.user.uid + JSON.stringify(b);
+                if (sig === lastBossSig) return;
+                const { F, db } = ACC.fb;
+                try {
+                    await F.setDoc(F.doc(db, 'profiles', ACC.user.uid), { bosses: b }, { merge: true });
+                    lastBossSig = sig;
+                } catch (e) { lastBossSig = sig; }
+            }
+            const cloudPush13 = cloudPush;
+            cloudPush = async function () {
+                const r = await cloudPush13.apply(this, arguments);
+                pushProfileBosses();
+                return r;
+            };
+            const st = document.createElement('style');
+            st.textContent = `
+            .pcard-bosses{margin-top:8px;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.32)}
+            .pcard-dark .pcard-bosses{background:rgba(255,255,255,.45)}
+            .pcard-boss-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;margin-top:6px}
+            .pcard-boss{display:flex;flex-direction:column;align-items:center;min-width:0;text-align:center}
+            .pcard-boss .pb-sym{font-size:1.3rem;line-height:1;height:1.4rem;display:flex;align-items:center}
+            .pcard-boss .pb-sym .ico{width:1.3rem;height:1.3rem}
+            .pcard-boss b{font-size:1rem;font-weight:900;color:#fff;line-height:1.2}
+            .pcard-dark .pcard-boss b{color:#111827}
+            .pcard-boss small{font-size:.62rem;font-weight:800;color:var(--pc-ac);text-transform:uppercase;letter-spacing:.03em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+            .gh-modes{display:flex;gap:4px;padding:3px;margin:0 auto 8px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);max-width:100%}
+            .gh-mode{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 4px;border-radius:8px;font-size:.72rem;font-weight:800;color:#cbd5e1;background:transparent;border:0;cursor:pointer}
+            .gh-mode span{min-width:0;white-space:normal;line-height:1.1;text-align:center;overflow-wrap:normal}
+            .pcard-stats .lb-bosses.big{gap:4px;font-size:.9rem;flex-wrap:wrap;row-gap:0}
+            .gh-mode .ico{width:14px;height:14px;flex:none}
+            .gh-mode.on{color:#1c1408;background:linear-gradient(180deg,#f3d48a,#c9a24e)}
+            .dlb-subtabs{flex-wrap:nowrap}
+            .dlb-st{flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+            .dlb-st span{min-width:0;overflow:hidden;text-overflow:ellipsis}`;
+            document.head.appendChild(st);
+
+            // ---------- Boss yazısı (ör. "SİYAH VEZİR YENİLDİ!") bilgisayarda tahtanın dışına taşmasın ----------
+            function fitBanner() {
+                const cv = document.getElementById('gameCanvas'), host = bossBanner.offsetParent;
+                if (!cv || !host) return;
+                const cr = cv.getBoundingClientRect(), hr = host.getBoundingClientRect();
+                if (cr.width <= 0) return;
+                bossBanner.style.left = Math.round(cr.left - hr.left + cr.width / 2) + 'px';
+                bossBanner.style.top = Math.round(cr.top - hr.top + cr.height * 0.4) + 'px';
+                bossBanner.style.maxWidth = Math.floor(cr.width * 0.92) + 'px';
+                bossBanner.style.fontSize = '';
+                let fs = Math.min(parseFloat(getComputedStyle(bossBanner).fontSize) || 28, cr.width * 0.085);
+                bossBanner.style.fontSize = fs + 'px';
+                let k = 0;
+                while ((bossBanner.scrollWidth > bossBanner.clientWidth + 1 || bossBanner.scrollHeight > fs * 1.15 * 2 + 4) && fs > 11 && k++ < 30) {
+                    fs -= 1; bossBanner.style.fontSize = fs + 'px';
+                }
+            }
+            const showBanner13 = showBanner;
+            showBanner = function () {
+                const r = showBanner13.apply(this, arguments);
+                try { fitBanner(); } catch (e) {}
+                requestAnimationFrame(() => { try { fitBanner(); } catch (e) {} });   // çeviri yazıyı değiştirdikten sonra tekrar
+                return r;
+            };
+            window.addEventListener('resize', () => { if (bossBanner.style.opacity === '1') try { fitBanner(); } catch (e) {} });
         })();
 
         if (LANG !== 'tr') applyLanguage(LANG);
@@ -37175,6 +37354,5 @@
         accInit();
 
     </script>
-<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "0c8fecfdd83b4d7b9dda629a05b25a5a"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
