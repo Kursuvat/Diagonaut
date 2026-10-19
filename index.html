@@ -3103,7 +3103,7 @@
             shield: { name: 'KALKAN',            icon: 'shield', color: '#38bdf8', weight: 25 },
             mult:   { name: 'ÇARPAN',            icon: 'x?', color: '#fbbf24', weight: 20 },
             slow:   { name: 'ZAMAN YAVAŞLADI',   icon: 'hourglass', color: '#a78bfa', weight: 18 },
-            bomb:   { name: 'BOMBA',             icon: 'bomb', color: '#f87171', weight: 14 },
+            bomb:   { name: 'BOMBA',             icon: 'bomb', color: '#4ade80', weight: 14 },
             life:   { name: 'YEDEK CAN',         icon: 'heart', color: '#f472b6', weight: 10 },
             token:  { name: '+15 TOKEN',         icon: 'coin', color: '#facc15', weight: 13 }
         };
@@ -8242,7 +8242,7 @@
                         save.stats.fancyEaten = (save.stats.fancyEaten || 0) + 1;
                         floatingTexts.push({ x: e.x + TS / 2, y: e.y - 18, text: `+${FANCY_REWARD} TOKEN`, life: 1.3, rgb: '251, 191, 36' });
                     }
-                    createParticles(e.x + TS / 2, e.y + TS / 2, '#f87171');
+                    createParticles(e.x + TS / 2, e.y + TS / 2, '#4ade80');
                     if (boss) bolts.push({ sx: e.x + TS / 2, sy: e.y + TS / 2, t: 0, dur: 320, dmg: pts });
                 }
                 matchStats.bombMax = Math.max(matchStats.bombMax, enemies.length);
