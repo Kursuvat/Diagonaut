@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Beyaz Sessizlik</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: #020305; color: #e6ebf0;
+    font-family: "Segoe UI", system-ui, sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .hidden { display: none !important; }
+  .mono { font-family: "Consolas", "Courier New", monospace; }
+
+  #hud { position: fixed; top: 10px; left: 10px; width: 240px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(8,12,18,.86), rgba(5,8,12,.78)); border: 1px solid #1e2a36; border-radius: 12px; padding: 10px 12px; font-size: 13px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+  #clock { font-size: 19px; font-weight: 700; letter-spacing: 1px; }
+  #role { font-size: 12px; margin-top: 2px; }
+  #power { font-size: 12px; margin: 2px 0 8px; }
+  .bar { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
+  .bar span { width: 64px; color: #9fb0c0; font-size: 12px; }
+  .bar .track { flex: 1; height: 7px; background: #141c25; border-radius: 4px; overflow: hidden; }
+  .bar .fill { height: 100%; border-radius: 4px; transition: width .2s; }
+  #obj { margin-top: 8px; font-size: 12px; color: #b8c6d3; line-height: 1.5; border-top: 1px solid #1e2a36; padding-top: 6px; }
+  #inv { position: fixed; top: 10px; right: 10px; display: flex; gap: 8px; align-items: flex-start; }
+  #invBox { background: rgba(6,9,14,.82); border: 1px solid #1e2a36; border-radius: 12px; padding: 8px 12px; font-size: 13px; line-height: 1.6; pointer-events: none; min-width: 160px; }
+  #inv button { background: rgba(6,9,14,.85); color: #e6ebf0; border: 1px solid #2a3846; border-radius: 10px; padding: 8px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  #log { position: fixed; left: 12px; bottom: 12px; max-width: min(520px, 66vw); pointer-events: none; font-size: 14px; }
+  #log div { background: rgba(6,9,14,.78); border-left: 3px solid #6aa0c8; padding: 5px 10px; margin-top: 5px; border-radius: 0 6px 6px 0; transition: opacity .6s; }
+  #log div.bad { border-left-color: #d0453f; }
+  #log div.good { border-left-color: #5fbf7f; }
+  #log div.talk { border-left-color: #c9a85a; font-style: italic; }
+
+  #dlg { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); width: min(640px, calc(100% - 24px)); max-height: 70vh; overflow-y: auto;
+    background: rgba(5,8,12,.96); border: 1px solid #2a3846; border-radius: 12px; padding: 14px 16px; box-shadow: 0 10px 40px rgba(0,0,0,.7); z-index: 5; }
+  #dName { color: #8ec5ea; font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  #dText { font-size: 17px; line-height: 1.5; white-space: pre-line; }
+  #dOpts { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  #dOpts button { text-align: left; background: #0e151d; color: #e6ebf0; border: 1px solid #253444; border-radius: 8px; padding: 9px 12px; font: inherit; font-size: 15px; cursor: pointer; }
+  #dOpts button:hover:not(:disabled) { background: #16212c; border-color: #3d5468; }
+  #dOpts button:disabled { opacity: .35; cursor: default; }
+  #dOpts button.red { border-color: #6a2a2a; color: #f0b0a8; }
+
+  .screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 8;
+    background: radial-gradient(ellipse at center, rgba(14,22,32,.94), rgba(1,2,4,.99)); overflow-y: auto; }
+  .panel { max-width: 620px; width: 100%; text-align: center; margin: auto; }
+  .panel h1 { font-size: clamp(38px, 10vw, 72px); letter-spacing: 5px; font-weight: 300; text-shadow: 0 0 30px rgba(140,190,230,.35); }
+  .panel h2 { font-size: clamp(28px, 7vw, 44px); letter-spacing: 3px; font-weight: 300; margin-bottom: 6px; }
+  .panel .sub { color: #8fa3b5; font-style: italic; margin: 8px 0 18px; font-size: 16px; }
+  .box { text-align: left; background: rgba(255,255,255,.035); border: 1px solid #1e2a36; border-radius: 10px; padding: 12px 14px; font-size: 14px; line-height: 1.6; color: #c4d0db; margin-top: 10px; }
+  .box b { color: #8ec5ea; }
+  .panel > button { margin-top: 18px; background: #2f5f86; color: #f2f6fa; border: none; border-radius: 999px; padding: 12px 32px; font: inherit; font-size: 17px; letter-spacing: 1px; cursor: pointer; }
+  .panel > button:hover { background: #3a73a1; }
+  .tag { font-size: 11px; color: #56677a; margin-top: 14px; letter-spacing: 1px; }
+  table.crew { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.crew td { padding: 6px 4px; border-bottom: 1px solid #1a2531; vertical-align: top; }
+  table.crew td:first-child { width: 34%; }
+  .ok { color: #6fd08f; } .badc { color: #e0605a; } .dim { color: #7d8fa0; } .warn { color: #e8b04a; }
+  .recipe { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #1a2531; }
+  .recipe small { color: #8fa3b5; display: block; }
+  .recipe button, .use button { background: #2f5f86; color: #fff; border: none; border-radius: 8px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; }
+  .recipe button:disabled, .use button:disabled { background: #2a323c; color: #6d7b88; cursor: default; }
+  .use { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+  .res { display: flex; flex-wrap: wrap; gap: 8px; }
+  .res span { background: rgba(255,255,255,.05); border: 1px solid #253444; border-radius: 6px; padding: 3px 8px; font-size: 13px; }
+
+  #touch { position: fixed; right: 12px; bottom: 12px; display: grid; grid-template-columns: repeat(3, 60px); gap: 8px; z-index: 4; }
+  #touch button { height: 52px; border-radius: 14px; border: 1px solid #2a3846; background: rgba(8,12,18,.8); color: #dce6ef; font: inherit; font-size: 12px; font-weight: 700; }
+  #touch button.on { background: #2f5f86; }
+  #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .8s; z-index: 9; }
+  #banner { position: fixed; top: 22%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 6; transition: opacity 1s; opacity: 0; }
+  #banner .b1 { font-size: clamp(26px, 6vw, 42px); font-weight: 300; letter-spacing: 4px; text-shadow: 0 2px 20px #000; }
+  #banner .b2 { font-size: 15px; color: #c4d0db; margin-top: 6px; text-shadow: 0 2px 10px #000; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div id="hud" class="hidden">
+  <div id="clock" class="mono"></div>
+  <div id="role"></div>
+  <div id="power"></div>
+  <div class="bar"><span>Sağlık</span><div class="track"><div class="fill" id="bHp" style="background:#d0453f"></div></div></div>
+  <div class="bar"><span>Vücut ısısı</span><div class="track"><div class="fill" id="bHeat" style="background:#e8a33d"></div></div></div>
+  <div class="bar"><span>Fener pili</span><div class="track"><div class="fill" id="bBat" style="background:#e6d870"></div></div></div>
+  <div class="bar"><span>Uyku</span><div class="track"><div class="fill" id="bFat" style="background:#9a86d8"></div></div></div>
+  <div class="bar"><span>Nefes</span><div class="track"><div class="fill" id="bSta" style="background:#7fb6dc"></div></div></div>
+  <div id="obj"></div>
+</div>
+<div id="inv" class="hidden">
+  <div id="invBox"></div>
+  <button id="bagBtn">Çanta</button>
+  <button id="crewBtn">Ekip</button>
+  <button id="muteBtn" aria-label="Sesi aç/kapat">🔊</button>
+</div>
+<div id="log"></div>
+<div id="banner"><div class="b1" id="bn1"></div><div class="b2" id="bn2"></div></div>
+<div id="touch" class="hidden">
+  <button id="tE">E<br>Etkileşim</button>
+  <button id="tF">Fener</button>
+  <button id="tShoot">Ateş</button>
+  <button id="tQ">Yardım</button>
+  <button id="tRun">Koş</button>
+  <button id="tC">Çanta</button>
+</div>
+
+<div id="dlg" class="hidden"><div id="dName"></div><div id="dText"></div><div id="dOpts"></div></div>
+
+<div id="title" class="screen">
+  <div class="panel">
+    <h1>BEYAZ SESSİZLİK</h1>
+    <p class="sub">Northwind Kutup İstasyonu · fırtınanın ilk günü</p>
+    <div class="box">
+      Dokuz kişilik ekipte bir taklitçi var. Kimse kimseye güvenmiyor. Herkesin cebinde <b>tek bir kan testi</b> var;
+      testi yapan herkes, sonucu istediği gibi anlatabilir. Taklitçi <b>iki günde bir</b> yalnız yakaladığı birini dönüştürebilir.<br><br>
+      İstasyonda sadece <b>üç tabanca</b> var. Silahı ve mermiyi bulan, kime ateş edeceğine kendisi karar verir.
+      Ve bir şey daha: <b>taklitçi sen de olabilirsin.</b><br><br>
+      Telsizi onar. <b>5. günün sabahı</b> uçak gelecek.
+    </div>
+    <div class="box">
+      <b>Hareket:</b> WASD / oklar ya da tıkla · <b>Shift:</b> koş · <b>E:</b> etkileşim · <b>F:</b> fener<br>
+      <b>Boşluk:</b> ateş et / vur · <b>Q:</b> yardım çağır · <b>C:</b> çanta ve üretim · <b>R:</b> pil · <b>M:</b> harita · <b>Tab:</b> ekip
+    </div>
+    <button id="startBtn">Başla</button>
+    <div class="tag">AŞAMA 3 · v0.3.1 · Kulaklıkla oynanması önerilir</div>
+  </div>
+</div>
+
+<div id="crewScr" class="screen hidden">
+  <div class="panel">
+    <h2>Ekip</h2>
+    <p class="sub">Gördüklerin ve duydukların. Herkes yalan söyleyebilir.</p>
+    <div class="box"><table class="crew" id="crewTable"></table></div>
+    <button id="closeCrew">Kapat</button>
+  </div>
+</div>
+
+<div id="bagScr" class="screen hidden">
+  <div class="panel">
+    <h2>Çanta</h2>
+    <div class="box"><b>Malzemeler</b><div class="res" id="resList" style="margin-top:8px"></div></div>
+    <div class="box"><b>Kullan</b><div id="useList"></div></div>
+    <div class="box"><b>Üret</b> <span class="dim">(⚒ işaretliler için atölye tezgâhı ya da laboratuvar tezgâhı yanında ol)</span><div id="craftList"></div></div>
+    <button id="closeBag">Kapat</button>
+  </div>
+</div>
+
+<div id="endScr" class="screen hidden">
+  <div class="panel">
+    <h2 id="endTitle"></h2>
+    <p class="sub" id="endSub"></p>
+    <div class="box" id="endText"></div>
+    <div class="box"><table class="crew" id="endTable"></table></div>
+    <button id="againBtn">Yeniden oyna</button>
+  </div>
+</div>
+
+<div id="fade"></div>
+
+<script>
+/* Beyaz Sessizlik — Aşama 3 */
+'use strict';
+const $ = id => document.getElementById(id);
+const cv = $('c'), ctx = cv.getContext('2d');
+const dk = document.createElement('canvas'), dctx = dk.getContext('2d');
+const bg = document.createElement('canvas'), bgx = bg.getContext('2d');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const hash = (x, y, s = 0) => { let h = (x * 374761393 + y * 668265263 + s * 982451653) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+
+// =====================================================================
+// HARİTA
+// =====================================================================
+const MW = 48, MH = 32;
+const G = [];
+for (let y = 0; y < MH; y++) G.push(new Array(MW).fill('#'));
+function carve(x1, y1, x2, y2, c = '.'){ for (let y = y1; y <= y2; y++) for (let x = x1; x <= x2; x++) G[y][x] = c; }
+const ROOMS = {
+  barracks: { n:'Yatakhane',        x1:1,  y1:1,  x2:10, y2:7,  c:'#4a4559', f:'carpet' },
+  showers:  { n:'Duşlar',           x1:12, y1:1,  x2:16, y2:7,  c:'#5b6c74', f:'tile' },
+  mess:     { n:'Yemekhane',        x1:18, y1:1,  x2:26, y2:7,  c:'#5c4c3b', f:'wood' },
+  pantry:   { n:'Kiler',            x1:28, y1:1,  x2:33, y2:7,  c:'#4c4a40', f:'metal' },
+  hallA:    { n:'Kuzey koridoru',   x1:1,  y1:9,  x2:33, y2:10, c:'#3a3b42', f:'metal' },
+  rec:      { n:'Dinlenme odası',   x1:1,  y1:12, x2:8,  y2:19, c:'#5b4136', f:'carpet' },
+  lab:      { n:'Laboratuvar',      x1:10, y1:12, x2:18, y2:19, c:'#56646b', f:'lab' },
+  infirm:   { n:'Revir',            x1:20, y1:12, x2:25, y2:19, c:'#5a6866', f:'tile' },
+  radio:    { n:'Telsiz odası',     x1:27, y1:12, x2:33, y2:19, c:'#46425a', f:'carpet' },
+  hallB:    { n:'Güney koridoru',   x1:1,  y1:21, x2:33, y2:22, c:'#3a3b42', f:'metal' },
+  gen:      { n:'Jeneratör',        x1:1,  y1:24, x2:7,  y2:30, c:'#45423a', f:'metal' },
+  workshop: { n:'Atölye',           x1:9,  y1:24, x2:16, y2:30, c:'#4a463c', f:'metal' },
+  storage:  { n:'Depo',             x1:18, y1:24, x2:24, y2:30, c:'#4b4538', f:'wood' },
+  garage:   { n:'Garaj',            x1:26, y1:24, x2:33, y2:30, c:'#3f4246', f:'concrete' },
+  outside:  { n:'Dışarısı',         x1:35, y1:1,  x2:46, y2:30, c:'#d5dbe3', f:'snow' },
+};
+for (const k in ROOMS){ const r = ROOMS[k]; carve(r.x1, r.y1, r.x2, r.y2, k === 'outside' ? 'S' : '.'); }
+const DOORS = [[5,8],[14,8],[22,8],[30,8],[27,4],[4,11],[14,11],[22,11],[30,11],[4,20],[16,20],[23,20],
+               [4,23],[12,23],[21,23],[29,23],[8,27],[25,27],[34,9,'E'],[34,22,'E'],[34,27,'E'],[34,28,'E']];
+DOORS.forEach(([x, y, e]) => G[y][x] = e ? 'E' : 'd');
+const isHall = r => r === 'hallA' || r === 'hallB';
+function roomOf(x, y){
+  const ix = Math.floor(x), iy = Math.floor(y);
+  for (const k in ROOMS){ const r = ROOMS[k]; if (ix >= r.x1 && ix <= r.x2 && iy >= r.y1 && iy <= r.y2) return k; }
+  return iy <= 15 ? 'hallA' : 'hallB';
+}
+const isWall = (x, y) => { const r = G[Math.floor(y)]; if (!r) return true; const c = r[Math.floor(x)]; return c === undefined || c === '#'; };
+
+const FURN = [
+  ...[[1,1],[3,1],[5,1],[7,1],[9,1],[1,4],[3,4],[5,4],[7,4],[9,4]].map(([x, y], i) => ({ x, y, w:1, h:2, t:'bed', block:false, bed:i, act: i === 9 ? 'sleep' : undefined })),
+  { x:10, y:6, w:1, h:1, t:'locker', act:'locker' }, { x:10, y:7, w:1, h:1, t:'locker', act:'locker' }, { x:1, y:7, w:2, h:1, t:'rug', block:false },
+  { x:12, y:1, w:1, h:1, t:'shower', act:'shower' }, { x:14, y:1, w:1, h:1, t:'shower', act:'shower' }, { x:16, y:1, w:1, h:1, t:'shower', act:'shower' },
+  { x:13, y:5, w:3, h:1, t:'bench2' },
+  { x:18, y:1, w:3, h:1, t:'counter' }, { x:21, y:1, w:1, h:1, t:'stove' }, { x:22, y:1, w:1, h:1, t:'soup', act:'soup' },
+  { x:19, y:3, w:3, h:2, t:'table' }, { x:23, y:3, w:3, h:2, t:'table' },
+  { x:28, y:1, w:6, h:1, t:'pshelf', act:'search' }, { x:33, y:3, w:1, h:2, t:'freezer', act:'freezer' }, { x:31, y:6, w:2, h:1, t:'sacks' },
+  { x:1, y:12, w:3, h:1, t:'tv', act:'tv' }, { x:8, y:12, w:1, h:1, t:'record', act:'record' }, { x:4, y:14, w:3, h:2, t:'pool' },
+  { x:8, y:15, w:1, h:2, t:'books', act:'books' }, { x:1, y:17, w:4, h:1, t:'sofa' }, { x:8, y:19, w:1, h:1, t:'locker', act:'locker' },
+  { x:5, y:18, w:2, h:1, t:'rug', block:false },
+  { x:10, y:12, w:4, h:1, t:'bench' }, { x:15, y:12, w:4, h:1, t:'bench' }, { x:10, y:15, w:1, h:1, t:'microscope', act:'microscope' },
+  { x:16, y:15, w:2, h:2, t:'tank', act:'tank' }, { x:18, y:18, w:1, h:1, t:'charger', act:'charger' },
+  { x:10, y:19, w:2, h:1, t:'chem', act:'search' }, { x:12, y:17, w:3, h:1, t:'table' },
+  { x:20, y:13, w:1, h:1, t:'medbed', block:false }, { x:20, y:15, w:1, h:1, t:'medbed', block:false }, { x:20, y:17, w:1, h:1, t:'medbed', block:false },
+  { x:25, y:12, w:1, h:1, t:'cabinet', act:'search' }, { x:25, y:14, w:1, h:1, t:'medkit', act:'medkit' }, { x:23, y:18, w:2, h:1, t:'desk' },
+  { x:31, y:13, w:3, h:1, t:'console', act:'console' }, { x:27, y:16, w:2, h:1, t:'desk', act:'logbook' }, { x:33, y:17, w:1, h:2, t:'rack' },
+  { x:3, y:26, w:3, h:3, t:'generator', act:'generator' }, { x:1, y:24, w:1, h:1, t:'fuse' }, { x:6, y:30, w:1, h:1, t:'barrel' },
+  { x:9, y:24, w:2, h:1, t:'tools', act:'search' }, { x:14, y:24, w:3, h:1, t:'workbench', act:'workbench' }, { x:15, y:29, w:2, h:1, t:'crate', act:'search' },
+  { x:16, y:27, w:1, h:1, t:'locker', act:'locker' },
+  { x:18, y:24, w:2, h:1, t:'crate', act:'search' }, { x:23, y:24, w:2, h:1, t:'crate', act:'search' }, { x:18, y:29, w:2, h:1, t:'crate', act:'search' },
+  { x:18, y:27, w:1, h:1, t:'crate', act:'search' }, { x:24, y:30, w:1, h:1, t:'locker', act:'locker' },
+  { x:28, y:25, w:4, h:3, t:'snowcat', act:'hidecat' }, { x:33, y:24, w:1, h:1, t:'fuelbarrel', act:'garagecans' }, { x:33, y:25, w:1, h:1, t:'fuelbarrel', act:'garagecans' },
+  { x:26, y:30, w:1, h:1, t:'crate', act:'search' },
+  { x:10, y:1, w:1, h:1, t:'cupboard', act:'search', n:'Dolap' }, { x:12, y:6, w:1, h:1, t:'cupboard', act:'search', n:'Dolap' },
+  { x:26, y:1, w:1, h:1, t:'cupboard', act:'search', n:'Mutfak dolabı' }, { x:7, y:12, w:1, h:1, t:'cupboard', act:'search', n:'Dolap' },
+  { x:18, y:13, w:1, h:1, t:'cupboard', act:'search', n:'Laboratuvar dolabı' }, { x:24, y:12, w:1, h:1, t:'cupboard', act:'search', n:'İlaç dolabı' },
+  { x:27, y:12, w:1, h:1, t:'cupboard', act:'search', n:'Çekmece' }, { x:7, y:24, w:1, h:1, t:'cupboard', act:'search', n:'Alet dolabı' },
+  { x:26, y:24, w:1, h:1, t:'cupboard', act:'search', n:'Alet dolabı' },
+  { x:42, y:3, w:3, h:2, t:'shed', act:'shed' }, { x:40, y:12, w:1, h:1, t:'weather', act:'weather' }, { x:37, y:18, w:3, h:1, t:'kennel', act:'kennel' },
+  { x:38, y:27, w:3, h:2, t:'fueltank' }, { x:44, y:24, w:1, h:1, t:'antenna' }, { x:45, y:10, w:1, h:2, t:'drift' }, { x:36, y:6, w:2, h:1, t:'drift' },
+];
+const BLOCK = new Set();
+FURN.forEach(f => { if (f.block !== false) for (let i = 0; i < f.w; i++) for (let j = 0; j < f.h; j++) BLOCK.add((f.x + i) + ',' + (f.y + j)); });
+const BEDS = FURN.filter(f => f.t === 'bed');
+const GENF = FURN.find(f => f.t === 'generator');
+const CONSOLE = FURN.find(f => f.act === 'console');
+const walkable = (x, y) => x >= 0 && y >= 0 && x < MW && y < MH && G[y][x] !== '#' && !BLOCK.has(x + ',' + y);
+const bedTile = i => [BEDS[i].x, BEDS[i].y + 1];
+const SPOTS = {
+  mess:     [[18,3],[22,3],[26,3],[18,5],[22,4],[26,5],[20,6],[24,6],[23,2]],
+  pantry:   [[28,3],[29,4],[30,3],[31,4],[28,6],[30,6],[32,3],[29,2],[33,6]],
+  lab:      [[11,13],[13,13],[16,13],[18,14],[11,15],[14,15],[15,18],[17,19],[18,16]],
+  gen:      [[2,25],[6,25],[2,29],[6,28],[4,30],[1,27],[7,29],[3,24],[5,24]],
+  radio:    [[31,14],[32,14],[30,15],[29,13],[27,18],[29,18],[31,19],[33,19],[28,14]],
+  infirm:   [[21,13],[21,15],[21,17],[23,14],[24,16],[22,18],[25,17],[23,12],[25,19]],
+  storage:  [[20,25],[22,25],[21,27],[23,27],[20,29],[22,29],[24,28],[19,26],[21,30]],
+  garage:   [[27,25],[32,25],[27,28],[32,28],[29,29],[31,29],[30,24],[28,30],[33,30]],
+  outside:  [[39,5],[41,8],[38,11],[41,13],[43,16],[36,14],[40,20],[44,22],[37,24]],
+  rec:      [[2,14],[2,15],[7,14],[5,16],[3,16],[6,18],[5,13],[7,17],[2,18]],
+  workshop: [[11,25],[13,25],[15,25],[10,27],[12,27],[14,27],[11,29],[13,29],[9,30]],
+  showers:  [[12,2],[14,2],[16,2],[12,4],[16,4],[13,6],[15,6],[12,7],[16,7]],
+  hallA:    [[3,9],[8,10],[12,9],[17,10],[20,9],[25,10],[28,9],[32,10],[6,9]],
+  hallB:    [[3,21],[8,22],[12,21],[17,22],[20,21],[25,22],[28,21],[32,22],[6,21]],
+};
+const LAMPS = [];
+for (const k in ROOMS){
+  if (k === 'outside') continue; const r = ROOMS[k];
+  if (isHall(k)) for (let x = r.x1 + 3; x < r.x2; x += 8) LAMPS.push([x + .5, r.y1 + 1]);
+  else LAMPS.push([(r.x1 + r.x2 + 1) / 2, (r.y1 + r.y2 + 1) / 2]);
+}
+const FLOOR_TILES = [];
+for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++){
+  if (!walkable(x, y) || G[y][x] === 'd' || G[y][x] === 'E') continue;
+  if (BEDS.some(b => x === b.x && (y === b.y || y === b.y + 1))) continue;
+  FLOOR_TILES.push([x, y, roomOf(x + .5, y + .5)]);
+}
+
+// =====================================================================
+// METİNLER / VERİ
+// =====================================================================
+const LORE = {
+  microscope: 'Mikroskopta hâlâ bir lam duruyor.\nİki hücre. Biri diğerine dokunuyor, onu yutuyor ve birkaç saniye sonra ona dönüşüyor. Kopya kusursuz.\nYanındaki not: "Kan, kızgın tele değince kaçıyor. Bunu herkes görürse saklanamaz."',
+  tank: 'Örnek tankı kırılmış. Camların hepsi dışarı doğru saçılmış.\nYani bir şey içeriden çıkmış.',
+  logbook: 'Telsiz defteri, son sayfalar:\n"03:12 — Frekansta ekibin seslerini duyduk. Konuşuyorlardı. Hepsi o saatte uyuyordu."',
+  books: 'Bir romanın sayfaları arasına sıkıştırılmış not:\n"Onlar yalnız kalmayı sever. Ve yalan söylemeyi çok iyi bilirler. \'Temiz\' diyen birine asla tek başına güvenme."',
+  kennel: 'Köpek kulübeleri boş. Zincirlerden biri kopmuş.\nKarın altında kızıl bir leke.',
+  weather: 'Hava istasyonu ekranı titriyor:\nRüzgâr 110 km/s · Sıcaklık −48°C\nTahmin: fırtına 5. gün sabahı dinecek.',
+  tv: 'Ekranda karlı bir yayın:\n"...kutup bölgesi için kırmızı fırtına uyarısı... dört gün boyunca uçuş yapılamayacak..."',
+  freezer: 'Donmuş et paketleri. Bazıları yırtılmış, içleri boş. Viktor\'un etiketlerinin yarısı kopmuş.',
+};
+const CREW_DEF = [
+  { id:'elena',  name:'Elena Voss',      role:'Biyolog',       coat:'#5f86a8', hair:'#2c2220', skin:'#ecd0b6', hs:'bun',   wpn:'bir yangın tüpü',
+    sched:[[6,'mess'],[8,'lab'],[12,'mess'],[13,'lab'],[15,'infirm'],[17,'lab'],[18,'mess'],[20,'rec'],[22,'barracks']],
+    lines:['Buzun altından çıkardığımız örnek hâlâ sıcaktı. Bu mümkün değil.', 'Hücreler başka hücreleri kopyalıyor. Kopyalar kusursuz.', 'Testi herkesin önünde yap. Kimse görmezse, kimse inanmaz.', 'Bu göreve kızım doğmadan önce başvurmuştum. Şimdi iki yaşında.', 'Örneği çıkarmayı ben önerdim. Bunu kimseye söyleme.', 'Laboratuvar dolabında hâlâ işe yarar kimyasallar olabilir.'] },
+  { id:'marcus', name:'Marcus Hale',     role:'Mühendis',      coat:'#b0703c', hair:'#3a2a1c', skin:'#d8b08e', hs:'short', wpn:'bir İngiliz anahtarı',
+    sched:[[6,'mess'],[8,'gen'],[12,'mess'],[13,'workshop'],[15,'storage'],[17,'gen'],[18,'mess'],[20,'rec'],[22,'barracks']],
+    lines:['Jeneratörün yakıtı dışarıdaki kulübede ve garajda. Bitirirsek donarız.', 'Atölyedeki tezgâhta tel ve kimyasalla kan testi yapılabilir.', 'Bu fırtına dört gün sürecekmiş. Dört gün...', 'Yirmi yıldır makinelerle uğraşıyorum. İnsanlardan daha kolay anlaşılırlar.', 'Alet dolaplarına bak; bakır tel her zaman bir köşede kalır.', 'Bu motor benim. Biri ona dokunursa anlarım.'] },
+  { id:'yuki',   name:'Yuki Tanaka',     role:'Telsizci',      coat:'#7d5aa0', hair:'#121214', skin:'#efd6bd', hs:'bob',   wpn:'bir sandalye',
+    sched:[[6,'mess'],[8,'radio'],[12,'mess'],[13,'radio'],[16,'rec'],[17,'radio'],[18,'mess'],[20,'radio'],[22,'barracks']],
+    lines:['Telsiz yanmış. Üç yedek parça lazım, istasyonun her yerine dağılmış olmalılar.', 'Parça bulan konsola getirsin. Bulup saklayan olursa... düşünmek bile istemiyorum.', 'Dün gece frekansta biri bizim sesimizle konuşuyordu.', 'Tokyo\'da bir radyo istasyonunda çalışıyordum. Buraya sessizlik için geldim. Ne ironi.', 'Fırtına 3. günden önce sinyali bırakmaz.', 'Parçalar genelde dolaplarda, çekmecelerde saklanır.'] },
+  { id:'viktor', name:'Viktor Sorensen', role:'Aşçı',          coat:'#e8e2d6', hair:'#c9b28a', skin:'#efc9ad', hs:'bald',  wpn:'bir et satırı',
+    sched:[[6,'mess'],[8,'pantry'],[10,'mess'],[14,'pantry'],[16,'mess'],[22,'barracks']],
+    lines:['Çorba sıcak. Ye biraz, dışarıda donarsın.', 'Kilerde biri çiğ et yemiş. Kimse kabul etmiyor.', 'Mutfağıma silahla girene çorba yok.', 'Annem derdi ki: insanı tanımak istiyorsan, onunla yemek ye.', 'Kimin ne yediğini bilirim. Biri son iki gündür hiç yemiyor.', 'Dmitri\'nin doğum günü için bir şeyler hazırlıyorum. Söyleme ona.'] },
+  { id:'hannah', name:'Hannah Brooks',   role:'Doktor',        coat:'#4f9a8a', hair:'#8a4b2a', skin:'#f0d2bc', hs:'long',  wpn:'bir neşter',
+    sched:[[6,'mess'],[8,'infirm'],[12,'mess'],[13,'infirm'],[17,'lab'],[18,'mess'],[20,'infirm'],[22,'barracks']],
+    lines:['Herkese bir test kiti verdim. Fazlası yok, ancak yapılabilir.', 'Testi yapan sonucu yalan söyleyebilir. Ben olsam kendi gözümle görmek isterdim.', 'Yaralanırsan revire gel.', 'Acil serviste on yıl çalıştım. Hiçbir şey beni bu kadar korkutmadı.', 'Kan testi için bakır tel, biraz kimyasal ve metal yeter. Tezgâhta yapılır.', 'İnsanlar korkunca birbirine zarar verir. Taklitçiden önce bundan korkuyorum.'] },
+  { id:'owen',   name:'Owen Pike',       role:'Mekanik',       coat:'#5a6b3c', hair:'#5a3a1e', skin:'#dcb596', hs:'beard', wpn:'bir kürek',
+    sched:[[6,'mess'],[8,'garage'],[10,'outside'],[11,'garage'],[12,'mess'],[13,'storage'],[15,'garage'],[17,'outside'],[18,'mess'],[20,'workshop'],[22,'barracks']],
+    lines:['İstasyonda üç tabanca vardı. Şimdi nerede olduklarını kimse bilmiyor.', 'Kar aracının hortumunu biri kesmiş.', 'Silahı olan birini görürsen, ondan uzak dur.', 'Alaska\'da büyüdüm. Soğuğu bilirim ama bu başka bir şey.', 'Depodaki sandıklara bak, bazen işe yarar şeyler çıkar.', 'Garajdaki alet dolabını ben düzenledim. Biri karıştırmış.'] },
+  { id:'dmitri', name:'Dmitri Volkov',   role:'İstasyon şefi', coat:'#3c4a5c', hair:'#9a9a9a', skin:'#e2c2a6', hs:'short', wpn:'bir buz kazması',
+    sched:[[6,'mess'],[8,'radio'],[10,'rec'],[12,'mess'],[13,'lab'],[14,'gen'],[16,'rec'],[18,'mess'],[20,'rec'],[22,'barracks']],
+    lines:['Kural basit: kimse yalnız kalmayacak.', 'Üçüncü gün benim doğum günüm. Ne olursa olsun o gün herkes birlikte olacak.', 'Bir şey görürsen bağır. Herkes koşar.', 'Bu istasyonu on bir yıldır yönetiyorum. İlk kez korkuyorum.', 'Silahlar kilitli dolaplardaydı. Şimdi dağılmışlar.', 'Birini öldürmeden önce emin ol. Bunu bir emir olarak düşün.'] },
+  { id:'sofia',  name:'Sofia Reyes',     role:'Meteorolog',    coat:'#c9a43a', hair:'#3d1f12', skin:'#d9a882', hs:'pony',  wpn:'bir metal boru',
+    sched:[[6,'mess'],[8,'outside'],[9,'lab'],[12,'mess'],[13,'radio'],[15,'outside'],[16,'lab'],[18,'mess'],[20,'showers'],[21,'rec'],[22,'barracks']],
+    lines:['Fırtına 5. gün sabahı dinecek. O zamana kadar dayanmalıyız.', 'Duşlar sıcak, elektrik olduğu sürece.', 'Karda ayak izleri gördüm. Kulübelere gidiyor ama geri dönmüyordu.', 'Rüzgârın sesini dinlerim. Bazen içinde kelimeler duyar gibi oluyorum.', 'Meksika\'da bir sahil kasabasında doğdum. Kar nedir bilmezdim.', 'Dışarıda odun bulabilirsin ama uzun kalma.'] },
+  { id:'liam',   name:'Liam O\'Connor',  role:'Pilot',         coat:'#8a3a3a', hair:'#b5702a', skin:'#f0cdb0', hs:'messy', wpn:'bir levye',
+    sched:[[6,'mess'],[8,'garage'],[11,'workshop'],[12,'mess'],[13,'garage'],[16,'rec'],[18,'mess'],[20,'rec'],[22,'barracks']],
+    lines:['Kurtarma uçağı gelirse herkes sayılacak.', 'Dinlenme odasındaki pikap çalışıyor. Kafayı dağıtmaya iyi geliyor.', 'Sana güveniyorum. Şimdilik.', 'İrlanda\'da annem beni bekliyor. Söz verdim, Noel\'de evdeyim dedim.', 'Uçağımız rüzgârdan devrildi. Benim hatam değildi ama yine de...', 'Kim yalnız kaldıysa bir daha aynı insan olmuyor gibi geliyor.'] },
+];
+const DAY_LINES = {
+  1: ['Fırtına daha yeni başladı ama şimdiden bunaldım.', 'Köpekler gitti. Sadece bu bile yeterince kötü.', 'Herkese bir kit verildi. İnsan cebindeki şeyin ağırlığını hissediyor.', 'Dün gece kimse uyuyamadı sanırım.'],
+  2: ['Dün gece koridorda ayak sesleri duydum. Herkes yataktaydı ama.', 'Bugün kimseyle yalnız kalmak istemiyorum.', 'Rüyamda kendimi gördüm. Bana bakıyordu.', 'Bugün bir şey olacak. Hissediyorum.'],
+  3: ['Dmitri\'nin doğum günü... böyle bir zamanda kutlama yapmak tuhaf ama iyi geldi.', 'Bugün herkes bir arada. Bence en güvenli gün bu.', 'Viktor pasta yapmış, inanabiliyor musun? Konserve şeftaliyle.', 'Herkes gülüyor ama kimse kimsenin gözünün içine bakmıyor.'],
+  4: ['Yarın sabah uçak geliyor. Sadece bir gece daha.', 'Uçağa kimin bineceğine kim karar verecek?', 'Son gün. Herkes birbirine daha çok bakıyor.', 'Bugün biri yine yalnız kalırsa... bilmiyorum.'],
+  5: ['Uçak geliyor.'],
+};
+const MOOD_COLD = ['Senden uzak duruyorum, kusura bakma.', 'Sana bir şey söylemeden önce iki kere düşünüyorum.', 'Gözüm üzerinde, bilmiş ol.', 'Fazla soru soruyorsun.'];
+const MOOD_WARM = ['Seninle konuşmak iyi geliyor.', 'Sana güveniyorum. Bu yerde pek kimseye güvenmiyorum.', 'Yanımda olman iyi.', 'İkimiz birbirimize göz kulak olalım.'];
+const CHATTER = ['Bu çorba yine mi lahana?', 'Ayaklarımı hissetmiyorum.', 'Pikabı kim açtı yine?', 'Dün gece horlayan kimdi?', 'Fırtına hiç dinmeyecek gibi.', 'Bir kahve olsa...', 'Evdekiler merak ediyordur.', 'Sence uçak gerçekten gelecek mi?', 'Bu ışıklar hep böyle titrer miydi?', 'Akşam kâğıt oynayalım mı?', 'Kimse yalnız kalmasın, tamam mı?', 'Elinde ne var?', 'Bugün kaç kişiyi test ettiler?', 'Uyuyabildin mi?', 'Şu duvarın arkasından bir ses geldi.', 'Benden uzak durma, lütfen.'];
+const MIMIC_LINES = ['Her şey yolunda. Neden soruyorsun?', 'Bu sabah ne yedim? Hatırlamıyorum. Önemli mi?', 'Burada olmak güzel. Hep burada kalalım.', 'Bence en çok sessiz olanlardan şüphelenmeliyiz.'];
+const RES = { wood:'Ahşap', metal:'Hurda metal', wire:'Bakır tel', cloth:'Kumaş', chem:'Kimyasal' };
+const ITEMN = { ...RES, pistol:'Tabanca', ammo:'Mermi kutusu', part:'Telsiz parçası', battery:'Pil' };
+const RECIPES = [
+  { id:'kit', n:'Kan testi kiti', d:'Birini test etmek için', need:{ wire:2, chem:1, metal:1 }, station:true },
+  { id:'club', n:'Tahta sopa', d:'Yakın dövüşte daha çok acıtır', need:{ wood:2, metal:1 }, station:true },
+  { id:'bandage', n:'Sargı bezi', d:'+40 sağlık', need:{ cloth:2 } },
+  { id:'heat', n:'Isı paketi', d:'+50 vücut ısısı', need:{ cloth:1, chem:1 } },
+  { id:'battery', n:'Pil', d:'Feneri doldurur', need:{ metal:1, wire:1, chem:1 } },
+];
+
+// =====================================================================
+// DURUM
+// =====================================================================
+const SEC_PER_HOUR = 12;
+const RESCUE_T = 4 * 24 + 6;
+let state = 'title';
+let T, crew, creatures, items, gen, player, cans, garageCans, medUses, partsInstalled, radioDone, endShown, convDays, totalMimics, soupUses, music, callCD, talkCD, corpses, shots;
+let dialogOpen = false, curOpts = [], showMap = false, uiOpen = false;
+let shake = 0, hurtT = 0, time = 0, lastStepSnd = 0;
+let prints = [], parts = [];
+let gunTaken = true, chemTaken = true, meatEaten = false;
+const snow = [];
+for (let i = 0; i < 260; i++) snow.push({ x: rnd(34.5, 48), y: rnd(0, 32), s: rnd(.6, 1.6) });
+
+function makeCrew(atBeds){
+  return CREW_DEF.map((d, i) => {
+    const [bx, by] = bedTile(i), [mx, my] = SPOTS.mess[i];
+    return { ...d, i, x: (atBeds ? bx : mx) + .5, y: (atBeds ? by : my) + .5, ang: Math.PI / 2, walk: 0, path: null, goal: null,
+      mimic: false, state: 'normal', hold: false, notes: [], wander: null, hp: 100, fight: null, follow: 0, expo: 0, infectedAt: null,
+      kit: 1, gun: false, ammo: 0, susp: {}, why: {}, task: null, testing: null, think: rnd(2, 8), shootCD: 0, queued: null, bubble: null,
+      grudge: null, lastPTalk: -99, paranoia: rnd(.15, .45), seenGun: false, sure: {}, hist: [], testedBy: [], lastChat: -99 };
+  });
+}
+function spawnItem(t, opts = {}){
+  for (let k = 0; k < 80; k++){
+    const [x, y, r] = pick(FLOOR_TILES);
+    if (isHall(r)) continue;
+    if (r === 'outside' && !opts.outside) continue;
+    if (items.some(i => i.x === x && i.y === y)) continue;
+    items.push({ x, y, t }); return;
+  }
+}
+function newGame(){
+  T = 8;
+  crew = makeCrew(false);
+  creatures = []; prints = []; parts = []; corpses = []; items = []; shots = [];
+  gen = { fuel: 70, broken: false };
+  player = { id:'p', name:'Sen', x: 22.5, y: 9.5, ang: -Math.PI / 2, walk: 0, hp: 100, heat: 100, bat: 100, sta: 100, fat: 100, light: true, run: false,
+             hidden: null, path: null, onArrive: null, channel: null, carrying: false, mimic: false,
+             kit: 1, gun: false, ammo: 0, club: false, res: { wood:0, metal:0, wire:0, cloth:0, chem:0 }, bandage: 0, heatpack: 0, batteries: 0, parts: 0, atkCD: 0 };
+  // roller
+  if (Math.random() < .15){ player.mimic = true; totalMimics = 1; }
+  else { const m = pick(crew); m.mimic = true; m.infectedAt = 'başlangıç'; totalMimics = 1; }
+  // eşyalar
+  // yerde az şey: koridorda hiç yok
+  spawnItem('pistol'); spawnItem('ammo'); spawnItem('part', { outside: true }); spawnItem('part');
+  ['wood','wood','wood','metal','wire','cloth'].forEach(k => spawnItem(k, { outside: k === 'wood' }));
+  // gerisi dolaplarda, rafta, sandıklarda
+  const conts = FURN.filter(f => f.act === 'search');
+  conts.forEach(f => f.loot = []);
+  const pool = ['pistol','pistol','ammo','ammo','ammo','ammo','part','part','part','battery','battery',
+                'wire','wire','wire','wire','wire','chem','chem','chem','chem','metal','metal','metal','cloth','cloth','cloth','wood','wood'];
+  pool.sort(() => Math.random() - .5).forEach(t => pick(conts).loot.push(t));
+  cans = 7; garageCans = 2; medUses = 3; partsInstalled = 0; radioDone = false; endShown = false; convDays = {};
+  soupUses = 2; music = false; callCD = 0; talkCD = 20;
+  $('log').innerHTML = '';
+  ['title','endScr','crewScr','bagScr'].forEach(id => $(id).classList.add('hidden'));
+  $('hud').classList.remove('hidden'); $('inv').classList.remove('hidden');
+  if (isTouch){ $('touch').classList.remove('hidden'); $('tF').classList.add('on'); }
+  state = 'trans';
+  const intro = player.mimic ? [
+    'Northwind Kutup İstasyonu. 1. gün, sabah 08:00.',
+    'Gece bir şey oldu. Bunu kimseye söyleyemezsin: sen artık o değilsin. Sen taklitçisin.',
+    'Hayatta kal ve 5. gün sabahı uçağa bin. Kimse seni testte yakalamasın. Biri seni yalnızken test etmeye kalkarsa... onu susturabilirsin.',
+    'Bir kişiyle baş başa kalınca onu dönüştürebilirsin (iki günde bir). Ama sakın görülme.',
+  ] : [
+    'Northwind Kutup İstasyonu. 1. gün, sabah 08:00. Dışarıda fırtına uluyor.',
+    'Dokuz kişilik ekipten biri artık insan değil. Herkesin cebinde tek bir kan testi var. Sende de.',
+    'Testi tanıkların önünde yap: taklitçi herkesin önünde saklanamaz. Yalnızken yakalarsan, seni suçlayacaktır.',
+    'Malzeme topla, Çanta (C) menüsünden kit ve eşya üret. Telsizi onar. Uçak 5. gün sabahı.',
+  ];
+  fadeTo(() => { state = 'play'; startAmbience(); }, () => sayLines('', intro, () => banner('1. GÜN', player.mimic ? 'Rolün: TAKLİTÇİ' : 'Rolün: İnsan')));
+}
+
+// =====================================================================
+// ZAMAN
+// =====================================================================
+const dayOf = t => Math.floor(t / 24) + 1;
+const hourOf = t => ((t % 24) + 24) % 24;
+const isNightH = h => h >= 22 || h < 6;
+const darkOutsideH = h => h >= 19.5 || h < 6.5;
+function clockStr(t = T){
+  const h = hourOf(t), hh = Math.floor(h), mm = Math.floor((h - hh) * 6) * 10;
+  return dayOf(t) + '. gün ' + String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+}
+const power = () => gen.fuel > 0 && !gen.broken;
+const togetherDay = () => dayOf(T) === 3;
+
+// =====================================================================
+// SES
+// =====================================================================
+let A = null, muted = false, amb = null;
+function ac(){ if (!A){ try { A = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){} } if (A && A.state === 'suspended') A.resume(); return A; }
+function tone(f1, f2, dur, type = 'sine', vol = .08, delay = 0){
+  if (muted || !ac()) return;
+  const t = A.currentTime + delay, o = A.createOscillator(), g = A.createGain();
+  o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(g); g.connect(A.destination); o.start(t); o.stop(t + dur + .02);
+}
+let noiseBuf = null;
+function getNoise(){ if (!noiseBuf){ const len = A.sampleRate * 2; noiseBuf = A.createBuffer(1, len, A.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; } return noiseBuf; }
+function noise(dur, vol = .1, freq = 800, ftype = 'lowpass', delay = 0){
+  if (muted || !ac()) return;
+  const t = A.currentTime + delay, s = A.createBufferSource(), f = A.createBiquadFilter(), g = A.createGain();
+  s.buffer = getNoise(); f.type = ftype; f.frequency.value = freq;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  s.connect(f); f.connect(g); g.connect(A.destination); s.start(t, Math.random()); s.stop(t + dur + .05);
+}
+const sfx = {
+  click: () => tone(620, 520, .04, 'triangle', .035),
+  step: () => noise(.05, .05, 420),
+  snowStep: () => noise(.08, .07, 900, 'bandpass'),
+  pickup: () => { tone(660, 990, .08, 'triangle', .06); tone(990, 1320, .1, 'triangle', .05, .07); },
+  talk: () => tone(320, 280, .07, 'triangle', .025),
+  flare: () => { noise(.35, .3, 1600, 'bandpass'); tone(300, 90, .4, 'sawtooth', .08); },
+  burn: () => noise(1.4, .12, 700),
+  screech: () => { noise(1.0, .4, 2200, 'bandpass'); tone(820, 160, .9, 'sawtooth', .2); tone(1240, 300, .8, 'square', .08); },
+  hit: () => { noise(.3, .5, 300); tone(140, 50, .4, 'sawtooth', .2); },
+  thud: () => { noise(.12, .25, 250); tone(110, 60, .15, 'sine', .15); },
+  powerDown: () => { tone(220, 30, 1.6, 'sawtooth', .1); noise(.4, .1, 200); },
+  powerUp: () => { tone(40, 180, 1.2, 'sawtooth', .07); },
+  heart: () => { tone(70, 40, .12, 'sine', .3); tone(60, 35, .14, 'sine', .22, .16); },
+  bang: () => { for (let i = 0; i < 3; i++) noise(.12, .3, 160, 'lowpass', i * .22); },
+  whisper: () => noise(1.4, .03, 2600, 'bandpass'),
+  locker: () => { tone(180, 120, .15, 'square', .05); noise(.12, .1, 900); },
+  shout: () => { tone(260, 330, .25, 'sawtooth', .06); tone(330, 280, .3, 'sawtooth', .05, .22); },
+  water: () => noise(2.6, .07, 3000, 'highpass'),
+  win: () => { [392, 494, 587, 784].forEach((f, i) => tone(f, f, 1.4, 'sine', .05, i * .25)); },
+};
+let musicT = 0;
+const MELODY = [392, 440, 392, 330, 294, 330, 392, 0, 440, 494, 440, 392, 330, 294, 262, 0];
+function musicTick(dt){
+  if (!music || !power()) return;
+  musicT -= dt;
+  if (musicT <= 0){
+    musicT = .42; const n = MELODY[Math.floor(time / .42) % MELODY.length];
+    const rp = ROOMS.rec, d = Math.hypot(player.x - 4.5, player.y - 16);
+    const v = clamp(.06 - d * .003, 0, .06);
+    if (n && v > .002) tone(n, n * .99, .38, 'triangle', v);
+  }
+}
+function startAmbience(){
+  if (amb || !ac() || muted) return;
+  const wind = A.createBufferSource(); wind.buffer = getNoise(); wind.loop = true;
+  const wf = A.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 450;
+  const wg = A.createGain(); wg.gain.value = 0;
+  const lfo = A.createOscillator(), lg = A.createGain(); lfo.frequency.value = .09; lg.gain.value = 180; lfo.connect(lg); lg.connect(wf.frequency);
+  wind.connect(wf); wf.connect(wg); wg.connect(A.destination); wind.start(); lfo.start();
+  const hum = A.createOscillator(), hf = A.createBiquadFilter(), hg = A.createGain();
+  hum.type = 'sawtooth'; hum.frequency.value = 52; hf.type = 'lowpass'; hf.frequency.value = 140; hg.gain.value = 0;
+  hum.connect(hf); hf.connect(hg); hg.connect(A.destination); hum.start();
+  const d1 = A.createOscillator(), d2 = A.createOscillator(), df = A.createBiquadFilter(), dg = A.createGain();
+  d1.frequency.value = 43; d2.frequency.value = 46.5; d2.type = 'triangle'; df.type = 'lowpass'; df.frequency.value = 200; dg.gain.value = 0;
+  d1.connect(df); d2.connect(df); df.connect(dg); dg.connect(A.destination); d1.start(); d2.start();
+  amb = { wg, hg, dg, nodes:[wind, lfo, hum, d1, d2] };
+}
+function stopAmbience(){ if (!amb) return; const a = amb; amb = null; a.nodes.forEach(n => { try { n.stop(); } catch(e){} }); }
+function setAmb(g, v){ if (!amb || !A) return; g.gain.setTargetAtTime(muted ? 0 : v, A.currentTime, .4); }
+$('muteBtn').onclick = e => { muted = !muted; e.currentTarget.textContent = muted ? '🔇' : '🔊'; if (muted) stopAmbience(); else if (state === 'play') startAmbience(); e.currentTarget.blur(); };
+
+sfx.gun = () => { noise(.25, .6, 2500, 'highpass'); noise(.4, .5, 300); tone(160, 40, .3, 'square', .12); };
+sfx.cheer = () => { [523, 659, 784].forEach((f, i) => tone(f, f, .5, 'triangle', .04, i * .12)); };
+
+// =====================================================================
+// EKRAN / KAMERA
+// =====================================================================
+let W, H, DPR, TS, camX = 0, camY = 0;
+function resize(){
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = dk.width = W * DPR; cv.height = dk.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0); dctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  TS = Math.round(clamp(Math.min(W, H) / 13, 30, 52));
+  renderBg();
+}
+const sx = x => x * TS - camX, sy = y => y * TS - camY;
+function updateCam(){
+  const mw = MW * TS, mh = MH * TS;
+  const tx = mw <= W ? (mw - W) / 2 : clamp(player.x * TS - W / 2, 0, mw - W);
+  const ty = mh <= H ? (mh - H) / 2 : clamp(player.y * TS - H / 2, 0, mh - H);
+  camX += (tx - camX) * .2; camY += (ty - camY) * .2;
+  if (Math.abs(tx - camX) > W) { camX = tx; camY = ty; }
+}
+// ---------- statik zemin (bir kez çizilir) ----------
+function renderBg(){
+  const s = Math.min(DPR, 1.5);
+  bg.width = MW * TS * s; bg.height = MH * TS * s;
+  const c = bgx; c.setTransform(s, 0, 0, s, 0, 0);
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++){
+    const X = x * TS, Y = y * TS, ch = G[y][x];
+    if (ch === '#'){
+      const out = x >= 35;
+      if (out){
+        c.fillStyle = '#c9d0d9'; c.fillRect(X, Y, TS, TS);
+        c.fillStyle = '#5b636e'; c.fillRect(X + TS * .42, Y, TS * .16, TS);
+        c.fillStyle = '#7d8691'; c.fillRect(X, Y + TS * .3, TS, TS * .06); c.fillRect(X, Y + TS * .7, TS, TS * .06);
+        continue;
+      }
+      c.fillStyle = '#16181e'; c.fillRect(X, Y, TS, TS);
+      c.fillStyle = 'rgba(255,255,255,.025)'; c.fillRect(X, Y, TS, 2);
+      const below = y + 1 < MH && G[y + 1][x] !== '#';
+      if (below){
+        const fh = TS * .38;
+        const grd = c.createLinearGradient(0, Y + TS - fh, 0, Y + TS);
+        grd.addColorStop(0, '#363a44'); grd.addColorStop(1, '#262a32');
+        c.fillStyle = grd; c.fillRect(X, Y + TS - fh, TS, fh);
+        c.fillStyle = 'rgba(0,0,0,.35)'; c.fillRect(X + TS - 1, Y + TS - fh, 1, fh);
+        c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(X, Y + TS - fh, TS, 1);
+        if (x >= 34 || (x + 1 < MW && G[y][x + 1] === 'S')){ c.fillStyle = '#9fc3dc'; c.fillRect(X + TS * .2, Y + TS - fh + 3, TS * .6, fh - 7); }
+      }
+      continue;
+    }
+    if (ch === 'S'){
+      const v = 218 + Math.floor(hash(x, y) * 4);
+      c.fillStyle = 'rgb(' + (v - 6) + ',' + (v - 1) + ',' + (v + 8) + ')'; c.fillRect(X, Y, TS, TS);
+      for (let i = 0; i < 3; i++){ const hx = hash(x, y, i + 1), hy = hash(y, x, i + 7); c.fillStyle = 'rgba(160,180,205,.22)'; c.beginPath(); c.ellipse(X + hx * TS, Y + hy * TS, TS * (.15 + hx * .2), TS * .06, 0, 0, 7); c.fill(); }
+      continue;
+    }
+    const rk = roomOf(x + .5, y + .5), r = ROOMS[rk];
+    if (ch === 'd' || ch === 'E'){
+      c.fillStyle = '#2f323a'; c.fillRect(X, Y, TS, TS);
+      c.fillStyle = '#4a4e57'; c.fillRect(X + 2, Y + 2, TS - 4, TS - 4);
+      c.fillStyle = 'rgba(0,0,0,.25)'; for (let i = 1; i < 4; i++) c.fillRect(X + 2, Y + i * TS / 4, TS - 4, 1);
+      if (ch === 'E'){ c.fillStyle = '#c9a85a'; c.fillRect(X + TS * .15, Y + TS * .15, TS * .7, 3); c.fillRect(X + TS * .15, Y + TS * .82, TS * .7, 3); }
+      continue;
+    }
+    c.fillStyle = r.c; c.fillRect(X, Y, TS, TS);
+    const n = hash(x, y);
+    switch (r.f){
+      case 'wood':
+        for (let i = 0; i < 4; i++){ c.fillStyle = 'rgba(0,0,0,' + (.04 + hash(x, y, i) * .08) + ')'; c.fillRect(X, Y + i * TS / 4, TS, TS / 4 - 1); }
+        c.fillStyle = 'rgba(0,0,0,.25)'; for (let i = 0; i < 4; i++) c.fillRect(X + ((x * 3 + i * 5) % 4) * TS / 4, Y + i * TS / 4, 1, TS / 4);
+        break;
+      case 'tile': case 'lab':
+        c.fillStyle = r.f === 'lab' ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.035)';
+        c.fillRect(X + 1, Y + 1, TS / 2 - 2, TS / 2 - 2); c.fillRect(X + TS / 2 + 1, Y + TS / 2 + 1, TS / 2 - 2, TS / 2 - 2);
+        c.fillStyle = 'rgba(0,0,0,.22)'; c.fillRect(X, Y, TS, 1); c.fillRect(X, Y, 1, TS); c.fillRect(X, Y + TS / 2, TS, 1); c.fillRect(X + TS / 2, Y, 1, TS);
+        break;
+      case 'metal':
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(X, Y, TS, 1); c.fillRect(X, Y, 1, TS);
+        c.fillStyle = 'rgba(255,255,255,.05)'; for (let i = 1; i < 6; i++) c.fillRect(X + 3, Y + i * TS / 6, TS - 6, 1);
+        c.fillStyle = 'rgba(0,0,0,.35)'; [[.12,.12],[.88,.12],[.12,.88],[.88,.88]].forEach(([a, b]) => { c.beginPath(); c.arc(X + a * TS, Y + b * TS, 1.3, 0, 7); c.fill(); });
+        break;
+      case 'carpet':
+        for (let i = 0; i < 14; i++){ c.fillStyle = hash(x, y, i) > .5 ? 'rgba(255,255,255,.035)' : 'rgba(0,0,0,.06)'; c.fillRect(X + hash(x, y, i + 20) * TS, Y + hash(x, y, i + 40) * TS, 2, 2); }
+        break;
+      case 'concrete':
+        c.fillStyle = 'rgba(0,0,0,' + n * .08 + ')'; c.fillRect(X, Y, TS, TS);
+        if (n > .8){ c.fillStyle = 'rgba(20,20,20,.25)'; c.beginPath(); c.ellipse(X + TS * .5, Y + TS * .5, TS * .3, TS * .18, n * 3, 0, 7); c.fill(); }
+        c.fillStyle = 'rgba(0,0,0,.18)'; if (x % 3 === 0) c.fillRect(X, Y, 1, TS); if (y % 3 === 0) c.fillRect(X, Y, TS, 1);
+        break;
+    }
+    // duvar dibi gölgesi
+    if (G[y - 1] && G[y - 1][x] === '#'){ const gg = c.createLinearGradient(0, Y, 0, Y + TS * .4); gg.addColorStop(0, 'rgba(0,0,0,.35)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); c.fillStyle = gg; c.fillRect(X, Y, TS, TS * .4); }
+    if (G[y][x - 1] === '#'){ c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(X, Y, TS * .12, TS); }
+  }
+}
+addEventListener('resize', resize); resize();
+
+// =====================================================================
+// YARDIMCILAR
+// =====================================================================
+function findPath(x0, y0, isGoal, maxN = 1600){
+  const q = [[x0, y0]], prev = new Map([[x0 + ',' + y0, null]]);
+  let head = 0;
+  while (head < q.length && head < maxN){
+    const [x, y] = q[head++];
+    if (isGoal(x, y)){
+      const path = []; let k = x + ',' + y;
+      while (k){ path.unshift(k.split(',').map(Number)); k = prev.get(k); }
+      path.shift(); return path;
+    }
+    for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx = x + dx, ny = y + dy, k = nx + ',' + ny;
+      if (!prev.has(k) && walkable(nx, ny)){ prev.set(k, x + ',' + y); q.push([nx, ny]); }
+    }
+  }
+  return null;
+}
+const adjRect = r => (x, y) =>
+  (x >= r.x - 1 && x <= r.x + r.w && y >= r.y && y < r.y + r.h) ||
+  (y >= r.y - 1 && y <= r.y + r.h && x >= r.x && x < r.x + r.w);
+function rectDist(px, py, r){ const cx = clamp(px, r.x, r.x + r.w), cy = clamp(py, r.y, r.y + r.h); return Math.hypot(px - cx, py - cy); }
+function los(x0, y0, x1, y1){
+  const d = Math.hypot(x1 - x0, y1 - y0), n = Math.ceil(d / .15);
+  for (let i = 1; i < n; i++){ const t = i / n; if (isWall(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)) return false; }
+  return true;
+}
+function canStand(x, y){
+  const r = .26;
+  return walkable(Math.floor(x - r), Math.floor(y - r)) && walkable(Math.floor(x + r), Math.floor(y - r)) &&
+         walkable(Math.floor(x - r), Math.floor(y + r)) && walkable(Math.floor(x + r), Math.floor(y + r));
+}
+function moveAlong(e, sp, dt){
+  if (!e.path || !e.path.length) return true;
+  const [tx, ty] = e.path[0], gx = tx + .5, gy = ty + .5, dx = gx - e.x, dy = gy - e.y, d = Math.hypot(dx, dy), st = sp * dt;
+  if (d <= st){ e.x = gx; e.y = gy; e.path.shift(); }
+  else { e.x += dx / d * st; e.y += dy / d * st; }
+  if (d > .01) e.ang = Math.atan2(dy, dx);
+  e.walk = (e.walk || 0) + Math.min(d, st);
+  return !e.path.length;
+}
+function pathTo(e, tx, ty){ e.path = findPath(Math.floor(e.x), Math.floor(e.y), (x, y) => x === tx && y === ty); }
+function pathNear(e, tx, ty){ e.path = findPath(Math.floor(e.x), Math.floor(e.y), (x, y) => Math.abs(x - tx) + Math.abs(y - ty) === 1); }
+function log(text, cls = ''){
+  const el = document.createElement('div'); el.textContent = text; if (cls) el.className = cls;
+  $('log').appendChild(el);
+  while ($('log').children.length > 6) $('log').firstChild.remove();
+  setTimeout(() => { el.style.opacity = 0; setTimeout(() => el.remove(), 700); }, 8000);
+}
+function banner(a, b){ $('bn1').textContent = a; $('bn2').textContent = b || ''; $('banner').style.opacity = 1; setTimeout(() => $('banner').style.opacity = 0, 3200); }
+function fadeTo(mid, after){
+  const f = $('fade'); f.style.opacity = 1;
+  setTimeout(() => { mid && mid(); f.style.opacity = 0; setTimeout(() => after && after(), 800); }, 850);
+}
+const alive = c => c.state !== 'dead' && c.state !== 'revealed';
+const asleep = c => isNightH(hourOf(T)) && roomOf(c.x, c.y) === 'barracks' && !(c.path && c.path.length) && !c.fight;
+const awakeNow = c => alive(c) && !asleep(c);
+// Türkçe ekler: ilgi (gen), belirtme (acc), ayrılma (abl), yönelme (dat)
+const EK = {
+  elena:  ['\'nın','\'yı','\'dan','\'ya'], marcus: ['\'un','\'u','\'tan','\'a'],  yuki:  ['\'nin','\'yi','\'den','\'ye'],
+  viktor: ['\'un','\'u','\'dan','\'a'],    hannah: ['\'nın','\'yı','\'dan','\'ya'], owen:  ['\'ın','\'ı','\'dan','\'a'],
+  dmitri: ['\'nin','\'yi','\'den','\'ye'], sofia:  ['\'nın','\'yı','\'dan','\'ya'], liam:  ['\'ın','\'ı','\'dan','\'a'],
+};
+const SEN_EK = ['senin','seni','senden','sana'];
+function ek(a, k){ const i = { gen:0, acc:1, abl:2, dat:3 }[k]; return a === player ? SEN_EK[i] : a.name.split(' ')[0] + EK[a.id][i]; }
+// gerekçe metni: oyuncu hakkındaysa fiil 2. tekil şahısla çekilir ('@' ile başlayanlar olduğu gibi kalır)
+function whyText(id, w){ if (!w) return ''; if (w[0] === '@') return w.slice(1); return id === 'p' ? w.replace(/([dt][ıiuü])$/, '$1n').replace(/yor$/, 'yorsun') : w; }
+const actorById = id => id === 'p' ? player : crew.find(c => c.id === id);
+const nm = a => a === player ? 'sen' : a.name.split(' ')[0];
+const NM = a => a === player ? 'Sen' : a.name.split(' ')[0];
+const isActorAlive = a => a === player ? player.hp > 0 && state === 'play' : (a && a.c ? creatures.includes(a) : alive(a));
+function burst(x, y, color, n, spd = 3){ for (let i = 0; i < n; i++){ const a = Math.random() * 7, v = spd * rnd(.3, 1); parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: rnd(.4, .9), color, s: rnd(2, 4) }); } }
+function addNote(c, text){ if (c && c !== player && !c.notes.includes(text)) { c.notes.push(text); if (c.notes.length > 8) c.notes.shift(); } }
+const hhmm = () => clockStr().replace(' gün ', '.g ');
+
+// =====================================================================
+// DİYALOG
+// =====================================================================
+function openDlg(name, text, opts){
+  dialogOpen = true; player.path = null;
+  $('dlg').classList.remove('hidden');
+  $('dName').textContent = name || ''; $('dName').style.display = name ? 'block' : 'none';
+  $('dText').textContent = text;
+  const box = $('dOpts'); box.innerHTML = ''; curOpts = opts;
+  opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.textContent = (opts.length > 1 ? (i + 1) + '. ' : '') + o.label;
+    b.disabled = !!o.disabled; if (o.cls) b.className = o.cls;
+    b.onclick = () => { sfx.click(); o.fn(); };
+    box.appendChild(b);
+  });
+  $('dlg').scrollTop = 0;
+}
+function closeDlg(){ dialogOpen = false; curOpts = []; $('dlg').classList.add('hidden'); }
+function sayLines(name, lines, done){
+  let i = 0;
+  const next = () => {
+    if (i >= lines.length){ closeDlg(); done && done(); return; }
+    const text = lines[i++]; if (name) sfx.talk();
+    openDlg(name, text, [{ label: i >= lines.length ? 'Tamam' : 'Devam ▸', fn: next }]);
+  };
+  next();
+}
+
+// =====================================================================
+// GÜVEN / ŞÜPHE
+// =====================================================================
+const getS = (c, id) => c.susp[id] ?? .12;
+function setS(c, id, v, why){ if (!c || c === player || id === c.id) return; c.susp[id] = clamp(v, 0, 1); if (why) c.why[id] = why; }
+function bump(c, id, d, why){ setS(c, id, getS(c, id) + d, why); }
+function witnessesOf(x, y, excl = []){
+  return crew.filter(c => !excl.includes(c) && awakeNow(c) && Math.hypot(c.x - x, c.y - y) < 8 && los(c.x, c.y, x, y));
+}
+function playerSees(x, y){ return state === 'play' && !player.hidden && Math.hypot(player.x - x, player.y - y) < 9 && visibleTo(x, y); }
+function hearers(sp){
+  return crew.filter(c => c !== sp && awakeNow(c) && Math.hypot(c.x - sp.x, c.y - sp.y) < 8.5 && (los(c.x, c.y, sp.x, sp.y) || roomOf(c.x, c.y) === roomOf(sp.x, sp.y)));
+}
+function playerHears(sp){ return sp !== player && !player.hidden ? Math.hypot(player.x - sp.x, player.y - sp.y) < 9 && (los(player.x, player.y, sp.x, sp.y) || roomOf(player.x, player.y) === roomOf(sp.x, sp.y)) : false; }
+function say(sp, text, claim){
+  if (sp !== player){ sp.bubble = { text, t: 4.5 }; }
+  if (playerHears(sp)){
+    log(NM(sp) + ': "' + text + '"', 'talk');
+    if (claim){ const subj = actorById(claim.subj); if (subj && subj !== player) addNote(subj, (sp === player ? 'Sen' : NM(sp)) + ' "' + (claim.type === 'mimic' ? 'taklitçi' : 'temiz') + '" ' + (sp === player ? 'dedin' : 'dedi') + ' (' + hhmm() + ')'); }
+  }
+  if (claim) for (const l of hearers(sp)) processClaim(l, sp, claim);
+}
+function processClaim(l, sp, cl){
+  if (l === sp) return;
+  const trust = 1 - getS(l, sp.id);
+  const subj = actorById(cl.subj);
+  if (!subj) return;
+  if (cl.subj === l.id){ if (cl.type === 'mimic'){ bump(l, sp.id, .45, 'bana iftira attı'); if (cl.str >= .5 && time - (l.lastCounter || -99) > 25 && (!l.mimic || Math.random() < .7)){ l.lastCounter = time; l.queued = { at: time + rnd(1, 2.5), text: 'Yalan! Ben insanım. Asıl ' + (sp === player ? 'sen şüphelisin!' : nm(sp) + ' şüpheli!'), claim: { type:'mimic', subj: sp.id, str: .45 } }; } } return; }
+  if (cl.type === 'mimic'){
+    bump(l, cl.subj, cl.str * .55 * trust, '@' + (sp === player ? 'sen öyle söyledin' : NM(sp) + ' öyle söyledi'));
+    if (l.mimic && subj.mimic && Math.random() < .5 && time - (l.lastCounter || -99) > 25 && (l.lastCounter = time)) l.queued = { at: time + rnd(1, 3), text: (subj === player ? 'Bu kişi' : NM(subj)) + ' temiz, eminim. ' + (sp === player ? 'Sen neden bu kadar acele ediyorsun?' : NM(sp) + ' neden bu kadar acele ediyor?'), claim: { type:'mimic', subj: sp.id, str: .35 } };
+  } else {
+    setS(l, cl.subj, getS(l, cl.subj) * (1 - cl.str * .7 * trust), '@' + (sp === player ? 'sen temiz dedin' : NM(sp) + ' temiz dedi'));
+    if (l.kit > 0 && !l.task && Math.random() < l.paranoia && isActorAlive(subj)){
+      l.task = { type:'test', target: cl.subj, until: time + 45, verify: true };
+      l.queued = { at: time + .8, text: 'Kusura bakma' + (subj === player ? '' : ' ' + NM(subj)) + ', ben de kendi gözümle görmek istiyorum.' };
+    }
+  }
+}
+
+// =====================================================================
+// TEST
+// =====================================================================
+function canBeTested(g){ return g === player ? state === 'play' : awakeNow(g) || (alive(g) && asleep(g)); }
+function startTest(t, g){
+  if (t === player){
+    if (player.kit <= 0) return;
+    if (g.mimic && !g.hold){
+      const w = witnessesOf(g.x, g.y, [g]).length;
+      if (w && Math.random() < .45){ say(g, 'Hayır! Sana güvenmiyorum, o iğneyi bana yaklaştırma.'); for (const o of witnessesOf(g.x, g.y, [g])) bump(o, g.id, .15, 'testi reddetti'); addNote(g, 'Testi reddetti (' + hhmm() + ')'); return; }
+    } else if (!g.mimic && getS(g, 'p') > .6 && awakeNow(g) && Math.random() < .5){ say(g, 'Önce sen test ol. Sana güvenmiyorum.'); return; }
+    g.hold = true;
+    startChannel(nm(g) + ' test ediliyor', 2.4, () => { g.hold = false; resolveTest(player, g); }, g);
+    return;
+  }
+  t.testing = { g, t: 0 }; t.path = null;
+  if (g !== player) g.hold = true;
+}
+function resolveTest(t, g){
+  if (g !== player) g.testedBy.push(t === player ? 'sen' : nm(t));
+  if (t === player) player.kit--; else t.kit--;
+  const W = witnessesOf(g.x, g.y, [t, g]);
+  const pw = t !== player && g !== player && playerSees(g.x, g.y);
+  const anyW = W.length > 0 || pw || (t === player && W.length > 0);
+  const tn = nm(t), gn = nm(g);
+  if (g.mimic && (W.length > 0 || pw)){
+    // herkesin önünde: saklanamaz
+    for (const w of W) setS(w, g.id, 1, 'testte taklitçi çıktı');
+    if (g === player) return exposed();
+    say(t === player ? g : t, t === player ? 'Aaaagh!' : NM(g) + ' bir taklitçi!');
+    log('Kan tele değince cızırdayıp kaçıyor! ' + g.name + ' bir taklitçi!', 'bad');
+    revealCreature(g);
+    return;
+  }
+  if (g.mimic){
+    // tanıksız: dönüşmez, iftira atar
+    if (t === player){
+      addNote(g, 'Senin testinde taklitçi çıktı (' + hhmm() + ')');
+      g.grudge = 'p'; g.queued = { at: time + 1, text: 'Herkes duysun: bana bir şey yaptı! Benim kanımda sorun yok. Asıl onu test edin!', claim: { type:'mimic', subj:'p', str:.7 } };
+      openDlg('', 'Kan tele değdiği an cızırdayıp kaçıyor. ' + g.name + ' bir taklitçi!\nAma kimse görmedi. Senin sözüne karşı onun sözü.', [
+        { label: '"' + g.name.split(' ')[0] + ' taklitçi!" diye bağır', fn: () => { closeDlg(); say(player, g.name.split(' ')[0] + ' taklitçi! Testten geçemedi!', { type:'mimic', subj: g.id, str: 1 }); callHelp(true); } },
+        { label: 'Şimdilik sessiz kal', fn: closeDlg },
+      ]);
+    } else if (t === player || t.mimic){
+      say(t, gn + ' temiz.', { type:'clean', subj: g.id, str: 1 });
+    } else {
+      setS(t, g.id, 1, 'testte taklitçi çıktı'); t.sure[g.id] = true;
+      say(t, g === player ? 'Sen taklitçisin! Testten geçemedin!' : NM(g) + ' taklitçi! Testten geçemedi!', { type:'mimic', subj: g.id, str: 1 });
+      if (g === player){ /* oyuncu taklitçi, tanıksız yakalandı */ log(t.name + ' kanının kaçtığını gördü. Seni herkese söyleyecek.', 'bad'); }
+      else { g.grudge = t.id; g.queued = { at: time + 1.2, text: tn + ' yalan söylüyor! Asıl taklitçi o, beni öldürtmek istiyor!', claim: { type:'mimic', subj: t.id, str: .9 } }; }
+    }
+    return;
+  }
+  // temiz
+  for (const w of W) setS(w, g.id, .02, 'testi temiz çıktı');
+  if (g !== player) setS(g, t.id, getS(g, t.id) * .7);
+  if (t === player){
+    addNote(g, 'Senin testinde temiz (' + hhmm() + ')');
+    if (W.length){ log(g.name + ' temiz. ' + W.length + ' kişi de gördü.', 'good'); say(player, gn + ' temiz.', { type:'clean', subj: g.id, str: 1 }); }
+    else openDlg('', 'Kan tele değiyor ve sessizce kalıyor. ' + g.name + ' temiz.\nKimse görmedi. Ne söyleyeceksin?', [
+      { label: '"' + g.name.split(' ')[0] + ' temiz."', fn: () => { closeDlg(); say(player, gn + ' temiz.', { type:'clean', subj: g.id, str: 1 }); } },
+      { label: '"' + g.name.split(' ')[0] + ' taklitçi!" (yalan)', cls:'red', fn: () => { closeDlg(); say(player, g.name.split(' ')[0] + ' taklitçi! Testten geçemedi!', { type:'mimic', subj: g.id, str: 1 }); } },
+      { label: 'Hiçbir şey söyleme', fn: closeDlg },
+    ]);
+    return;
+  }
+  if (pw) addNote(g, ek(t, 'gen') + ' testinde temiz çıktı, gözünle gördün (' + hhmm() + ')');
+  if (t.mimic && !anyW && Math.random() < .5) say(t, g === player ? 'Sen taklitçisin! Kanın tele değince kaçtı!' : NM(g) + ' taklitçi! Kanı tele değince kaçtı!', { type:'mimic', subj: g.id, str: .9 });
+  else say(t, g === player ? 'Temizsin. İçim rahatladı.' : gn + ' temiz.', { type:'clean', subj: g.id, str: 1 });
+  if (g === player) log(t.name + ' seni test etti: temiz.', 'good');
+}
+
+// =====================================================================
+// DÖVÜŞ / SİLAH
+// =====================================================================
+function revealCreature(c){
+  c.state = 'revealed'; sfx.screech(); shake = 14; burst(c.x, c.y, '#6a0f14', 30, 5);
+  const cr = { c, x: c.x, y: c.y, hp: Math.max(60, c.hp), mode: 'chase', path: null, repath: 0, stun: .8, ang: 0, atkCD: 0, walk: 0, tgt: null };
+  creatures.push(cr);
+  rally(cr);
+  for (const o of crew) if (o.fight === c) o.fight = cr;
+  return cr;
+}
+function rally(target){
+  const tx = target.x, ty = target.y;
+  for (const o of crew){
+    if (!awakeNow(o) || o.fight || o === target || o === target.c) continue;
+    const d = Math.hypot(o.x - tx, o.y - ty);
+    if (d > 9 || !los(o.x, o.y, tx, ty)) continue;
+    if (o.mimic && target.c){ // yaratığa taklitçi saldırmaz ama oyunu bozmamak için uzak durur
+      if (playerSees(o.x, o.y)) addNote(o, 'Yaratığa saldırmadı, geri durdu (' + hhmm() + ')');
+      continue;
+    }
+    o.fight = target; o.path = null; o.task = null;
+    if (target.c) log(NM(o) + ' ' + o.wpn + ' kapıp saldırıyor!');
+  }
+}
+function hurt(target, amt, by){
+  if (!target) return;
+  if (target === player){
+    if (player.hp <= 0) return;
+    player.hp -= amt; hurtT = 1; shake = Math.max(shake, 10); burst(player.x, player.y, '#a01818', 8, 3);
+    if (player.hp <= 0) die(by);
+    return;
+  }
+  if (target.c){ target.hp -= amt; burst(target.x, target.y, '#5a0d10', 4, 2); if (target.hp <= 0) killCreature(target, by); return; }
+  if (!alive(target)) return;
+  target.hp -= amt; burst(target.x, target.y, '#a01818', 6, 2);
+  if (target.mimic && target.hp > 0 && amt >= 25){ log(ek(target, 'gen') + ' bedeni yarılıyor!', 'bad'); revealCreature(target); return; }
+  if (target.hp <= 0) killPerson(target, by);
+  else if (by && by !== target && !target.mimic && !target.fight){ setS(target, by.id, 1, 'bana saldırdı'); target.sure[by.id] = true; target.fight = by; }
+}
+function killCreature(cr, by){
+  if (!creatures.includes(cr)) return;
+  creatures.splice(creatures.indexOf(cr), 1);
+  cr.c.state = 'dead'; corpses.push({ x: cr.x, y: cr.y, mimic: true, c: cr.c });
+  sfx.burn(); shake = 8; burst(cr.x, cr.y, '#ff7a3a', 30, 4); burst(cr.x, cr.y, '#5a0d10', 20, 3);
+  log((by === player ? 'Onu yere serdin. ' : 'Ekip onu yere serdi. ') + cr.c.name + ' artık yok.', 'good');
+  for (const o of crew) if (o.fight === cr) o.fight = null;
+  if (by && by !== player && by.susp) for (const o of crew) setS(o, by.id, getS(o, by.id) * .5);
+}
+function killPerson(c, by){
+  c.state = 'dead'; c.fight = null; c.task = null; c.hold = false;
+  corpses.push({ x: c.x, y: c.y, mimic: c.mimic, c });
+  sfx.hit();
+  for (const o of crew) if (o.fight === c) o.fight = null;
+  const byName = by ? (by === player ? 'Sen' : by.name) : null;
+  const W = by && !by.c ? witnessesOf(c.x, c.y, [c, by]) : [];
+  if (c.mimic){
+    burst(c.x, c.y, '#5a0d10', 30, 4);
+    log(c.name + ' yere düştü... ve bedeni yarıldı. Taklitçiymiş!', 'good');
+    if (by && by !== player) for (const o of crew) setS(o, by.id, getS(o, by.id) * .4);
+    if (by === player) for (const o of crew) setS(o, 'p', getS(o, 'p') * .4);
+    return;
+  }
+  if (playerSees(c.x, c.y) || !by) log(c.name + ' öldü.' + (by && !by.c && by !== player && playerSees(by.x, by.y) ? ' ' + byName + ' öldürdü.' : ''), 'bad');
+  else log('Bir yerlerden çığlık geldi. ' + c.name + ' öldü.', 'bad');
+  if (!by || by.c) return;
+  for (const w of W){
+    setS(w, by.id, 1, ek(c, 'acc') + ' öldürdü'); w.sure[by.id] = true;
+    if (!w.mimic){ w.fight = by; w.task = null; }
+  }
+  if (W.length) say(W[0], by === player ? ek(c, 'acc') + ' öldürdün! Durdurun onu!' : NM(by) + ' ' + ek(c, 'acc') + ' öldürdü! Durdurun!', { type:'mimic', subj: by.id, str: 1 });
+}
+function shoot(shooter, target){
+  if (shooter.ammo <= 0) return false;
+  shooter.ammo--; sfx.gun(); shake = Math.max(shake, shooter === player ? 6 : 3);
+  const d = Math.hypot(target.x - shooter.x, target.y - shooter.y);
+  const miss = Math.random() < .1 + d * .025;
+  const ex = miss ? target.x + rnd(-1, 1) : target.x, ey = miss ? target.y + rnd(-1, 1) : target.y;
+  shots.push({ x0: shooter.x, y0: shooter.y, x1: ex, y1: ey, t: .12 });
+  shooter.ang = Math.atan2(target.y - shooter.y, target.x - shooter.x);
+  if (shooter !== player){ shooter.seenGun = true; if (playerSees(shooter.x, shooter.y)) addNote(shooter, 'Silahlı, ateş etti (' + hhmm() + ')'); }
+  if (!miss) hurt(target, 55, shooter);
+  // ateşi gören insanlar, hedef masumsa tepki verir (öldüğünde killPerson halleder)
+  return true;
+}
+function playerAttack(){
+  if (state !== 'play' || player.hidden || player.channel || dialogOpen || player.atkCD > 0) return;
+  // hedef: bakılan yöndeki en yakın canlı
+  const cands = [...crew.filter(c => alive(c)), ...creatures];
+  let best = null, bs = 99;
+  const range = player.gun && player.ammo ? 12 : 1.3;
+  for (const t of cands){
+    const dx = t.x - player.x, dy = t.y - player.y, d = Math.hypot(dx, dy);
+    if (d > range || !los(player.x, player.y, t.x, t.y)) continue;
+    let a = Math.atan2(dy, dx) - player.ang; a = Math.abs(Math.atan2(Math.sin(a), Math.cos(a)));
+    if (a > (d < 1.6 ? 1 : .32)) continue;
+    const sc = a * 3 + d * .1; if (sc < bs){ bs = sc; best = t; }
+  }
+  player.atkCD = .45;
+  if (player.gun && player.ammo){
+    if (!best){ player.ammo--; sfx.gun(); shots.push({ x0: player.x, y0: player.y, x1: player.x + Math.cos(player.ang) * 10, y1: player.y + Math.sin(player.ang) * 10, t: .12 }); alarmShot(); return; }
+    shoot(player, best); alarmShot(); player.atkCD = .7; return;
+  }
+  if (!best){ sfx.click(); return; }
+  const dmg = player.mimic ? 35 : (player.club ? 28 : 9);
+  sfx.thud(); hurt(best, dmg, player);
+  if (best.susp && !best.mimic && alive(best)){
+    for (const w of witnessesOf(best.x, best.y, [best])) { if (!w.mimic){ setS(w, 'p', 1, 'birine saldırdı'); w.fight = player; } }
+  }
+}
+function alarmShot(){
+  for (const w of crew) if (awakeNow(w) && Math.hypot(w.x - player.x, w.y - player.y) < 8 && los(w.x, w.y, player.x, player.y)) bump(w, 'p', .15, 'silahla ateş etti');
+}
+
+// =====================================================================
+// İLETİŞİM (oyuncu)
+// =====================================================================
+function callHelp(silentLog){
+  if (state !== 'play') return;
+  if (callCD > 0){ if (!silentLog) log('Sesin kısıldı, biraz bekle.'); return; }
+  callCD = 12; sfx.shout(); shake = 2;
+  let n = 0;
+  for (const o of crew){
+    if (!alive(o)) continue;
+    const d = Math.hypot(o.x - player.x, o.y - player.y);
+    if (d < 14 && !asleep(o)){ o.follow = T + 1; o.goal = null; n++; }
+  }
+  log(n ? '"YARDIM EDİN!" · ' + n + ' kişi sesine geliyor.' : '"YARDIM EDİN!" · Kimse duymadı.', n ? '' : 'bad');
+}
+function accuseMenu(c){
+  const others = crew.filter(o => alive(o) && o !== c);
+  openDlg('Kimi?', 'Kim hakkında konuşacaksın? Yakındaki herkes duyar.', [
+    ...others.map(o => ({ label: o.name, fn: () => openDlg(o.name, 'Ne diyeceksin?', [
+      { label: '"' + nm(o) + ' taklitçi."', cls:'red', fn: () => { closeDlg(); say(player, NM(o) + ' taklitçi, eminim.', { type:'mimic', subj: o.id, str: .8 }); reactTo(c, o, 'mimic'); } },
+      { label: '"' + nm(o) + ' temiz."', fn: () => { closeDlg(); say(player, NM(o) + ' temiz, bundan eminim.', { type:'clean', subj: o.id, str: .8 }); reactTo(c, o, 'clean'); } },
+      { label: 'Vazgeç', fn: closeDlg },
+    ]) })),
+    { label: 'Vazgeç', fn: closeDlg },
+  ]);
+}
+function reactTo(c, o, type){
+  const s = getS(c, o.id), tp = getS(c, 'p');
+  let r;
+  if (type === 'mimic') r = tp > .55 ? 'Bunu senden duymak ilginç...' : s > .5 ? 'Ben de öyle düşünüyorum.' : 'Emin misin? Kanıtın var mı?';
+  else r = tp > .55 ? 'Senin sözüne mi güveneceğim?' : 'Umarım haklısındır.';
+  setTimeout(() => say(c, r), 700);
+}
+function opinion(c){
+  // en şüphelendiği kişi
+  let best = null, bv = 0;
+  for (const id in c.susp){ const a = actorById(id); if (!a || !isActorAlive(a) || a === c) continue; if (c.susp[id] > bv){ bv = c.susp[id]; best = id; } }
+  if (c.mimic){
+    const hs = [...crew.filter(o => alive(o) && !o.mimic && o !== c), ...(player.mimic ? [] : [player])];
+    const victim = c.grudge ? actorById(c.grudge) : pick(hs);
+    if (victim && isActorAlive(victim)) return victim === player ? 'Açık konuşacağım: senden şüpheleniyorum.' : 'Bence ' + ek(victim, 'dat') + ' dikkat etmeliyiz. Çok sessiz, çok sakin.';
+    return 'Kimseden emin değilim.';
+  }
+  if (!best || bv < .3) return 'Henüz kimseden emin değilim. Herkes biraz tuhaf.';
+  const a = actorById(best), why = c.why[best] ? ' (' + whyText(best, c.why[best]) + ')' : '';
+  return (bv > .7 ? 'Neredeyse eminim: ' : 'En çok ') + ek(a, 'abl') + ' şüpheleniyorum' + why + '.';
+}
+function talkTo(c){
+  if (!awakeNow(c)){
+    openDlg(c.name, c.name + ' uyuyor.', [
+      { label: 'Uyurken kan testi yap (' + player.kit + ' kit)', disabled: !player.kit, fn: () => { closeDlg(); startTest(player, c); } },
+      ...(player.mimic && canConvert() && !witnessesOf(c.x, c.y, [c]).length ? [{ label: 'Dönüştür', cls:'red', fn: () => { closeDlg(); convert(c, true); } }] : []),
+      { label: 'Ayrıl', fn: closeDlg },
+    ]);
+    return;
+  }
+  if (c.fight === player){ say(c, 'Uzak dur benden!'); return; }
+  sfx.talk();
+  const line = greeting(c);
+  const w = witnessesOf(c.x, c.y, [c]).length;
+  const back = () => talkMenu(c);
+  const reply = txt => openDlg(c.name + ' · ' + c.role, '"' + txt + '"', [{ label: 'Başka bir şey sor', fn: back }, { label: 'Ayrıl', fn: closeDlg }]);
+  talkMenu.last = { c, line, w, reply };
+  talkMenu(c, line);
+}
+function greeting(c){
+  const s = getS(c, 'p'), r = Math.random();
+  if (c.mimic && r < .2) return pick(MIMIC_LINES);
+  if (s > .55 && r < .5) return pick(MOOD_COLD);
+  if (s < .06 && r < .3) return pick(MOOD_WARM);
+  if (r < .55) return pick(c.lines);
+  return pick(DAY_LINES[dayOf(T)] || DAY_LINES[4]);
+}
+function whereAnswer(c){
+  const now = Math.floor(T), out = [];
+  for (let k = 3; k >= 1; k--){
+    const e = c.hist.find(h => h.t === now - k); if (!e) continue;
+    const room = (c.mimic && e.room !== e.sched) ? e.sched : e.room;
+    out.push(String(hourOf(e.t)).padStart(2, '0') + ':00 ' + ROOMS[room].n.toLowerCase());
+  }
+  if (!out.length) return 'Sabahtan beri buralardayım.';
+  return 'Bakalım... ' + out.join(', sonra ') + '. Neden soruyorsun?';
+}
+function gunAnswer(c){
+  if (c.gun && c.ammo >= 0){
+    if (c.mimic) return pick(['Silah mı? Hayır. Neden olsun ki?', 'Bende mi? Yok öyle bir şey.']);
+    if (getS(c, 'p') > .55) return 'Bu seni ilgilendirmez.';
+    return 'Evet, bir tabancam var. ' + (c.ammo ? 'Merak etme, kime ateş edeceğimi biliyorum.' : 'Mermisi yok ama kimse bunu bilmek zorunda değil.');
+  }
+  return pick(['Hayır. Keşke olsaydı.', 'Yok. Olsa daha mı iyi uyurdum, bilmiyorum.', 'Hayır, ve olmasını da istemiyorum.']);
+}
+function testAnswer(c){
+  if (!c.testedBy.length) return pick(['Hayır, henüz kimse test etmedi.', 'Hayır. Ama isteyen olursa itirazım yok.']);
+  return 'Evet. Beni test edenler: ' + c.testedBy.join(', ') + '. Temiz çıktım.' + (c.kit ? ' Benim kitim hâlâ cebimde.' : ' Kitimi de kullandım.');
+}
+function storyAnswer(c){ return pick(c.lines.slice(3).length ? c.lines.slice(3) : c.lines); }
+function talkMenu(c, line){
+  const L = talkMenu.last; const w = L.w, reply = L.reply, back = () => talkMenu(c);
+  const opts = [
+    { label: 'Kimden şüpheleniyorsun?', fn: () => reply(opinion(c)) },
+    { label: 'Son birkaç saattir neredeydin?', fn: () => reply(whereAnswer(c)) },
+    { label: 'Silahın var mı?', fn: () => reply(gunAnswer(c)) },
+    { label: 'Seni test eden oldu mu?', fn: () => reply(testAnswer(c)) },
+    { label: 'Biraz kendinden bahset.', fn: () => reply(storyAnswer(c)) },
+    { label: 'Birisi hakkında konuş...', fn: () => accuseMenu(c) },
+    { label: 'Kan testi yap (' + player.kit + ' kit) · ' + (w ? w + ' kişi izliyor' : 'kimse izlemiyor'), disabled: !player.kit, fn: () => { closeDlg(); startTest(player, c); } },
+    { label: 'Benimle gel', fn: () => { closeDlg(); if (getS(c, 'p') > .6){ say(c, 'Seninle hiçbir yere gelmem.'); return; } c.follow = T + 2; say(c, 'Peki, geliyorum.'); } },
+  ];
+  if (player.mimic && canConvert() && !w && !c.mimic) opts.push({ label: 'Dönüştür (kimse görmüyor)', cls:'red', fn: () => { closeDlg(); convert(c, true); } });
+  opts.push({ label: 'Ayrıl', fn: closeDlg });
+  openDlg(c.name + ' · ' + c.role, line ? '"' + line + '"' : 'Başka ne soracaksın?', opts);
+}
+function npcApproach(c){
+  // NPC oyuncuyla konuşur
+  if (dialogOpen || player.channel || state !== 'play' || uiOpen) return false;
+  c.lastPTalk = time; talkCD = rnd(25, 45);
+  const t = c.task;
+  if (t && t.type === 'test' && t.target === 'p'){
+    sfx.talk();
+    const opts = [
+      { label: 'Tamam, test et.', fn: () => { closeDlg(); c.task = null; startTest(c, player); } },
+      { label: 'Hayır.', fn: () => { closeDlg(); c.task = null; bump(c, 'p', .35, 'testi reddetti'); say(c, 'Bunu unutmayacağım. Herkes de bilecek.', { type:'mimic', subj:'p', str:.35 }); } },
+    ];
+    if (player.mimic) opts.push({ label: 'Onu sustur (öldür)', cls:'red', fn: () => { closeDlg(); c.task = null; silentKill(c); } });
+    openDlg(c.name + ' · ' + c.role, '"' + (t.verify ? 'Herkes temiz diyor ama ben kendi gözümle görmek istiyorum. ' : '') + 'Seni test etmem lazım. Kişisel değil."', opts);
+    return true;
+  }
+  sfx.talk();
+  const share = opinion(c);
+  openDlg(c.name + ' · ' + c.role, '"' + (Math.random() < .5 ? 'Bir saniye... ' : '') + share + '"', [
+    { label: 'Katılıyorum.', fn: () => { closeDlg(); say(c, 'Göz kulak olalım o zaman.'); } },
+    { label: 'Bence yanılıyorsun.', fn: () => { closeDlg(); say(c, 'Belki. Belki de değil.'); } },
+    { label: 'Birisi hakkında konuş...', fn: () => accuseMenu(c) },
+    { label: 'Tamam.', fn: closeDlg },
+  ]);
+  return true;
+}
+function silentKill(c){
+  const W = witnessesOf(c.x, c.y, [c]);
+  sfx.screech(); shake = 10; burst(c.x, c.y, '#a01818', 20, 4);
+  c.hp = 0; killPerson(c, player);
+  if (!W.length) log('Kimse görmedi. Şimdilik.', 'bad');
+}
+function canConvert(){ const d = dayOf(T); return (d === 2 || d === 4) && !convDays[d] && totalMimics < 3; }
+function convert(c, byPlayer){
+  convDays[dayOf(T)] = true; totalMimics++; c.mimic = true; c.infectedAt = clockStr(); c.grudge = null;
+  for (const id in c.susp) if (actorById(id) && actorById(id).mimic) c.susp[id] = .02;
+  if (byPlayer){ sfx.whisper(); log(c.name + ' artık seninle. Kimse fark etmedi.', 'bad'); }
+}
+function exposed(){ if (endShown) return; endShown = true; state = 'end'; stopAmbience(); sfx.screech(); fadeTo(() => showEnd('exposed')); }
+
+// =====================================================================
+// ETKİLEŞİM
+// =====================================================================
+function nearStation(){ return FURN.some(f => (f.t === 'workbench' || f.t === 'bench') && rectDist(player.x, player.y, f) < 1.1); }
+function furnLabel(f){
+  switch (f.act){
+    case 'locker': return 'Dolaba saklan';
+    case 'hidecat': return 'Kar aracına saklan';
+    case 'sleep': return (hourOf(T) >= 20 || hourOf(T) < 6) ? 'Yatağında uyu' : 'Yatağın (henüz erken)';
+    case 'charger': return power() ? 'Feneri şarj et' : 'Şarj (elektrik yok)';
+    case 'medkit': return medUses ? 'Yaralarını sar (' + medUses + ')' : 'İlk yardım çantası boş';
+    case 'console': return radioDone ? 'Telsiz çalışıyor' : (player.parts ? 'Parçaları tak' : (partsInstalled >= 3 ? (dayOf(T) >= 3 ? 'Telsizi ayarla' : 'Telsiz (fırtına sinyali bozuyor)') : 'Telsiz konsolu (' + partsInstalled + '/3)'));
+    case 'generator': return player.carrying ? 'Yakıt doldur' : 'Jeneratör (%' + Math.round(gen.fuel) + ')';
+    case 'shed': return player.carrying ? 'Zaten bidon taşıyorsun' : (cans ? 'Yakıt bidonu al (' + cans + ')' : 'Kulübe boş');
+    case 'garagecans': return player.carrying ? 'Zaten bidon taşıyorsun' : (garageCans ? 'Yakıt bidonu al (' + garageCans + ')' : 'Varil boş');
+    case 'shower': return power() ? 'Sıcak duş al' : 'Duş (elektrik yok)';
+    case 'soup': return power() ? 'Sıcak çorba iç (' + soupUses + ')' : 'Ocak soğuk';
+    case 'record': return music ? 'Pikabı kapat' : 'Pikabı aç';
+    case 'tv': return 'Televizyona bak';
+    case 'books': return 'Kitaplığı karıştır';
+    case 'microscope': return 'Mikroskoba bak';
+    case 'tank': return 'Örnek tankını incele';
+    case 'workbench': return 'Tezgâh (C ile üret)';
+    case 'logbook': return 'Telsiz defterini oku';
+    case 'freezer': return 'Dondurucuyu aç';
+    case 'kennel': return 'Köpek kulübelerine bak';
+    case 'weather': return 'Hava istasyonu';
+    case 'search': return (f.n || 'Ara') + (f.n ? ' · ara' : '');
+  }
+  return null;
+}
+function interactables(){
+  const list = [];
+  if (player.hidden) return [{ kind:'unhide', d:0, label: player.hidden.act === 'hidecat' ? 'Araçtan çık' : 'Dolaptan çık' }];
+  for (const c of crew){
+    if (!alive(c)) continue;
+    const d = Math.hypot(player.x - c.x, player.y - c.y);
+    if (d < 1.3) list.push({ kind:'npc', c, d: d - .2, label: awakeNow(c) ? nm(c) + ' ile konuş' : nm(c) + ' uyuyor' });
+  }
+  for (const it of items){ const d = Math.hypot(player.x - (it.x + .5), player.y - (it.y + .5)); if (d < 1.1) list.push({ kind:'item', it, d: d - .1, label: ITEMN[it.t] + ' al' }); }
+  for (const f of FURN){
+    if (!f.act) continue;
+    const d = rectDist(player.x, player.y, f);
+    if (d > .85) continue;
+    list.push({ kind:'furn', f, d, label: furnLabel(f) });
+  }
+  list.sort((a, b) => a.d - b.d);
+  return list;
+}
+function giveItem(who, t, quiet){
+  if (who === player){
+    if (RES[t]) player.res[t]++;
+    else if (t === 'pistol'){ if (player.gun) player.ammo += 1; else { player.gun = true; player.ammo += 1; if (!quiet) log('Tabanca! Boşluk ile ateş edersin.', 'good'); } }
+    else if (t === 'ammo') player.ammo += 2;
+    else if (t === 'part') player.parts++;
+    else if (t === 'battery') player.batteries++;
+    return;
+  }
+  if (t === 'pistol'){ if (who.gun) who.ammo += 1; else { who.gun = true; who.ammo += 1; } }
+  else if (t === 'ammo') who.ammo += 2;
+  else if (t === 'part' && !who.mimic) who.task = { type:'deliver', until: time + 60 };
+}
+function pickupItem(o, who){
+  items.splice(items.indexOf(o), 1);
+  if (who === player){
+    sfx.pickup();
+    if (RES[o.t]) player.res[o.t]++;
+    else if (o.t === 'pistol'){ if (player.gun){ player.ammo += 1; log('Zaten tabancan var; içindeki 1 mermiyi aldın.'); return; } player.gun = true; player.ammo += 1; log('Tabanca! İçinde 1 mermi var. Boşluk ile ateş edersin. Kime ateş edeceğin sana kalmış.', 'good'); return; }
+    else if (o.t === 'ammo') player.ammo += 2;
+    else if (o.t === 'part') player.parts++;
+    else if (o.t === 'battery') player.batteries++;
+    log(ITEMN[o.t] + ' aldın.', 'good');
+    for (const w of witnessesOf(player.x, player.y)) if (o.t === 'pistol') bump(w, 'p', .1, 'silah aldı');
+    return;
+  }
+  const c = who;
+  if (o.t === 'pistol'){ if (c.gun) c.ammo += 1; else { c.gun = true; c.ammo += 1; } }
+  else if (o.t === 'ammo') c.ammo += 2;
+  else if (o.t === 'part'){ if (!c.mimic){ c.task = { type:'deliver', until: time + 60 }; } }
+  if (playerSees(c.x, c.y)){
+    log(NM(c) + ' yerden bir ' + ITEMN[o.t].toLowerCase() + ' aldı.', o.t === 'pistol' || o.t === 'ammo' ? 'bad' : '');
+    if (o.t === 'pistol'){ c.seenGun = true; addNote(c, 'Tabanca aldı (' + hhmm() + ')'); }
+    if (o.t === 'part' && c.mimic) addNote(c, 'Telsiz parçası aldı (' + hhmm() + ')');
+  }
+}
+function interact(){
+  if (dialogOpen || state !== 'play' || player.channel) return;
+  const it = interactables()[0]; if (!it) return;
+  if (it.kind === 'unhide'){ player.hidden = null; sfx.locker(); return; }
+  if (it.kind === 'npc') return talkTo(it.c);
+  if (it.kind === 'item') return pickupItem(it.it, player);
+  const f = it.f;
+  switch (f.act){
+    case 'locker': case 'hidecat':
+      player.hidden = f; player.path = null; sfx.locker(); break;
+    case 'sleep':
+      if (hourOf(T) >= 20 || hourOf(T) < 6) openDlg('', 'Sabaha kadar uyumak ister misin?', [{ label:'Uyu', fn: () => { closeDlg(); sleepNow(false); } }, { label:'Henüz değil', fn: closeDlg }]);
+      else log('Henüz uykun yok. 20:00\'den sonra uyuyabilirsin.');
+      break;
+    case 'charger': if (!power()) log('Elektrik yok.', 'bad'); else log('Şarj istasyonunun yanında durdukça pil dolar.'); break;
+    case 'medkit':
+      if (medUses && player.hp < 100) startChannel('Yaraları sarıyorsun', 2.5, () => { medUses--; player.hp = Math.min(100, player.hp + 50); sfx.pickup(); });
+      else if (medUses) log('Yaran yok.');
+      break;
+    case 'console':
+      if (radioDone) return;
+      if (player.parts){ partsInstalled += player.parts; player.parts = 0; sfx.pickup(); log('Parçaları konsola taktın (' + partsInstalled + '/3).', 'good'); }
+      if (partsInstalled >= 3){
+        if (!power()){ log('Telsizi ayarlamak için elektrik lazım.', 'bad'); return; }
+        if (dayOf(T) < 3){ log('Telsiz çalışıyor ama fırtına sinyali bozuyor. 3. günden itibaren dene.', 'bad'); return; }
+        startChannel('Frekans aranıyor', 6, () => radioWorks(player));
+      } else log('Konsola ' + (3 - partsInstalled) + ' parça daha lazım.');
+      break;
+    case 'generator':
+      if (player.carrying) startChannel('Yakıt dolduruluyor', 2.2, () => { player.carrying = false; const was = power(); gen.fuel = Math.min(100, gen.fuel + 40); if (!was && power()) sfx.powerUp(); log('Jeneratör %' + Math.round(gen.fuel) + '.', 'good'); });
+      else log('Yakıt %' + Math.round(gen.fuel) + '. Dışarıdaki kulübeden ya da garajdan bidon getirebilirsin.');
+      break;
+    case 'shed': case 'garagecans': {
+      const isShed = f.act === 'shed';
+      if (!player.carrying && (isShed ? cans : garageCans) > 0){ if (isShed) cans--; else garageCans--; player.carrying = true; sfx.pickup(); log('Yakıt bidonunu aldın. Ağır, koşamazsın.'); }
+      break; }
+    case 'shower':
+      if (power()){ sfx.water(); startChannel('Sıcak su...', 3, () => { player.heat = 100; log('Isındın.', 'good'); }); }
+      else log('Su buz gibi. Elektrik yok.', 'bad');
+      break;
+    case 'soup':
+      if (!power()) log('Ocak soğuk.', 'bad');
+      else if (!soupUses) log('Kazan boş. Viktor yarın yine yapar.');
+      else startChannel('Çorba içiyorsun', 2, () => { soupUses--; player.heat = Math.min(100, player.heat + 30); player.hp = Math.min(100, player.hp + 15); player.fat = Math.min(100, player.fat + 10); sfx.pickup(); });
+      break;
+    case 'record': music = !music; sfx.click(); log(music ? 'Pikap çalmaya başladı.' : 'Pikap sustu.'); break;
+    case 'tv': sayLines('', [power() ? LORE.tv : 'Ekran kapkara.']); break;
+    case 'books': sayLines('', [LORE.books]); break;
+    case 'microscope': sayLines('', [LORE.microscope]); break;
+    case 'tank': sayLines('', [LORE.tank]); break;
+    case 'logbook': sayLines('', [LORE.logbook]); break;
+    case 'kennel': sayLines('', [LORE.kennel]); break;
+    case 'weather': sayLines('', [LORE.weather]); break;
+    case 'freezer': sayLines('', [LORE.freezer]); break;
+    case 'workbench': openBag(); break;
+    case 'search':
+      startChannel('Aranıyor', 1.6, () => {
+        if (!f.loot.length){ log(pick(['Sadece eski kablolar ve boş kutular.', 'Boş. Biri senden önce karıştırmış.', 'İşe yarar bir şey yok.'])); return; }
+        const got = f.loot.splice(0);
+        got.forEach(t => giveItem(player, t, true));
+        sfx.pickup(); log('Buldun: ' + got.map(t => ITEMN[t]).join(', ') + '.', 'good');
+      });
+      break;
+  }
+}
+function radioWorks(by){
+  radioDone = true; sfx.win();
+  banner('TELSİZ ÇALIŞIYOR', 'Kurtarma uçağı 5. gün 06:00\'da pistte olacak');
+  if (by === player) sayLines('Telsiz', ['"...Northwind, burası McMurdo. Sizi duyuyoruz. Fırtına dinene kadar uçak kalkamaz."', '"5. gün sabah 06:00\'da pistte olun. Kaç kişiyseniz o kadar koltuk ayıracağız."']);
+  else log(NM(by) + ' telsizi çalıştırdı! Uçak 5. gün 06:00\'da gelecek.', 'good');
+}
+function startChannel(label, dur, done, npc, lock){ player.channel = { label, dur, t: 0, done, npc, lock: !!lock }; player.path = null; }
+
+// =====================================================================
+// UYKU
+// =====================================================================
+function sleepNow(passedOut){
+  state = 'trans';
+  fadeTo(() => {
+    const h = hourOf(T), add = h >= 6 ? (24 - h) + 6 : 6 - h;
+    gen.fuel = Math.max(0, gen.fuel - add * 2.2);
+    T += add;
+    player.fat = 100;
+    if (passedOut){ player.hp = Math.max(10, player.hp - 20); if (roomOf(player.x, player.y) === 'outside' || !power()) player.heat = Math.max(5, player.heat - 50); }
+    else { player.hp = Math.min(100, player.hp + 15); player.heat = power() ? 100 : player.heat; const [bx, by] = bedTile(9); player.x = bx + .5; player.y = by + .5; }
+    for (const c of crew) if (alive(c)){ const [bx, by] = bedTile(c.i); c.x = bx + .5; c.y = by + .5; c.path = null; c.goal = null; c.task = null; c.follow = 0; c.wander = null; c.hold = false; c.testing = null; c.fight = (!c.mimic && c.fight === player) ? player : null; }
+    soupUses = 2;
+    spawnMorningItems();
+    state = 'play';
+  }, () => {
+    if (T >= RESCUE_T) return endGame();
+    const d = dayOf(T);
+    banner(d + '. GÜN', d === 3 ? 'Dmitri\'nin doğum günü: bugün herkes birlikte' : d === 5 ? 'Uçak geliyor' : (passedOut ? 'Bayılmışsın...' : 'Sabah 06:00'));
+    if (d === 3) setTimeout(() => sfx.cheer(), 600);
+  });
+}
+function spawnMorningItems(){
+  const conts = FURN.filter(f => f.act === 'search');
+  ['wire','wire','chem','cloth','metal'].forEach(t => pick(conts).loot.push(t));
+  if (Math.random() < .5) pick(conts).loot.push('ammo');
+  spawnItem('wood', { outside: true });
+}
+
+// =====================================================================
+// NPC ZEKASI
+// =====================================================================
+function schedRoom(c, h){
+  if (c.wander && T < c.wander.until) return c.wander.room;
+  return baseRoom(c, h);
+}
+function baseRoom(c, h){
+  if (h < 6 || h >= 22) return 'barracks';
+  if (togetherDay()) return h < 12 ? 'mess' : h < 18 ? 'rec' : 'mess';
+  let room = 'barracks'; for (const [s, r] of c.sched) if (h >= s) room = r; return room;
+}
+function decide(c){
+  if (!awakeNow(c) || c.fight || c.testing || c.task || c.hold) return;
+  const h = hourOf(T);
+  if (isNightH(h)) return;
+  if (c.mimic){
+    const humans = [...crew.filter(o => alive(o) && !o.mimic && o !== c), ...(player.mimic ? [] : [player])];
+    if (c.gun && c.ammo > 0 && dayOf(T) >= 3 && Math.random() < .06 && humans.length){
+      const tgt = c.grudge && isActorAlive(actorById(c.grudge)) ? actorById(c.grudge) : pick(humans);
+      c.task = { type:'execute', target: tgt.id, until: time + 50 }; return;
+    }
+    if (c.grudge && Math.random() < .5){ const g = actorById(c.grudge); if (g && isActorAlive(g)) { say(c, g === player ? 'Herkes duysun: sen taklitçisin. Bana bir şey yaptın.' : 'Ben söyleyeyim: ' + NM(g) + ' taklitçi. Bana bir şey yaptı.', { type:'mimic', subj: c.grudge, str: .55 }); return; } }
+    if (c.kit > 0 && Math.random() < .2 && humans.length){
+      const allies = crew.filter(o => alive(o) && o.mimic && o !== c);
+      const tgt = allies.length && Math.random() < .4 ? pick(allies) : pick(humans);
+      c.task = { type:'test', target: tgt.id, until: time + 45 }; return;
+    }
+    if (Math.random() < .12 && time - c.lastPTalk > 90 && talkCD <= 0 && !player.mimic){ c.task = { type:'talk', until: time + 30 }; return; }
+    if (Math.random() < .2) scavenge(c);
+    return;
+  }
+  // insan
+  let best = null, bv = 0;
+  for (const id in c.susp){ const a = actorById(id); if (!a || a === c || !isActorAlive(a)) continue; if (c.susp[id] > bv){ bv = c.susp[id]; best = id; } }
+  if (best && bv >= .4 && c.kit > 0 && Math.random() < .7){ c.task = { type:'test', target: best, until: time + 50 }; return; }
+  if (c.kit > 0 && T > 12 && Math.random() < .03){
+    // kimseden emin değil ama kitini kullanmak istiyor: en şüphelendiğini ya da rastgele birini seç
+    const pool = [...crew.filter(o => alive(o) && o !== c), player].filter(a => getS(c, a.id) > .05);
+    const tgt = best && bv > .2 ? actorById(best) : pick(pool);
+    if (tgt){ c.task = { type:'test', target: tgt.id, until: time + 50 }; return; }
+  }
+  if (best && bv >= .55 && Math.random() < .5){ const a = actorById(best); say(c, 'Bence ' + ek(a, 'acc') + ' test etmeliyiz.' + (c.why[best] ? ' (' + whyText(best, c.why[best]) + ')' : ''), { type:'mimic', subj: best, str: .35 }); return; }
+  if (Math.random() < .1 && time - c.lastPTalk > 90 && talkCD <= 0){ c.task = { type:'talk', until: time + 30 }; return; }
+  if (Math.random() < .15) scavenge(c);
+}
+function scavenge(c){
+  const room = roomOf(c.x, c.y);
+  const conts = FURN.filter(f => f.act === 'search' && f.loot.length && roomOf(f.x + .5, f.y + .5) === room);
+  if (conts.length && Math.random() < .6){ c.task = { type:'rummage', f: pick(conts), until: time + 25 }; return; }
+  let best = null, bd = 7;
+  for (const it of items){ const d = Math.hypot(it.x + .5 - c.x, it.y + .5 - c.y); if (d < bd && los(c.x, c.y, it.x + .5, it.y + .5)){ bd = d; best = it; } }
+  if (best) c.task = { type:'scavenge', item: best, until: time + 25 };
+}
+function doTask(c, dt){
+  const t = c.task;
+  if (time > t.until){ c.task = null; c.goal = null; return; }
+  if (t.type === 'scavenge'){
+    if (!items.includes(t.item)){ c.task = null; c.goal = null; return; }
+    if (!c.path || !c.path.length) pathTo(c, t.item.x, t.item.y);
+    moveAlong(c, 2.4, dt);
+    if (Math.hypot(c.x - t.item.x - .5, c.y - t.item.y - .5) < .6){ pickupItem(t.item, c); c.task = c.task === t ? null : c.task; c.goal = null; }
+    return;
+  }
+  if (t.type === 'rummage'){
+    const f = t.f;
+    if (!c.path || !c.path.length) c.path = findPath(Math.floor(c.x), Math.floor(c.y), adjRect(f));
+    if (moveAlong(c, 2.4, dt) && rectDist(c.x, c.y, f) < 1){
+      const got = f.loot.splice(0, 1 + Math.floor(Math.random() * 2));
+      got.forEach(it => giveItem(c, it));
+      if (playerSees(c.x, c.y) && got.length){
+        log(NM(c) + ' ' + (f.n ? f.n.toLowerCase() : 'sandığı') + ' karıştırdı' + (got.includes('pistol') ? ' ve bir tabanca aldı!' : '.'), got.includes('pistol') ? 'bad' : '');
+        if (got.includes('pistol')){ c.seenGun = true; addNote(c, 'Tabanca aldı (' + hhmm() + ')'); }
+      }
+      if (c.task === t) c.task = null; c.goal = null;
+    }
+    return;
+  }
+  if (t.type === 'deliver'){
+    if (!c.path || !c.path.length) c.path = findPath(Math.floor(c.x), Math.floor(c.y), adjRect(CONSOLE));
+    if (moveAlong(c, 2.4, dt) && rectDist(c.x, c.y, CONSOLE) < 1){
+      partsInstalled++; c.task = null; c.goal = null;
+      log(NM(c) + ' telsize bir parça taktı (' + Math.min(3, partsInstalled) + '/3).', 'good');
+    }
+    return;
+  }
+  const tgt = t.target ? actorById(t.target) : player;
+  if (!tgt || !isActorAlive(tgt) || (tgt !== player && tgt.state !== 'normal')){ c.task = null; c.goal = null; return; }
+  const d = Math.hypot(tgt.x - c.x, tgt.y - c.y);
+  if (t.type === 'execute'){
+    if (d < 7 && los(c.x, c.y, tgt.x, tgt.y) && (tgt !== player || !player.hidden)){
+      if (!t.announced){ t.announced = true; say(c, tgt === player ? 'Sen bir taklitçisin! Gördüm! Herkes geri çekilsin!' : NM(tgt) + ' bir taklitçi! Gördüm! Geri çekilin!', { type:'mimic', subj: tgt.id, str: .8 }); c.shootCD = 1.2; return; }
+      c.fight = tgt; c.task = null; return;
+    }
+  } else if (t.type === 'test' || t.type === 'talk'){
+    if (tgt === player && (player.hidden || dialogOpen || player.channel || uiOpen)) { /* bekle */ }
+    else if (d < 1.4){
+      if (t.type === 'talk'){ if (npcApproach(c)) c.task = null; return; }
+      if (tgt === player){ npcApproach(c); return; }
+      if (!canBeTested(tgt) || tgt.hold){ return; }
+      c.task = null;
+      if (tgt.mimic && witnessesOf(tgt.x, tgt.y, [tgt, c]).length && Math.random() < .45){
+        say(tgt, pick(['Bana o iğneyi yaklaştırma. Önce sen test ol!', 'Neden hep ben? Başkasını test et!', 'Hayır. Sana güvenmiyorum.']));
+        bump(c, tgt.id, .2, 'testi reddetti'); for (const o of witnessesOf(tgt.x, tgt.y, [tgt])) bump(o, tgt.id, .1, 'testi reddetti');
+        if (playerSees(tgt.x, tgt.y)) addNote(tgt, ek(c, 'gen') + ' testini reddetti (' + hhmm() + ')');
+        return;
+      }
+      startTest(c, tgt); return;
+    }
+  }
+  c.repath = (c.repath || 0) - dt;
+  if (c.repath <= 0 || !c.path || !c.path.length){ c.repath = .6; pathNear(c, Math.floor(tgt.x), Math.floor(tgt.y)); }
+  moveAlong(c, 2.6, dt);
+}
+function updateCrew(dt){
+  const h = hourOf(T), night = isNightH(h);
+  for (const c of crew){
+    if (!alive(c)) continue;
+    if (c.bubble){ c.bubble.t -= dt; if (c.bubble.t <= 0) c.bubble = null; }
+    if (c.shootCD > 0) c.shootCD -= dt;
+    if (c.queued && time >= c.queued.at){ const q = c.queued; c.queued = null; if (awakeNow(c)) say(c, q.text, q.claim); }
+    // test yapıyor
+    if (c.testing){
+      c.testing.t += dt;
+      const g = c.testing.g;
+      if (g !== player && !alive(g)){ c.testing = null; continue; }
+      c.ang = Math.atan2(g.y - c.y, g.x - c.x);
+      if (g === player && !player.channel) startChannel(nm(c) + ' seni test ediyor', Math.max(.1, 2.4 - c.testing.t), () => {}, null, true);
+      if (c.testing.t >= 2.4){ const tg = c.testing.g; c.testing = null; if (tg !== player) tg.hold = false; resolveTest(c, tg); }
+      continue;
+    }
+    if (c.hold) continue;
+    // dövüş
+    if (c.fight){
+      const tg = c.fight;
+      if (!isActorAlive(tg) || (tg === player && player.hidden && Math.hypot(tg.x - c.x, tg.y - c.y) > 2)){ c.fight = null; c.goal = null; continue; }
+      const d = Math.hypot(tg.x - c.x, tg.y - c.y);
+      if (d > 18){ c.fight = null; c.goal = null; continue; }
+      const seen = los(c.x, c.y, tg.x, tg.y);
+      if (c.gun && c.ammo > 0 && seen && d < 9){
+        c.ang = Math.atan2(tg.y - c.y, tg.x - c.x);
+        if (c.shootCD <= 0){ c.shootCD = 1.5; shoot(c, tg); }
+        continue;
+      }
+      if (d < .95){ c.ang = Math.atan2(tg.y - c.y, tg.x - c.x); hurt(tg, (tg.c ? 10 : 9) * dt, c); if (Math.random() < dt * 3) sfx.thud(); }
+      else {
+        c.repath = (c.repath || 0) - dt;
+        if (c.repath <= 0 || !c.path){ c.repath = .4; pathTo(c, Math.floor(tg.x), Math.floor(tg.y)); }
+        moveAlong(c, 3.0, dt);
+      }
+      continue;
+    }
+    // silahlı insan: çok şüphelendiğini vurur
+    if (!c.mimic && c.gun && c.ammo > 0 && awakeNow(c) && c.shootCD <= 0){
+      for (const id in c.susp){
+        if (c.susp[id] < .9 || !c.sure[id]) continue;
+        const a = actorById(id); if (!a || !isActorAlive(a) || a === c) continue;
+        if (a === player && player.hidden) continue;
+        if (Math.hypot(a.x - c.x, a.y - c.y) < 8 && los(c.x, c.y, a.x, a.y)){
+          say(c, (a === player ? 'Sen' : NM(a)) + ', dur orada! Ne olduğunu biliyorum!');
+          c.fight = a; c.shootCD = 1.2; break;
+        }
+      }
+      if (c.fight) continue;
+    }
+    // yaratık gördü mü
+    for (const cr of creatures) if (!c.fight && awakeNow(c) && Math.hypot(cr.x - c.x, cr.y - c.y) < 9 && los(c.x, c.y, cr.x, cr.y) && !c.mimic){ c.fight = cr; }
+    if (c.fight) continue;
+    // görev
+    c.think -= dt;
+    if (c.think <= 0){ c.think = rnd(4, 9); decide(c); }
+    if (c.task){ doTask(c, dt); continue; }
+    // takip
+    if (c.follow > T){
+      const d = Math.hypot(player.x - c.x, player.y - c.y);
+      if (d > 1.6){
+        c.repath = (c.repath || 0) - dt;
+        if (c.repath <= 0 || !c.path){ c.repath = .5; pathNear(c, Math.floor(player.x), Math.floor(player.y)); }
+        moveAlong(c, 3.1, dt);
+      }
+      continue;
+    }
+    // program
+    let room = schedRoom(c, h), goal;
+    if (room === 'barracks') goal = bedTile(c.i);
+    else goal = SPOTS[room][c.i % 9];
+    if (!c.goal || c.goal[0] !== goal[0] || c.goal[1] !== goal[1]){ c.goal = goal; pathTo(c, goal[0], goal[1]); }
+    moveAlong(c, room === 'outside' ? 1.9 : 2.3, dt);
+    if (roomOf(c.x, c.y) === 'outside') addPrint(c, 'boot');
+    // yerdeki eşyayı kap
+    if (awakeNow(c)) for (const it of items) if (Math.hypot(it.x + .5 - c.x, it.y + .5 - c.y) < .7 && Math.random() < dt * .8){ pickupItem(it, c); break; }
+    // programı dışında görülme
+    if (!night && c.wander && T < c.wander.until && !(c.path && c.path.length) && c.wander.room !== baseRoom(c, h)){
+      if (playerSees(c.x, c.y) && Math.hypot(c.x - player.x, c.y - player.y) < 9) addNote(c, 'Beklenmedik yerde: ' + ROOMS[c.wander.room].n + ' (' + hhmm() + ')');
+      for (const o of witnessesOf(c.x, c.y, [c])) if (Math.random() < dt * .3) bump(o, c.id, .05, 'tuhaf yerlerde dolaşıyor');
+    }
+  }
+  // saatlik konum geçmişi
+  if (Math.floor(T) !== Math.floor(T - dt / SEC_PER_HOUR)){
+    for (const c of crew) if (alive(c)){ c.hist.push({ t: Math.floor(T) - 1, room: roomOf(c.x, c.y), sched: baseRoom(c, hourOf(Math.floor(T) - 1)) }); if (c.hist.length > 30) c.hist.shift(); }
+  }
+  // ortam sohbeti
+  if (!night && Math.random() < dt * .25){
+    const a = pick(crew.filter(c => awakeNow(c) && !c.fight && !c.bubble));
+    if (a && time - a.lastChat > 25){
+      const b = crew.find(o => o !== a && awakeNow(o) && Math.hypot(o.x - a.x, o.y - a.y) < 3);
+      if (b){ a.lastChat = time; a.bubble = { text: pick(CHATTER), t: 3.5 }; }
+    }
+  }
+  // 4. gün Yuki telsizi kendisi ayarlar
+  if (!radioDone && partsInstalled >= 3 && dayOf(T) >= 4 && power() && h >= 10){
+    const y = crew.find(c => c.id === 'yuki');
+    if (y && alive(y) && !y.mimic && rectDist(y.x, y.y, CONSOLE) < 2.5) radioWorks(y);
+  }
+  // taklitçi yalnız kalmış birini arar
+  if (Math.floor(T) !== Math.floor(T - dt / SEC_PER_HOUR) && !night && !togetherDay()){
+    for (const c of crew) if (c.mimic && alive(c) && !c.fight && !c.task && canConvert() && Math.random() < .35){
+      const counts = {};
+      for (const o of crew) if (alive(o) && o !== c){ const r = schedRoom(o, h); counts[r] = (counts[r] || 0) + 1; }
+      const lone = crew.filter(o => !o.mimic && alive(o) && counts[schedRoom(o, h)] === 1 && !isHall(schedRoom(o, h)) && schedRoom(o, h) !== 'barracks');
+      if (lone.length) c.wander = { room: schedRoom(pick(lone), h), until: T + rnd(.8, 1.6) };
+    }
+  }
+  // bulaşma (gizli, uyarısız)
+  if (!night && canConvert()){
+    const proom = roomOf(player.x, player.y), byRoom = {};
+    for (const c of crew){ if (!alive(c) || (c.path && c.path.length) || c.fight || c.task || c.follow > T) continue; const r = roomOf(c.x, c.y); (byRoom[r] = byRoom[r] || []).push(c); }
+    const exposedSet = new Set();
+    for (const r in byRoom){
+      const g = byRoom[r], m = g.filter(c => c.mimic), hu = g.filter(c => !c.mimic);
+      if (m.length && hu.length === 1 && r !== proom && !isHall(r)) exposedSet.add(hu[0]);
+    }
+    for (const c of crew){
+      if (c.mimic || !alive(c)) continue;
+      if (exposedSet.has(c)){ c.expo += dt; if (c.expo > 9 && canConvert()) convert(c, false); }
+      else c.expo = Math.max(0, c.expo - dt * .25);
+    }
+  }
+}
+
+// =====================================================================
+// YARATIK
+// =====================================================================
+function updateCreatures(dt){
+  for (const cr of creatures.slice()){
+    if (cr.atkCD > 0) cr.atkCD -= dt;
+    if (cr.stun > 0){ cr.stun -= dt; continue; }
+    let tgt = null, td = 99;
+    const cands = [...(player.mimic ? [] : [player]), ...crew.filter(o => alive(o) && !o.mimic)];
+    for (const o of cands){
+      if (o === player && player.hidden) continue;
+      const d = Math.hypot(cr.x - o.x, cr.y - o.y);
+      if (d < 11 && (los(cr.x, cr.y, o.x, o.y) || d < 2) && d < td){ tgt = o; td = d; }
+    }
+    if (Math.random() < dt * 2) rally(cr);
+    const fighters = crew.filter(o => o.fight === cr).length;
+    const sp = 3.1 * (fighters ? .8 : 1);
+    cr.repath -= dt;
+    if (tgt){
+      cr.last = [Math.floor(tgt.x), Math.floor(tgt.y)];
+      if (td < 1.2){ const dx = tgt.x - cr.x, dy = tgt.y - cr.y, st = sp * dt; if (td > .45 && !isWall(cr.x + dx / td * st, cr.y + dy / td * st)){ cr.x += dx / td * st; cr.y += dy / td * st; } cr.ang = Math.atan2(dy, dx); cr.walk += st; }
+      else { if (cr.repath <= 0 || !cr.path){ cr.repath = .35; pathTo(cr, cr.last[0], cr.last[1]); } moveAlong(cr, sp, dt); }
+      if (td < .65 && cr.atkCD <= 0){ cr.atkCD = 1.3; sfx.hit(); hurt(tgt, tgt === player ? 30 : 40, cr); if (tgt !== player && alive(tgt)) log(NM(tgt) + ' yaralandı!', 'bad'); }
+    } else {
+      if (!cr.path || !cr.path.length){ const room = pick(Object.keys(SPOTS)), [tx, ty] = pick(SPOTS[room]); pathTo(cr, tx, ty); }
+      moveAlong(cr, sp * .7, dt);
+    }
+    if (roomOf(cr.x, cr.y) === 'outside') addPrint(cr, 'claw');
+  }
+}
+
+// =====================================================================
+// İZLER
+// =====================================================================
+function addPrint(e, kind){
+  const lx = e._px, ly = e._py;
+  if (lx === undefined || Math.hypot(e.x - lx, e.y - ly) > .45){
+    e._px = e.x; e._py = e.y; e._side = !e._side;
+    const a = e.ang || 0, off = (e._side ? 1 : -1) * .1;
+    prints.push({ x: e.x - Math.sin(a) * off, y: e.y + Math.cos(a) * off, a, kind, t: time });
+    if (prints.length > 500) prints.shift();
+  }
+}
+
+// =====================================================================
+// ÇANTA / ÜRETİM
+// =====================================================================
+function openBag(){
+  if (state !== 'play') return;
+  uiOpen = true;
+  const r = player.res;
+  $('resList').innerHTML = Object.keys(RES).map(k => '<span>' + RES[k] + ': <b>' + r[k] + '</b></span>').join('');
+  const uses = [
+    ['bandage', 'Sargı bezi', player.bandage, () => { player.bandage--; player.hp = Math.min(100, player.hp + 40); }],
+    ['heatpack', 'Isı paketi', player.heatpack, () => { player.heatpack--; player.heat = Math.min(100, player.heat + 50); }],
+    ['battery', 'Pil', player.batteries, () => { player.batteries--; player.bat = 100; }],
+  ];
+  $('useList').innerHTML = '';
+  uses.forEach(([k, n, cnt, fn]) => {
+    const d = document.createElement('div'); d.className = 'use';
+    d.innerHTML = '<span>' + n + ' × ' + cnt + '</span>';
+    const b = document.createElement('button'); b.textContent = 'Kullan'; b.disabled = !cnt;
+    b.onclick = () => { fn(); sfx.pickup(); openBag(); };
+    d.appendChild(b); $('useList').appendChild(d);
+  });
+  const st = nearStation();
+  $('craftList').innerHTML = '';
+  for (const rc of RECIPES){
+    const ok = Object.keys(rc.need).every(k => r[k] >= rc.need[k]) && (!rc.station || st) && !(rc.id === 'club' && player.club);
+    const d = document.createElement('div'); d.className = 'recipe';
+    d.innerHTML = '<div><b>' + (rc.station ? '⚒ ' : '') + rc.n + '</b><small>' + rc.d + ' · ' + Object.keys(rc.need).map(k => rc.need[k] + ' ' + RES[k].toLowerCase()).join(', ') + '</small></div>';
+    const b = document.createElement('button'); b.textContent = 'Üret'; b.disabled = !ok;
+    b.onclick = () => {
+      for (const k in rc.need) r[k] -= rc.need[k];
+      if (rc.id === 'kit') player.kit++; else if (rc.id === 'club') player.club = true; else if (rc.id === 'bandage') player.bandage++; else if (rc.id === 'heat') player.heatpack++; else if (rc.id === 'battery') player.batteries++;
+      sfx.pickup(); log(rc.n + ' ürettin.', 'good'); openBag();
+    };
+    d.appendChild(b); $('craftList').appendChild(d);
+  }
+  $('bagScr').classList.remove('hidden');
+}
+function closeBag(){ uiOpen = false; $('bagScr').classList.add('hidden'); }
+
+// =====================================================================
+// GİRDİ
+// =====================================================================
+const keys = {};
+addEventListener('keydown', e => {
+  ac();
+  const k = e.key.toLowerCase();
+  if (!$('crewScr').classList.contains('hidden')){ if (k === 'escape' || k === 'tab' || k === 'enter'){ e.preventDefault(); $('crewScr').classList.add('hidden'); uiOpen = false; } return; }
+  if (!$('bagScr').classList.contains('hidden')){ if (k === 'escape' || k === 'c'){ e.preventDefault(); closeBag(); } return; }
+  if (state === 'title' && k === 'enter'){ newGame(); return; }
+  if (dialogOpen){
+    if (e.repeat) return;
+    if ((k === ' ' || k === 'enter' || k === 'e') && curOpts.length === 1){ e.preventDefault(); sfx.click(); curOpts[0].fn(); }
+    const n = parseInt(k, 10);
+    if (n >= 1 && n <= curOpts.length && !curOpts[n - 1].disabled){ sfx.click(); curOpts[n - 1].fn(); }
+    return;
+  }
+  if (state !== 'play') return;
+  if (k === 'tab'){ e.preventDefault(); showCrew(); return; }
+  keys[k] = true;
+  if (e.repeat) return;
+  if (k === 'e'){ e.preventDefault(); interact(); }
+  if (k === 'f') toggleLight();
+  if (k === ' '){ e.preventDefault(); playerAttack(); }
+  if (k === 'q') callHelp();
+  if (k === 'r') useBattery();
+  if (k === 'c') openBag();
+  if (k === 'm') showMap = !showMap;
+});
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+function toggleLight(){ if (player.bat <= 0 && !player.light){ log('Pil bitti.', 'bad'); return; } player.light = !player.light; sfx.click(); $('tF').classList.toggle('on', player.light); }
+function useBattery(){ if (!player.batteries){ log('Yedek pilin yok.'); return; } player.batteries--; player.bat = 100; sfx.pickup(); log('Fenere yeni pil taktın.', 'good'); }
+cv.addEventListener('pointerdown', e => {
+  ac();
+  if (dialogOpen || state !== 'play' || player.hidden || uiOpen) return;
+  const tx = Math.floor((e.clientX + camX) / TS), ty = Math.floor((e.clientY + camY) / TS);
+  let goal = null, arrive = null;
+  const c = crew.find(c => alive(c) && Math.floor(c.x) === tx && Math.floor(c.y) === ty);
+  const f = FURN.find(f => f.act && tx >= f.x && tx < f.x + f.w && ty >= f.y && ty < f.y + f.h);
+  const it = items.find(i => i.x === tx && i.y === ty);
+  if (c){ goal = (x, y) => Math.abs(x - tx) + Math.abs(y - ty) === 1; arrive = () => interact(); }
+  else if (f){ goal = adjRect(f); arrive = () => interact(); }
+  else if (it){ goal = (x, y) => x === tx && y === ty; arrive = () => interact(); }
+  else if (walkable(tx, ty)) goal = (x, y) => x === tx && y === ty;
+  if (!goal) return;
+  const p = findPath(Math.floor(player.x), Math.floor(player.y), goal, 3000);
+  if (!p) return;
+  player.path = p; player.onArrive = arrive; player.channel = null;
+});
+$('tE').onclick = () => interact();
+$('tF').onclick = () => toggleLight();
+$('tShoot').onclick = () => playerAttack();
+$('tQ').onclick = () => callHelp();
+$('tC').onclick = () => openBag();
+$('tRun').onclick = () => { player.run = !player.run; $('tRun').classList.toggle('on', player.run); };
+$('crewBtn').onclick = e => { e.currentTarget.blur(); showCrew(); };
+$('bagBtn').onclick = e => { e.currentTarget.blur(); openBag(); };
+$('closeCrew').onclick = () => { $('crewScr').classList.add('hidden'); uiOpen = false; };
+$('closeBag').onclick = () => closeBag();
+$('startBtn').onclick = () => { ac(); newGame(); };
+$('againBtn').onclick = () => newGame();
+
+function showCrew(){
+  uiOpen = true;
+  const rows = crew.map(c => {
+    let st;
+    if (c.state === 'dead') st = c.mimic ? '<span class="dim">Öldü · taklitçiymiş</span>' : '<span class="dim">Öldü · insandı</span>';
+    else if (c.state === 'revealed') st = '<span class="badc">Yaratık, serbest</span>';
+    else {
+      st = [];
+      if (player.mimic && c.mimic) st.push('<span class="badc">Senin gibi</span>');
+      if (c.seenGun) st.push('<span class="badc">Silahlı</span>');
+      c.notes.forEach(n => st.push('<span class="warn">' + n + '</span>'));
+      if (c.fight === player) st.push('<span class="badc">Sana düşman</span>');
+      st = st.length ? st.join('<br>') : '<span class="dim">Bilinmiyor</span>';
+    }
+    const usual = [...new Set(c.sched.map(s => s[1]).filter(r => r !== 'mess' && r !== 'barracks'))].map(r => ROOMS[r].n).join(', ');
+    return '<tr><td><b>' + c.name + '</b><br><span class="dim">' + c.role + '<br>Genelde: ' + usual + '</span></td><td>' + st + '</td></tr>';
+  });
+  $('crewTable').innerHTML = rows.join('');
+  $('crewScr').classList.remove('hidden');
+}
+
+// =====================================================================
+// GÜNCELLEME
+// =====================================================================
+function update(dt){
+  time += dt;
+  if (shake > 0) shake = Math.max(0, shake - dt * 30);
+  if (hurtT > 0) hurtT -= dt;
+  for (const s of snow){ s.y += dt * 3.2 * s.s; s.x -= dt * 1.8 * s.s; if (s.y > 32){ s.y = -.5; s.x = rnd(34.5, 49); } if (s.x < 34.5) s.x = 48.5; }
+  for (const p of parts){ p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .92; p.vy *= .92; p.life -= dt; }
+  parts = parts.filter(p => p.life > 0);
+  for (const s of shots) s.t -= dt; shots = shots.filter(s => s.t > 0);
+  if (state !== 'play' || dialogOpen || uiOpen) return;
+
+  T += dt / SEC_PER_HOUR;
+  const h = hourOf(T);
+  if (callCD > 0) callCD -= dt;
+  if (talkCD > 0) talkCD -= dt;
+  if (player.atkCD > 0) player.atkCD -= dt;
+  if (T >= RESCUE_T) return endGame();
+
+  if (gen.fuel > 0 && !gen.broken){
+    const before = gen.fuel; gen.fuel = Math.max(0, gen.fuel - dt / SEC_PER_HOUR * 2.2);
+    if (before > 0 && gen.fuel <= 0){ sfx.powerDown(); log('Jeneratörün yakıtı bitti!', 'bad'); }
+    if (before > 20 && gen.fuel <= 20) log('Jeneratör yakıtı azalıyor (%20).', 'bad');
+  }
+
+  updateCrew(dt);
+  updateCreatures(dt);
+  musicTick(dt);
+
+  // oyuncu
+  const room = roomOf(player.x, player.y), inside = room !== 'outside';
+  if (player.channel){
+    const ch = player.channel;
+    const movingKey = ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].some(k => keys[k]);
+    if (movingKey && !ch.lock){ player.channel = null; if (ch.npc) ch.npc.hold = false; log('Yarıda kaldı.'); }
+    else { ch.t += dt; if (ch.t >= ch.dur){ player.channel = null; ch.done(); } }
+  } else if (!player.hidden){
+    let dx = 0, dy = 0;
+    if (keys['a'] || keys['arrowleft']) dx -= 1;
+    if (keys['d'] || keys['arrowright']) dx += 1;
+    if (keys['w'] || keys['arrowup']) dy -= 1;
+    if (keys['s'] || keys['arrowdown']) dy += 1;
+    const wantRun = (keys['shift'] || player.run) && !player.carrying;
+    let sp = 3.1 * (player.carrying ? .7 : 1) * (inside ? 1 : .85) * (player.fat < 15 ? .7 : 1);
+    const moving = dx || dy || (player.path && player.path.length);
+    if (wantRun && moving && player.sta > 0){ sp *= 1.7; player.sta = Math.max(0, player.sta - dt * 26); }
+    else player.sta = Math.min(100, player.sta + dt * 16);
+    let moved = 0;
+    if (dx || dy){
+      player.path = null;
+      const l = Math.hypot(dx, dy); dx /= l; dy /= l;
+      const nx = player.x + dx * sp * dt, ny = player.y + dy * sp * dt;
+      if (canStand(nx, player.y)){ moved += Math.abs(nx - player.x); player.x = nx; }
+      if (canStand(player.x, ny)){ moved += Math.abs(ny - player.y); player.y = ny; }
+      player.ang = Math.atan2(dy, dx); player.walk += moved;
+    } else if (player.path){
+      if (!player.path.length){ const f = player.onArrive; player.path = null; player.onArrive = null; f && f(); }
+      else { const ox = player.x, oy = player.y; moveAlong(player, sp, dt); moved = Math.hypot(player.x - ox, player.y - oy); }
+    }
+    lastStepSnd += moved;
+    if (lastStepSnd > .65){ lastStepSnd = 0; inside ? sfx.step() : sfx.snowStep(); }
+    if (!inside) addPrint(player, 'boot');
+  }
+  // ısı
+  const night = darkOutsideH(h);
+  if (!inside) player.heat -= dt * (night ? 4.2 : 2.8);
+  else if (power()) player.heat += dt * 5;
+  else player.heat -= dt * .55;
+  player.heat = clamp(player.heat, 0, 100);
+  if (player.heat <= 0){ player.hp -= dt * 5; if (Math.random() < dt * .4) log('Donuyorsun!', 'bad'); }
+  if ((!inside || player.heat < 45) && Math.random() < dt * 1.4) parts.push({ x: player.x + Math.cos(player.ang) * .3, y: player.y - .2 + Math.sin(player.ang) * .3, vx: Math.cos(player.ang) * .6, vy: Math.sin(player.ang) * .6 - .2, life: .9, color: 'rgba(235,242,250,.5)', s: 5, puff: true });
+  // uyku
+  player.fat -= dt / SEC_PER_HOUR * (isNightH(h) ? 9 : 5);
+  if (player.fat <= 0){ player.fat = 0; log('Gözlerin kapanıyor...', 'bad'); return sleepNow(true); }
+  // pil
+  if (player.light){ player.bat -= dt * .7; if (player.bat <= 0){ player.bat = 0; player.light = false; log('Fenerin pili bitti.', 'bad'); } }
+  const chg = FURN.find(f => f.act === 'charger');
+  if (power() && rectDist(player.x, player.y, chg) < .9) player.bat = Math.min(100, player.bat + dt * 14);
+  if (player.hp <= 0) return die();
+
+  // NPC konuşma zamanlayıcı
+  const cnear = creatures.reduce((m, cr) => Math.min(m, Math.hypot(cr.x - player.x, cr.y - player.y)), 99);
+  if (cnear < 8){ const iv = .35 + cnear * .1; if (time - (update.hb || 0) > iv){ update.hb = time; sfx.heart(); } }
+  if (amb){
+    setAmb(amb.wg, inside ? .02 : .11);
+    setAmb(amb.hg, power() ? clamp(.05 - rectDist(player.x, player.y, GENF) * .004, .006, .05) : 0);
+    setAmb(amb.dg, isNightH(h) || !power() || creatures.length ? .05 : .012);
+  }
+}
+let killer = null;
+function die(by){ if (endShown) return; killer = by || null; endShown = true; state = 'end'; stopAmbience(); fadeTo(() => showEnd('dead')); }
+function endGame(){ if (endShown) return; endShown = true; state = 'end'; stopAmbience(); fadeTo(() => showEnd(radioDone ? 'rescue' : 'nobody')); }
+function showEnd(kind){
+  const living = crew.filter(c => c.state === 'normal');
+  const mims = living.filter(c => c.mimic), hums = living.filter(c => !c.mimic);
+  const lost = crew.filter(c => c.state === 'dead' && !c.mimic).length;
+  let title, sub, text;
+  if (kind === 'exposed'){
+    title = 'AÇIĞA ÇIKTIN'; sub = clockStr() + ' · Herkesin gözü önünde.';
+    text = 'Kan tele değdiği an herkes gördü. Ne kadar insan gibi bağırsan da artık kimse dinlemiyordu. Northwind\'in ateşi gece boyunca söndürülmedi.';
+  } else if (kind === 'dead'){
+    title = 'ÖLDÜN'; sub = clockStr();
+    if (player.mimic) text = 'Seni yakaladılar. ' + (killer && killer.name ? killer.name + ' son darbeyi vurdu. ' : '') + 'Belki de haklıydılar.';
+    else if (player.heat <= 0) text = 'Soğuk seni sessizce aldı.';
+    else text = (killer && killer.name ? killer.name + (killer.mimic ? ' seni öldürdü. Ve onun ne olduğunu kimse bilmiyordu.' : ' seni öldürdü. Senin taklitçi olduğuna inanmıştı.') : 'Karanlıkta seni buldu.');
+  } else if (kind === 'nobody'){
+    title = 'KİMSE GELMEDİ'; sub = '5. gün sabahı · Telsiz hiç çalışmadı.';
+    text = 'Fırtına dindi ama gökyüzü boş kaldı. ' + (mims.length || player.mimic ? 'Northwind\'de kalanların hepsi insan değildi.' : 'En azından içlerinde taklitçi kalmamıştı.');
+  } else if (player.mimic){
+    title = 'İÇERİDESİN'; sub = '5. gün 06:00 · Uçak pistte.';
+    text = 'Uçağa ' + (living.length + 1) + ' kişi bindi. Kimse senin ne olduğunu bilmiyor. Uçak güneye, şehirlere doğru dönüyor ve sen pencereden bakıp gülümsüyorsun.' + (mims.length ? ' Yanında seninle aynı olanlar da var: ' + mims.map(c => nm(c)).join(', ') + '.' : '');
+    sfx.win();
+  } else if (!mims.length){
+    title = 'KURTULDUN'; sub = '5. gün 06:00 · Uçak pistte.';
+    text = 'Uçağa sen ve ' + hums.length + ' insan bindi' + (lost ? '; ' + lost + ' masum insanı kaybettiniz' : '') + '. Taklitçilerin hiçbiri istasyondan çıkamadı.';
+    sfx.win();
+  } else {
+    title = 'UÇAK HAVALANDI'; sub = '5. gün 06:00 · ...ama yalnız değildin.';
+    text = 'Uçağa ' + (living.length + 1) + ' kişiyle bindin. ' + mims.map(c => c.name).join(', ') + ' cama yaslanıp sana gülümsedi.';
+  }
+  $('endTitle').textContent = title; $('endSub').textContent = sub; $('endText').textContent = text;
+  const rows = crew.map(c => {
+    let st;
+    if (c.state === 'dead') st = c.mimic ? '<span class="dim">Öldü · taklitçiydi</span>' : '<span class="dim">Öldü · insandı</span>';
+    else if (c.state === 'revealed') st = '<span class="badc">Yaratık · istasyonda kaldı</span>';
+    else if (c.mimic) st = '<span class="badc">Taklitçi' + (c.infectedAt === 'başlangıç' ? ' · ilk vaka' : ' · dönüştü: ' + c.infectedAt) + '</span>';
+    else st = '<span class="ok">İnsan</span>';
+    return '<tr><td><b>' + c.name + '</b><br><span class="dim">' + c.role + '</span></td><td>' + st + '</td></tr>';
+  });
+  rows.unshift('<tr><td><b>Sen</b></td><td>' + (player.mimic ? '<span class="badc">Taklitçi · ilk vaka</span>' : '<span class="ok">İnsan</span>') + '</td></tr>');
+  $('endTable').innerHTML = rows.join('');
+  $('hud').classList.add('hidden'); $('inv').classList.add('hidden'); $('touch').classList.add('hidden'); $('log').innerHTML = ''; closeDlg(); closeBag();
+  $('endScr').classList.remove('hidden');
+}
+
+// =====================================================================
+// IŞIK
+// =====================================================================
+const CONE_HALF = .5, CONE_RANGE = 7.5;
+function inCone(x, y){
+  if (!player.light || player.hidden) return false;
+  const dx = x - player.x, dy = y - player.y, d = Math.hypot(dx, dy);
+  if (d > CONE_RANGE) return false;
+  let a = Math.atan2(dy, dx) - player.ang; a = Math.atan2(Math.sin(a), Math.cos(a));
+  return Math.abs(a) < CONE_HALF && los(player.x, player.y, x, y);
+}
+function lightParams(){
+  const h = hourOf(T), inside = roomOf(player.x, player.y) !== 'outside';
+  if (inside){
+    if (power()) return isNightH(h) ? [.86, .3] : (darkOutsideH(h) ? [.82, .12] : [.75, 0]);
+    return [.985, .93];
+  }
+  return darkOutsideH(h) ? [.96, .8] : [.7, 0];
+}
+function visibleTo(x, y){
+  if (player.hidden) return Math.hypot(x - player.x, y - player.y) < 1.6;
+  const d = Math.hypot(x - player.x, y - player.y);
+  if (d > 17 || !los(player.x, player.y, x, y)) return false;
+  const [, aIn] = lightParams();
+  if (aIn < .6) return true;
+  return d < 1.7 || inCone(x, y);
+}
+function rayPoly(cx, cy, a0, a1, range, n){
+  const pts = [[cx, cy]];
+  for (let i = 0; i <= n; i++){
+    const a = a0 + (a1 - a0) * i / n, ca = Math.cos(a), sa = Math.sin(a);
+    let d = .15;
+    while (d < range){ if (isWall(cx + ca * d, cy + sa * d)){ d += .2; break; } d += .09; }
+    pts.push([cx + ca * d, cy + sa * d]);
+  }
+  return pts;
+}
+function polyPath(c, pts){ c.beginPath(); pts.forEach(([x, y], i) => i ? c.lineTo(sx(x), sy(y)) : c.moveTo(sx(x), sy(y))); c.closePath(); }
+function drawLighting(){
+  const [aOut, aIn] = lightParams();
+  const X = sx(player.x), Y = sy(player.y);
+  dctx.globalCompositeOperation = 'source-over'; dctx.clearRect(0, 0, W, H);
+  dctx.fillStyle = 'rgba(1,2,5,' + aOut + ')'; dctx.fillRect(0, 0, W, H);
+  dctx.globalCompositeOperation = 'destination-out';
+  if (!player.hidden){
+    const vis = rayPoly(player.x, player.y, 0, Math.PI * 2, 17, 240);
+    dctx.fillStyle = 'rgba(0,0,0,' + (1 - aIn / aOut) + ')'; polyPath(dctx, vis); dctx.fill();
+  }
+  let g = dctx.createRadialGradient(X, Y, 0, X, Y, TS * 1.7);
+  g.addColorStop(0, 'rgba(0,0,0,.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  dctx.fillStyle = g; dctx.beginPath(); dctx.arc(X, Y, TS * 1.7, 0, 7); dctx.fill();
+  let cone = null;
+  if (player.light && !player.hidden){
+    const flick = player.bat < 15 ? (Math.random() < .15 ? .3 : 1) : 1;
+    cone = rayPoly(player.x, player.y, player.ang - CONE_HALF, player.ang + CONE_HALF, CONE_RANGE, 60);
+    g = dctx.createRadialGradient(X, Y, TS * .3, X, Y, TS * CONE_RANGE);
+    g.addColorStop(0, 'rgba(0,0,0,' + flick + ')'); g.addColorStop(.6, 'rgba(0,0,0,' + .85 * flick + ')'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    dctx.fillStyle = g; polyPath(dctx, cone); dctx.fill();
+  }
+  ctx.drawImage(dk, 0, 0, W, H);
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  if (power() && roomOf(player.x, player.y) !== 'outside' && !player.hidden){
+    const flick = gen.fuel < 10 ? (Math.random() < .1 ? .2 : 1) : 1;
+    for (const [lx, ly] of LAMPS){
+      const d = Math.hypot(lx - player.x, ly - player.y);
+      if (d > 14 || !los(player.x, player.y, lx, ly)) continue;
+      const LX = sx(lx), LY = sy(ly), r = TS * 3.2;
+      const gg = ctx.createRadialGradient(LX, LY, 0, LX, LY, r);
+      const a = (isNightH(hourOf(T)) ? .11 : .07) * flick;
+      gg.addColorStop(0, 'rgba(255,214,150,' + a + ')'); gg.addColorStop(1, 'rgba(255,200,130,0)');
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(LX, LY, r, 0, 7); ctx.fill();
+    }
+  }
+  if (cone){ ctx.fillStyle = 'rgba(255,225,160,.05)'; polyPath(ctx, cone); ctx.fill(); }
+  ctx.restore();
+}
+
+// =====================================================================
+// ÇİZİM
+// =====================================================================
+function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function shadowRect(X, Y, w, h){ ctx.fillStyle = 'rgba(0,0,0,.28)'; rr(X + 3, Y + 4, w, h, 4); ctx.fill(); }
+function drawFurn(f){
+  const X = sx(f.x), Y = sy(f.y), w = f.w * TS, h = f.h * TS, p = TS * .08;
+  if (X > W + 10 || Y > H + 10 || X + w < -10 || Y + h < -10) return;
+  switch (f.t){
+    case 'bed': shadowRect(X + p, Y + p, w - 2 * p, h - 2 * p);
+      ctx.fillStyle = '#3d3240'; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 4); ctx.fill();
+      ctx.fillStyle = ['#6f7c8f','#7a6a8a','#6a8a7a','#8a7a6a','#6a7a9a'][f.bed % 5]; rr(X + p * 1.6, Y + h * .26, w - 3.2 * p, h * .68, 3); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.15)'; ctx.fillRect(X + p * 1.6, Y + h * .26, w - 3.2 * p, 3);
+      ctx.fillStyle = '#e2e0d8'; rr(X + w * .18, Y + p * 1.6, w * .64, h * .13, 4); ctx.fill(); break;
+    case 'medbed': shadowRect(X + p, Y + p, w - 2 * p, h - 2 * p); ctx.fillStyle = '#9aa6a8'; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 4); ctx.fill(); ctx.fillStyle = '#eef3f4'; rr(X + p * 1.6, Y + h * .3, w - 3.2 * p, h * .6, 3); ctx.fill(); break;
+    case 'locker': case 'shower': {
+      const sh = f.t === 'shower';
+      ctx.fillStyle = sh ? '#8fa4ad' : '#5b6672'; ctx.fillRect(X + p, Y + p * .5, w - 2 * p, h - p);
+      ctx.fillStyle = 'rgba(255,255,255,.1)'; ctx.fillRect(X + p, Y + p * .5, w - 2 * p, 3);
+      if (sh){ ctx.fillStyle = '#c9d6dc'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h * .45, TS * .16, 0, 7); ctx.fill(); ctx.fillStyle = '#7a8d96'; for (let i = 0; i < 5; i++) ctx.fillRect(X + w / 2 - TS * .1 + i * TS * .05, Y + h * .42, 1.5, 1.5); }
+      else { ctx.strokeStyle = '#2e353d'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X + w / 2, Y + p); ctx.lineTo(X + w / 2, Y + h - p); ctx.stroke(); ctx.fillStyle = '#2e353d'; for (let i = 0; i < 3; i++) ctx.fillRect(X + p * 2, Y + p * 2 + i * 4, w * .25, 2); }
+      if (player.hidden === f){ ctx.fillStyle = 'rgba(255,220,150,.25)'; ctx.fillRect(X + p, Y + p * .5, w - 2 * p, h - p); }
+      break; }
+    case 'bench2': shadowRect(X, Y + p * 2, w, h - p * 4); ctx.fillStyle = '#7a5c3c'; rr(X, Y + p * 2, w, h - p * 4, 4); ctx.fill(); ctx.fillStyle = 'rgba(0,0,0,.2)'; for (let i = 1; i < f.w * 3; i++) ctx.fillRect(X + i * TS / 3, Y + p * 2, 1, h - p * 4); break;
+    case 'counter': case 'pshelf':
+      ctx.fillStyle = f.t === 'pshelf' ? '#6a5a44' : '#8a8e95'; ctx.fillRect(X, Y, w, h * .85); ctx.fillStyle = f.t === 'pshelf' ? '#8a7a5a' : '#b4b8be'; ctx.fillRect(X, Y, w, h * .2);
+      if (f.t === 'pshelf') for (let i = 0; i < f.w * 3; i++){ ctx.fillStyle = ['#b85a3a','#d6c27a','#7aa05a','#c0b0a0','#a04040'][i % 5]; ctx.fillRect(X + i * TS / 3 + 2, Y + h * .3, TS / 3 - 4, h * .4); }
+      break;
+    case 'stove': ctx.fillStyle = '#303036'; ctx.fillRect(X, Y, w, h * .85); ctx.fillStyle = power() ? '#c2481f' : '#151518'; for (const [a, b] of [[.3,.3],[.7,.3],[.3,.62],[.7,.62]]){ ctx.beginPath(); ctx.arc(X + w * a, Y + h * b, TS * .1, 0, 7); ctx.fill(); } break;
+    case 'soup': ctx.fillStyle = '#303036'; ctx.fillRect(X, Y, w, h * .85); ctx.fillStyle = '#8a8e95'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h * .45, TS * .32, 0, 7); ctx.fill(); ctx.fillStyle = soupUses ? '#b5652a' : '#3a3a3a'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h * .45, TS * .25, 0, 7); ctx.fill();
+      if (power() && soupUses){ ctx.fillStyle = 'rgba(255,255,255,.18)'; for (let i = 0; i < 3; i++){ const t = (time * .6 + i / 3) % 1; ctx.beginPath(); ctx.arc(X + w / 2 + Math.sin(t * 6 + i) * 4, Y + h * .4 - t * TS * .6, 3 + t * 4, 0, 7); ctx.fill(); } } break;
+    case 'table': shadowRect(X + p, Y + p, w - 2 * p, h - 2 * p); ctx.fillStyle = '#6b5640'; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 5); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.07)'; ctx.fillRect(X + p, Y + p, w - 2 * p, 3);
+      ctx.fillStyle = '#d8d4c8'; for (let i = 0; i < f.w; i++){ ctx.beginPath(); ctx.arc(X + i * TS + TS / 2, Y + h * .35, TS * .1, 0, 7); ctx.fill(); } break;
+    case 'freezer': ctx.fillStyle = '#d6dde2'; ctx.fillRect(X + p, Y, w - 2 * p, h - p); ctx.fillStyle = '#9aa8b2'; ctx.fillRect(X + p * 2, Y + h * .45, w - 4 * p, 2); ctx.fillStyle = meatEaten ? '#7a1a1a' : '#9aa8b2'; ctx.fillRect(X + w * .7, Y + h * .2, 3, h * .2); break;
+    case 'sacks': ctx.fillStyle = '#a89070'; for (let i = 0; i < f.w * 2; i++){ ctx.beginPath(); ctx.ellipse(X + i * TS / 2 + TS / 4, Y + h / 2, TS * .22, TS * .3, 0, 0, 7); ctx.fill(); } break;
+    case 'tv': ctx.fillStyle = '#121214'; ctx.fillRect(X + p, Y, w - 2 * p, h * .6); ctx.fillStyle = power() ? 'rgb(' + (40 + Math.random() * 40) + ',' + (60 + Math.random() * 40) + ',' + (80 + Math.random() * 40) + ')' : '#1a1e24'; ctx.fillRect(X + p * 2, Y + p, w - 4 * p, h * .45); break;
+    case 'record': ctx.fillStyle = '#5a3a24'; ctx.fillRect(X + p, Y + p, w - 2 * p, h - 2 * p); ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .28, 0, 7); ctx.fill();
+      ctx.fillStyle = '#b5302a'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .08, 0, 7); ctx.fill();
+      if (music && power()){ ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .18, time * 4, time * 4 + 1); ctx.stroke(); ctx.fillStyle = 'rgba(255,230,160,.8)'; ctx.font = (TS * .3) + 'px serif'; ctx.fillText('♪', X + w * .7, Y - (time * 20 % 20)); } break;
+    case 'pool': shadowRect(X, Y, w, h); ctx.fillStyle = '#4a2c1a'; rr(X, Y, w, h, 6); ctx.fill(); ctx.fillStyle = '#2f6b44'; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 4); ctx.fill();
+      [['#e8e0c8',.3,.4],['#c0392b',.6,.6],['#2a52be',.7,.3],['#f0c040',.45,.7]].forEach(([c, a, b]) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(X + w * a, Y + h * b, TS * .07, 0, 7); ctx.fill(); }); break;
+    case 'books': ctx.fillStyle = '#4c3d2c'; ctx.fillRect(X, Y, w, h); for (let i = 0; i < 8; i++){ ctx.fillStyle = ['#7a3a3a','#3a5a7a','#8a7a3a','#4a6a4a'][i % 4]; ctx.fillRect(X + p, Y + p + i * (h - 2 * p) / 8, w * (.5 + hash(i, f.y) * .3), (h - 2 * p) / 8 - 2); } break;
+    case 'sofa': shadowRect(X, Y + p, w, h - p); ctx.fillStyle = '#5a3a4a'; rr(X, Y + p, w, h - p, 10); ctx.fill(); ctx.fillStyle = '#6e4a5c'; for (let i = 0; i < f.w; i++){ rr(X + i * TS + p, Y + h * .35, TS - 2 * p, h * .55, 6); ctx.fill(); } break;
+    case 'rug': ctx.fillStyle = '#7a3b32'; ctx.globalAlpha = .45; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 6); ctx.fill(); ctx.strokeStyle = '#d0a060'; ctx.lineWidth = 1; rr(X + p * 2, Y + p * 2, w - 4 * p, h - 4 * p, 4); ctx.stroke(); ctx.globalAlpha = 1; break;
+    case 'bench': ctx.fillStyle = '#c6ccd2'; ctx.fillRect(X, Y, w, h * .85); ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.fillRect(X, Y, w, 2);
+      for (let i = 0; i < f.w; i++){ ctx.fillStyle = ['#5aa08a','#7d8c99','#a05a7a','#d6b04a'][(i + f.x) % 4]; ctx.fillRect(X + i * TS + TS * .25, Y + h * .25, TS * .14, h * .4); ctx.fillRect(X + i * TS + TS * .55, Y + h * .35, TS * .1, h * .3); } break;
+    case 'microscope': ctx.fillStyle = '#c6ccd2'; ctx.fillRect(X, Y + p, w, h - 2 * p); ctx.fillStyle = '#2a2e34'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .18, 0, 7); ctx.fill(); ctx.fillStyle = '#6ad0e0'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .06, 0, 7); ctx.fill(); break;
+    case 'tank': shadowRect(X + p, Y + p, w - 2 * p, h - 2 * p); ctx.fillStyle = '#2a3a40'; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 8); ctx.fill(); ctx.fillStyle = 'rgba(120,200,190,.25)'; rr(X + p * 2, Y + p * 2, w - 4 * p, h - 4 * p, 6); ctx.fill();
+      ctx.strokeStyle = 'rgba(220,240,240,.7)'; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(X + w * .3, Y + h * .3); ctx.lineTo(X + w * .5, Y + h * .5); ctx.lineTo(X + w * .42, Y + h * .7); ctx.moveTo(X + w * .5, Y + h * .5); ctx.lineTo(X + w * .72, Y + h * .42); ctx.stroke();
+      ctx.fillStyle = 'rgba(200,240,240,.6)'; for (let i = 0; i < 6; i++) ctx.fillRect(X + w + hash(i, 1) * TS * .5 - TS * .1, Y + hash(i, 2) * h, 2, 2); break;
+    case 'charger': ctx.fillStyle = '#2a3038'; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 4); ctx.fill(); ctx.fillStyle = power() ? '#6fe08a' : '#3a2020'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .1, 0, 7); ctx.fill(); break;
+    case 'chem': ctx.fillStyle = '#c6ccd2'; ctx.fillRect(X, Y, w, h * .85); if (!chemTaken){ ctx.fillStyle = '#8ae05a'; ctx.fillRect(X + w * .3, Y + h * .2, TS * .16, h * .45); } ctx.fillStyle = '#e05a8a'; ctx.fillRect(X + w * .65, Y + h * .25, TS * .14, h * .4); break;
+    case 'cabinet': ctx.fillStyle = '#d6dde0'; ctx.fillRect(X + p, Y, w - 2 * p, h * .85); ctx.fillStyle = '#c0392b'; ctx.fillRect(X + w * .44, Y + h * .2, w * .12, h * .4); ctx.fillRect(X + w * .3, Y + h * .34, w * .4, h * .12); break;
+    case 'medkit': ctx.fillStyle = '#e3e6e8'; rr(X + p * 2, Y + p * 2, w - 4 * p, h - 4 * p, 4); ctx.fill(); ctx.fillStyle = medUses ? '#2e9e5a' : '#777'; ctx.fillRect(X + w * .44, Y + h * .28, w * .12, h * .44); ctx.fillRect(X + w * .28, Y + h * .44, w * .44, h * .12); break;
+    case 'desk': shadowRect(X, Y + p, w, h - 2 * p); ctx.fillStyle = '#5c4a38'; rr(X, Y + p, w, h - 2 * p, 3); ctx.fill(); ctx.fillStyle = '#ece6da'; ctx.fillRect(X + w * .2, Y + h * .3, w * .25, h * .35); ctx.fillStyle = '#2a2e34'; ctx.fillRect(X + w * .6, Y + h * .25, w * .25, h * .4); break;
+    case 'console': ctx.fillStyle = '#25272e'; ctx.fillRect(X, Y, w, h * .85); ctx.fillStyle = 'rgba(255,255,255,.08)'; ctx.fillRect(X, Y, w, 2);
+      for (let i = 0; i < 3; i++){ ctx.fillStyle = i < partsInstalled ? (radioDone ? '#5fe08a' : '#e0c85f') : '#3a3d46'; ctx.fillRect(X + i * TS + TS * .2, Y + h * .2, TS * .6, h * .3); }
+      if (power()){ ctx.fillStyle = Math.sin(time * 6) > 0 ? '#ff4040' : '#601010'; ctx.beginPath(); ctx.arc(X + w - TS * .15, Y + h * .7, 2.5, 0, 7); ctx.fill(); } break;
+    case 'rack': ctx.fillStyle = '#1e2026'; ctx.fillRect(X + p, Y, w - 2 * p, h); for (let i = 0; i < 6; i++){ ctx.fillStyle = power() && hash(i, Math.floor(time * 3)) > .4 ? '#5fe08a' : '#24402c'; ctx.fillRect(X + w * .3, Y + p + i * h / 6.5, 3, 3); } break;
+    case 'generator': {
+      shadowRect(X + p, Y + p, w - 2 * p, h - 2 * p);
+      ctx.fillStyle = '#4b4f3a'; rr(X + p, Y + p, w - 2 * p, h - 2 * p, 8); ctx.fill();
+      ctx.fillStyle = '#2b2d22'; rr(X + p * 3, Y + p * 3, w - 6 * p, h * .4, 6); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.4)'; for (let i = 0; i < 6; i++) ctx.fillRect(X + p * 4, Y + p * 4 + i * 4, w - 8 * p, 2);
+      const on = power(), jit = on ? Math.sin(time * 40) : 0;
+      ctx.fillStyle = on ? '#e8c34a' : (gen.broken === 'gen' ? '#c0392b' : '#3a3a30'); ctx.beginPath(); ctx.arc(X + w * .5 + jit, Y + h * .72, TS * .22, 0, 7); ctx.fill();
+      ctx.fillStyle = '#1a1b14'; ctx.fillRect(X + w * .15, Y + h * .9, w * .7, 4); ctx.fillStyle = gen.fuel < 20 ? '#c0392b' : '#8ac04a'; ctx.fillRect(X + w * .15, Y + h * .9, w * .7 * (gen.fuel / 100), 4);
+      if (gen.broken === 'gen' && Math.random() < .2) parts.push({ x: f.x + 1.5 + rnd(-.5, .5), y: f.y + 1.5, vx: rnd(-2, 2), vy: rnd(-2, 0), life: .3, color: '#ffd060', s: 2 });
+      break; }
+    case 'fuse': ctx.fillStyle = '#5a6068'; ctx.fillRect(X + p * 2, Y + p, w - 4 * p, h - 2 * p); ctx.fillStyle = gen.broken === 'fuse' ? '#c0392b' : '#6fe08a'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h * .35, 3, 0, 7); ctx.fill(); ctx.fillStyle = '#e8c34a'; ctx.fillRect(X + w * .35, Y + h * .55, w * .3, 3); break;
+    case 'barrel': case 'fuelbarrel': ctx.fillStyle = '#9a2a1e'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .36, 0, 7); ctx.fill(); ctx.strokeStyle = '#5a1810'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .24, 0, 7); ctx.stroke();
+      if (f.t === 'fuelbarrel' && !garageCans){ ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.arc(X + w / 2, Y + h / 2, TS * .36, 0, 7); ctx.fill(); } break;
+    case 'tools': ctx.fillStyle = '#4a3a2a'; ctx.fillRect(X, Y, w, h * .5); ctx.strokeStyle = '#a0a8b0'; ctx.lineWidth = 2; for (let i = 0; i < 5; i++){ ctx.beginPath(); ctx.moveTo(X + p + i * w / 5.5, Y + 3); ctx.lineTo(X + p + i * w / 5.5 + 2, Y + h * .42); ctx.stroke(); } break;
+    case 'workbench': shadowRect(X, Y, w, h * .85); ctx.fillStyle = '#7a5a3a'; ctx.fillRect(X, Y, w, h * .85); ctx.fillStyle = '#5a4028'; ctx.fillRect(X, Y + h * .7, w, h * .15); ctx.fillStyle = '#8a9098'; ctx.fillRect(X + w * .1, Y + h * .25, w * .2, h * .3); ctx.fillStyle = '#c0392b'; ctx.fillRect(X + w * .6, Y + h * .3, w * .12, h * .2); break;
+    case 'cupboard': shadowRect(X + p, Y + p * .5, w - 2 * p, h - p);
+      ctx.fillStyle = f.n && f.n.indexOf('İlaç') === 0 ? '#d6dde0' : f.n && f.n.indexOf('Alet') === 0 ? '#8a3a2a' : '#6b5238'; ctx.fillRect(X + p, Y + p * .5, w - 2 * p, h - p);
+      ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(X + p, Y + p * .5, w - 2 * p, 3);
+      ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.2; ctx.strokeRect(X + p * 1.6, Y + p * 1.4, w / 2 - p * 1.6, h - p * 2.6); ctx.strokeRect(X + w / 2, Y + p * 1.4, w / 2 - p * 1.6, h - p * 2.6);
+      ctx.fillStyle = '#c9a85a'; ctx.fillRect(X + w / 2 - 3, Y + h * .45, 2, 5); ctx.fillRect(X + w / 2 + 1, Y + h * .45, 2, 5);
+      break;
+    case 'crate': shadowRect(X + p * .5, Y + p * .5, w - p, h - p); ctx.fillStyle = f.loot && !f.loot.length ? '#5a4428' : '#7a5c36'; ctx.fillRect(X + p * .5, Y + p * .5, w - p, h - p); ctx.strokeStyle = '#4e3a22'; ctx.lineWidth = 2; ctx.strokeRect(X + p * .5, Y + p * .5, w - p, h - p); ctx.beginPath(); ctx.moveTo(X + p, Y + p); ctx.lineTo(X + w - p, Y + h - p); ctx.stroke(); break;
+    case 'gunbox': ctx.fillStyle = '#b8361e'; rr(X + p * 1.5, Y + p * 2, w - 3 * p, h - 4 * p, 4); ctx.fill(); if (!gunTaken){ ctx.fillStyle = '#ffd36b'; ctx.fillRect(X + w * .3, Y + h * .42, w * .4, h * .14); } break;
+    case 'snowcat': {
+      shadowRect(X, Y + p, w, h - p);
+      ctx.fillStyle = '#1e1e22'; rr(X, Y + h * .05, w, h * .2, 4); ctx.fill(); rr(X, Y + h * .75, w, h * .2, 4); ctx.fill();
+      ctx.fillStyle = '#d0702a'; rr(X + p * 2, Y + h * .15, w - 4 * p, h * .7, 8); ctx.fill();
+      ctx.fillStyle = '#9fc3dc'; rr(X + w * .62, Y + h * .25, w * .25, h * .5, 4); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.fillRect(X + w * .1, Y + h * .45, w * .45, 3);
+      if (player.hidden === f){ ctx.fillStyle = 'rgba(255,220,150,.2)'; rr(X, Y, w, h, 8); ctx.fill(); }
+      break; }
+    case 'shed': shadowRect(X, Y, w, h); ctx.fillStyle = '#5a4630'; ctx.fillRect(X, Y, w, h); ctx.fillStyle = 'rgba(0,0,0,.25)'; for (let i = 1; i < f.w * 3; i++) ctx.fillRect(X + i * TS / 3, Y, 1, h);
+      ctx.fillStyle = '#eef2f6'; ctx.fillRect(X - 3, Y - 3, w + 6, h * .25); ctx.fillStyle = '#2a2018'; ctx.fillRect(X + w * .4, Y + h * .55, w * .2, h * .45);
+      for (let i = 0; i < Math.min(cans, 6); i++){ ctx.fillStyle = '#c0392b'; ctx.fillRect(X + p + (i % 3) * TS * .3, Y + h * .3 + Math.floor(i / 3) * TS * .3, TS * .2, TS * .25); } break;
+    case 'weather': ctx.strokeStyle = '#555c66'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X + w / 2, Y + h); ctx.lineTo(X + w / 2, Y - h * .3); ctx.stroke();
+      const a = time * 6; ctx.fillStyle = '#c0392b'; for (let i = 0; i < 3; i++){ const aa = a + i * 2.09; ctx.beginPath(); ctx.arc(X + w / 2 + Math.cos(aa) * TS * .3, Y - h * .3 + Math.sin(aa) * TS * .3, 4, 0, 7); ctx.fill(); }
+      ctx.fillStyle = '#2a3038'; ctx.fillRect(X + p * 2, Y + h * .5, w - 4 * p, h * .3); break;
+    case 'kennel': for (let i = 0; i < f.w; i++){ const kx = X + i * TS; ctx.fillStyle = '#6a4a2a'; ctx.fillRect(kx + p, Y + p, TS - 2 * p, h - 2 * p); ctx.fillStyle = '#eef2f6'; ctx.fillRect(kx + p, Y + p, TS - 2 * p, h * .2); ctx.fillStyle = '#1a1210'; ctx.beginPath(); ctx.arc(kx + TS / 2, Y + h * .8, TS * .18, Math.PI, 0); ctx.fill(); }
+      ctx.fillStyle = 'rgba(140,20,20,.45)'; ctx.beginPath(); ctx.ellipse(X + w * .55, Y + h * 1.3, TS * .4, TS * .15, .3, 0, 7); ctx.fill(); break;
+    case 'fueltank': shadowRect(X, Y, w, h); ctx.fillStyle = '#8a9098'; rr(X, Y + p, w, h - 2 * p, h / 2); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.fillRect(X + p * 2, Y + h * .25, w - 4 * p, 3); ctx.fillStyle = '#c0392b'; ctx.fillRect(X + w * .4, Y + h * .45, w * .2, h * .15); ctx.fillStyle = '#eef2f6'; rr(X, Y, w, h * .25, 8); ctx.fill(); break;
+    case 'antenna': ctx.strokeStyle = '#555c66'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X + w / 2, Y + h); ctx.lineTo(X + w / 2, Y - h * 1.6); ctx.moveTo(X + w * .1, Y - h * .4); ctx.lineTo(X + w * .9, Y - h * .4); ctx.moveTo(X + w * .25, Y - h); ctx.lineTo(X + w * .75, Y - h); ctx.stroke();
+      if (radioDone && Math.sin(time * 4) > 0){ ctx.fillStyle = '#ff4040'; ctx.beginPath(); ctx.arc(X + w / 2, Y - h * 1.6, 3, 0, 7); ctx.fill(); } break;
+    case 'drift': ctx.fillStyle = '#f2f5f8'; ctx.beginPath(); ctx.ellipse(X + w / 2, Y + h / 2, w * .6, h * .55, 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(150,170,195,.25)'; ctx.beginPath(); ctx.ellipse(X + w / 2, Y + h * .65, w * .5, h * .3, 0, 0, 7); ctx.fill(); break;
+  }
+}
+const ITEMCOL = { wood:'#a0703a', metal:'#9aa4ae', wire:'#d0803a', cloth:'#c8c0e0', chem:'#7ae05a', ammo:'#d6b04a', battery:'#e6d870', part:'#78c8ff', pistol:'#2a2e34' };
+function drawItems(){
+  for (const it of items){
+    const X = sx(it.x + .5), Y = sy(it.y + .5), g = .5 + .5 * Math.sin(time * 4 + it.x * 1.3 + it.y);
+    if (X < -20 || Y < -20 || X > W + 20 || Y > H + 20) continue;
+    ctx.save(); ctx.translate(X, Y);
+    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(2, TS * .12, TS * .2, TS * .07, 0, 0, 7); ctx.fill();
+    const s = TS;
+    switch (it.t){
+      case 'wood': ctx.fillStyle = '#8a5a2a'; ctx.rotate(.4); ctx.fillRect(-s * .2, -s * .06, s * .4, s * .1); ctx.fillStyle = '#a0703a'; ctx.fillRect(-s * .18, s * .02, s * .38, s * .1); break;
+      case 'metal': ctx.fillStyle = '#7d8790'; ctx.beginPath(); ctx.moveTo(-s * .18, s * .08); ctx.lineTo(-s * .05, -s * .12); ctx.lineTo(s * .18, -s * .02); ctx.lineTo(s * .08, s * .12); ctx.closePath(); ctx.fill(); ctx.fillStyle = '#b0b8c0'; ctx.fillRect(-s * .05, -s * .03, s * .1, s * .03); break;
+      case 'wire': ctx.strokeStyle = '#d0803a'; ctx.lineWidth = 2; for (let i = 0; i < 3; i++){ ctx.beginPath(); ctx.ellipse(0, 0, s * (.08 + i * .04), s * (.05 + i * .025), 0, 0, 7); ctx.stroke(); } break;
+      case 'cloth': ctx.fillStyle = '#b8b0d0'; ctx.beginPath(); ctx.moveTo(-s * .18, -s * .08); ctx.quadraticCurveTo(0, -s * .16, s * .18, -s * .06); ctx.lineTo(s * .14, s * .1); ctx.quadraticCurveTo(0, s * .04, -s * .16, s * .1); ctx.closePath(); ctx.fill(); break;
+      case 'chem': ctx.fillStyle = 'rgba(220,240,240,.8)'; ctx.fillRect(-s * .06, -s * .16, s * .12, s * .06); ctx.fillStyle = '#5ac04a'; ctx.beginPath(); ctx.arc(0, s * .02, s * .12, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.arc(-s * .04, -s * .02, s * .03, 0, 7); ctx.fill(); break;
+      case 'ammo': ctx.fillStyle = '#5a4a2a'; ctx.fillRect(-s * .14, -s * .09, s * .28, s * .18); ctx.fillStyle = '#d6b04a'; for (let i = 0; i < 4; i++) ctx.fillRect(-s * .11 + i * s * .065, -s * .06, s * .04, s * .1); break;
+      case 'battery': ctx.fillStyle = '#2a2e34'; ctx.fillRect(-s * .08, -s * .14, s * .16, s * .26); ctx.fillStyle = '#e6d870'; ctx.fillRect(-s * .08, -s * .14, s * .16, s * .08); break;
+      case 'part': ctx.fillStyle = '#3b4250'; ctx.fillRect(-s * .18, -s * .12, s * .36, s * .24); ctx.fillStyle = 'rgba(120,200,255,' + (.4 + g * .5) + ')'; ctx.fillRect(-s * .1, -s * .04, s * .2, s * .08); break;
+      case 'pistol': ctx.rotate(-.3); ctx.fillStyle = '#1e2126'; ctx.fillRect(-s * .18, -s * .06, s * .32, s * .1); ctx.fillRect(-s * .16, 0, s * .1, s * .16); ctx.fillStyle = '#4a4e56'; ctx.fillRect(-s * .18, -s * .06, s * .32, s * .03); break;
+    }
+    ctx.restore();
+    ctx.strokeStyle = 'rgba(255,240,200,' + g * .35 + ')'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(X, Y, TS * .28, 0, 7); ctx.stroke();
+  }
+}
+function drawPrints(){
+  for (const p of prints){
+    const age = time - p.t; if (age > 80) continue;
+    const X = sx(p.x), Y = sy(p.y); if (X < -10 || Y < -10 || X > W + 10 || Y > H + 10) continue;
+    const a = (1 - age / 80) * (p.kind === 'claw' ? .55 : .35);
+    ctx.save(); ctx.translate(X, Y); ctx.rotate(p.a + Math.PI / 2);
+    if (p.kind === 'claw'){ ctx.fillStyle = 'rgba(90,20,30,' + a + ')'; for (let i = -1; i <= 1; i++){ ctx.beginPath(); ctx.ellipse(i * TS * .07, -TS * .05, TS * .025, TS * .09, i * .3, 0, 7); ctx.fill(); } }
+    else { ctx.fillStyle = 'rgba(110,125,150,' + a + ')'; ctx.beginPath(); ctx.ellipse(0, 0, TS * .05, TS * .1, 0, 0, 7); ctx.fill(); }
+    ctx.restore();
+  }
+}
+function drawCorpses(){
+  for (const c of corpses){
+    const X = sx(c.x), Y = sy(c.y); if (X < -40 || Y < -40 || X > W + 40 || Y > H + 40) continue;
+    ctx.fillStyle = c.mimic ? 'rgba(70,10,15,.75)' : 'rgba(120,10,10,.6)'; ctx.beginPath(); ctx.ellipse(X, Y, TS * .5, TS * .32, .3, 0, 7); ctx.fill();
+    if (c.mimic){ ctx.strokeStyle = '#3a0508'; ctx.lineWidth = 3; for (let i = 0; i < 5; i++){ const a = i * 1.3; ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X + Math.cos(a) * TS * .55, Y + Math.sin(a) * TS * .4); ctx.stroke(); } }
+    else { ctx.fillStyle = c.c.coat; ctx.beginPath(); ctx.ellipse(X, Y, TS * .28, TS * .18, .3, 0, 7); ctx.fill(); ctx.fillStyle = c.c.skin; ctx.beginPath(); ctx.arc(X + TS * .25, Y - TS * .08, TS * .1, 0, 7); ctx.fill(); }
+  }
+}
+// ---------- karakterler ----------
+function drawHuman(X, Y, ang, walk, col, opts = {}){
+  const r = TS * .3;
+  const step = Math.sin(walk * 6.5), moving = opts.moving;
+  ctx.save();
+  ctx.translate(X, Y);
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(r * .1, r * .25, r * .95, r * .75, 0, 0, 7); ctx.fill();
+  ctx.rotate(ang + Math.PI / 2);
+  // bacaklar
+  if (moving){ ctx.fillStyle = col.pants || '#2a2e36'; ctx.beginPath(); ctx.ellipse(-r * .3, -step * r * .45, r * .17, r * .26, 0, 0, 7); ctx.ellipse(r * .3, step * r * .45, r * .17, r * .26, 0, 0, 7); ctx.fill(); }
+  // kollar
+  ctx.fillStyle = col.coat; ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 1.2;
+  const sw = moving ? step * r * .35 : 0;
+  ctx.beginPath(); ctx.ellipse(-r * .78, sw, r * .2, r * .3, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(r * .78, -sw, r * .2, r * .3, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = col.skin; ctx.beginPath(); ctx.arc(-r * .8, sw - r * .28, r * .12, 0, 7); ctx.arc(r * .8, -sw - r * .28, r * .12, 0, 7); ctx.fill();
+  // gövde
+  ctx.fillStyle = col.coat; ctx.beginPath(); ctx.ellipse(0, 0, r * .72, r * .46, 0, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.beginPath(); ctx.ellipse(-r * .15, -r * .15, r * .4, r * .18, 0, 0, 7); ctx.fill();
+  if (col.hood){ ctx.fillStyle = '#e8dcc8'; ctx.beginPath(); ctx.arc(0, r * .08, r * .5, 0, 7); ctx.fill(); }
+  // kafa
+  ctx.fillStyle = col.skin; ctx.beginPath(); ctx.arc(0, -r * .02, r * .4, 0, 7); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = col.hair;
+  switch (col.hs){
+    case 'bald': ctx.globalAlpha = .4; ctx.beginPath(); ctx.arc(0, r * .1, r * .38, 0, Math.PI); ctx.fill(); ctx.globalAlpha = 1; break;
+    case 'bun': ctx.beginPath(); ctx.arc(0, r * .05, r * .41, Math.PI * -.05, Math.PI * 1.05); ctx.fill(); ctx.beginPath(); ctx.arc(0, r * .45, r * .17, 0, 7); ctx.fill(); break;
+    case 'long': ctx.beginPath(); ctx.arc(0, r * .05, r * .43, Math.PI * -.1, Math.PI * 1.1); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, r * .45, r * .32, r * .3, 0, 0, 7); ctx.fill(); break;
+    case 'pony': ctx.beginPath(); ctx.arc(0, r * .05, r * .41, Math.PI * -.05, Math.PI * 1.05); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, r * .55, r * .1, r * .25, 0, 0, 7); ctx.fill(); break;
+    case 'bob': ctx.beginPath(); ctx.arc(0, r * .02, r * .44, Math.PI * -.15, Math.PI * 1.15); ctx.fill(); break;
+    case 'messy': ctx.beginPath(); for (let i = 0; i <= 8; i++){ const a = Math.PI * (-.1 + i / 8 * 1.2), rr2 = r * (i % 2 ? .38 : .5); i ? ctx.lineTo(Math.cos(a) * rr2, r * .05 + Math.sin(a) * rr2) : ctx.moveTo(Math.cos(a) * rr2, r * .05 + Math.sin(a) * rr2); } ctx.fill(); break;
+    case 'hood': ctx.fillStyle = col.coat; ctx.beginPath(); ctx.arc(0, r * .02, r * .44, Math.PI * -.2, Math.PI * 1.2); ctx.fill(); ctx.fillStyle = '#e8dcc8'; ctx.beginPath(); ctx.arc(0, -r * .02, r * .44, Math.PI * 1.2, Math.PI * 1.8); ctx.lineWidth = r * .12; ctx.strokeStyle = '#e8dcc8'; ctx.stroke(); break;
+    default: ctx.beginPath(); ctx.arc(0, r * .04, r * .41, Math.PI * -.02, Math.PI * 1.02); ctx.fill(); if (col.hs === 'beard'){ ctx.beginPath(); ctx.arc(0, -r * .2, r * .3, Math.PI * 1.1, Math.PI * 1.9); ctx.fill(); }
+  }
+  // yüz (yön)
+  ctx.fillStyle = opts.glitch ? '#ff2a2a' : '#141414';
+  ctx.beginPath(); ctx.arc(-r * .14, -r * .26, r * .055, 0, 7); ctx.arc(r * .14, -r * .26, r * .055, 0, 7); ctx.fill();
+  if (opts.light){ ctx.fillStyle = '#2a2e34'; ctx.fillRect(r * .5, -r * .95, r * .2, r * .45); ctx.fillStyle = '#f2e6b8'; ctx.fillRect(r * .5, -r * 1.0, r * .2, r * .08); }
+  if (opts.weapon){ ctx.strokeStyle = '#9aa2aa'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(r * .8, -r * .3); ctx.lineTo(r * .9, -r * 1.1 - Math.abs(Math.sin(time * 10)) * r * .4); ctx.stroke(); }
+  ctx.restore();
+}
+function drawPerson(c){
+  const X = sx(c.x), Y = sy(c.y);
+  const sleeping = asleep(c);
+  ctx.save();
+  if (sleeping){
+    const r = TS * .3;
+    ctx.fillStyle = c.coat; ctx.globalAlpha = .9; rr(X - r * .7, Y - r * .3, r * 1.4, r * 1.4, 6); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.fillStyle = c.skin; ctx.beginPath(); ctx.arc(X, Y - r * .75, r * .38, 0, 7); ctx.fill();
+    ctx.fillStyle = c.hair; ctx.beginPath(); ctx.arc(X, Y - r * .85, r * .4, Math.PI, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(200,215,230,.6)'; ctx.font = (TS * .28) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.fillText('z', X + r, Y - r - Math.sin(time * 2 + c.i) * 4);
+  } else {
+    const moving = (c.path && c.path.length > 0) || (!!c.fight && !(c.gun && c.ammo));
+    drawHuman(X, Y, c.ang, c.walk, c, { moving, weapon: !!c.fight && !(c.gun && c.ammo) });
+    if (c.gun && (c.fight || c.seenGun)){ ctx.save(); ctx.translate(X, Y); ctx.rotate(c.ang); ctx.fillStyle = '#1e2126'; ctx.fillRect(TS * .2, TS * .12, TS * .28, TS * .07); ctx.restore(); }
+    if (c.testing || (c.hold && !sleeping)){ ctx.fillStyle = '#e0f0ff'; ctx.font = '600 11px Segoe UI'; ctx.textAlign = 'center'; ctx.fillText('💉', X, Y - TS * .55); }
+    if (c.hp < 100){ ctx.fillStyle = '#300'; ctx.fillRect(X - TS * .3, Y - TS * .62, TS * .6, 3); ctx.fillStyle = '#d04040'; ctx.fillRect(X - TS * .3, Y - TS * .62, TS * .6 * c.hp / 100, 3); }
+  }
+  ctx.restore();
+}
+function drawBubble(c){
+  if (!c.bubble) return;
+  const X = sx(c.x), Y = sy(c.y) - TS * .75;
+  ctx.font = '600 12px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  let text = c.bubble.text; if (text.length > 46) text = text.slice(0, 44) + '…';
+  const w = Math.min(ctx.measureText(text).width + 16, 340);
+  ctx.globalAlpha = clamp(c.bubble.t, 0, 1);
+  ctx.fillStyle = 'rgba(245,240,228,.95)'; rr(X - w / 2, Y - 13, w, 24, 8); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(X - 5, Y + 10); ctx.lineTo(X, Y + 17); ctx.lineTo(X + 5, Y + 10); ctx.fill();
+  ctx.fillStyle = '#1a1a1e'; ctx.fillText(text, X, Y);
+  ctx.globalAlpha = 1;
+}
+function drawName(c){
+  const X = sx(c.x), Y = sy(c.y) + TS * .56;
+  ctx.font = '600 11px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const s = nm(c) + (player.mimic && c.mimic ? ' ◆' : '');
+  const w = ctx.measureText(s).width + 8;
+  ctx.fillStyle = c.fight === player ? 'rgba(90,10,10,.8)' : 'rgba(5,8,12,.62)'; rr(X - w / 2, Y - 7, w, 14, 7); ctx.fill();
+  ctx.fillStyle = player.mimic && c.mimic ? '#f0a0a0' : '#dbe4ec'; ctx.fillText(s, X, Y);
+}
+function drawCreature(cr){
+  const X = sx(cr.x), Y = sy(cr.y), r = TS * .46, t = time * 6;
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(X, Y + r * .6, r * 1.1, r * .4, 0, 0, 7); ctx.fill();
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 9; i++){
+    const a = i / 9 * Math.PI * 2 + Math.sin(t * .4 + i) * .35, l = r * (1.2 + .35 * Math.sin(t + i * 2));
+    ctx.strokeStyle = i % 2 ? '#4a0c12' : '#2a0508'; ctx.lineWidth = TS * (.07 - (i % 3) * .015);
+    ctx.beginPath(); ctx.moveTo(X, Y); ctx.quadraticCurveTo(X + Math.cos(a + .5) * l * .6, Y + Math.sin(a + .5) * l * .6, X + Math.cos(a) * l, Y + Math.sin(a) * l); ctx.stroke();
+  }
+  const grd = ctx.createRadialGradient(X - r * .2, Y - r * .2, 0, X, Y, r);
+  grd.addColorStop(0, '#8a2a30'); grd.addColorStop(.7, '#4a0c12'); grd.addColorStop(1, '#2a0508');
+  ctx.fillStyle = grd; ctx.beginPath();
+  for (let i = 0; i <= 20; i++){ const a = i / 20 * Math.PI * 2, rr2 = r * (.72 + .14 * Math.sin(a * 3 + t) + .06 * Math.sin(a * 7 - t * 1.3)); i ? ctx.lineTo(X + Math.cos(a) * rr2, Y + Math.sin(a) * rr2) : ctx.moveTo(X + Math.cos(a) * rr2, Y + Math.sin(a) * rr2); }
+  ctx.fill();
+  ctx.fillStyle = cr.c.skin; ctx.globalAlpha = .6; ctx.beginPath(); ctx.ellipse(X + r * .15, Y - r * .15, r * .32, r * .38, .3, 0, 7); ctx.fill();
+  ctx.fillStyle = cr.c.hair; ctx.beginPath(); ctx.arc(X + r * .15, Y - r * .3, r * .3, Math.PI, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+  ctx.fillStyle = '#120204'; ctx.beginPath(); ctx.ellipse(X - r * .2, Y + r * .25, r * .22, r * (.08 + .1 * Math.abs(Math.sin(t * .7))), -.3, 0, 7); ctx.fill();
+  ctx.fillStyle = '#ffe9a8'; ctx.beginPath(); ctx.arc(X - r * .25, Y - r * .1, 2.5, 0, 7); ctx.arc(X + r * .32, Y - r * .3, 2.5, 0, 7); ctx.arc(X + r * .05, Y + r * .05, 2, 0, 7); ctx.fill();
+  ctx.fillStyle = '#200'; ctx.fillRect(X - r, Y - r * 1.3, r * 2, 4); ctx.fillStyle = '#e04a3a'; ctx.fillRect(X - r, Y - r * 1.3, r * 2 * clamp(cr.hp / 100, 0, 1), 4);
+  ctx.restore();
+}
+function drawPlayer(){
+  if (player.hidden) return;
+  const moving = !!(player.path && player.path.length) || ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].some(k => keys[k]);
+  const X = sx(player.x), Y = sy(player.y);
+  drawHuman(X, Y, player.ang, player.walk, { coat:'#d65a2a', skin:'#e9c7a6', hair:'#2b2b30', hs:'hood', pants:'#2a2e36' }, { moving, light: player.light });
+  if (player.gun){ ctx.save(); ctx.translate(X, Y); ctx.rotate(player.ang); ctx.fillStyle = '#1e2126'; ctx.fillRect(TS * .2, -TS * .2, TS * .28, TS * .07); ctx.restore(); }
+  if (player.carrying){ ctx.fillStyle = '#c0392b'; ctx.fillRect(X + TS * .2, Y + TS * .05, TS * .2, TS * .26); }
+}
+function drawParts(){
+  for (const p of parts){
+    ctx.globalAlpha = clamp(p.life * 2, 0, 1); ctx.fillStyle = p.color;
+    if (p.puff){ ctx.beginPath(); ctx.arc(sx(p.x), sy(p.y), p.s * (1.6 - p.life), 0, 7); ctx.fill(); }
+    else ctx.fillRect(sx(p.x) - p.s / 2, sy(p.y) - p.s / 2, p.s, p.s);
+  }
+  ctx.globalAlpha = 1;
+  for (const s of shots){
+    ctx.strokeStyle = 'rgba(255,230,150,' + s.t * 6 + ')'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(sx(s.x0), sy(s.y0)); ctx.lineTo(sx(s.x1), sy(s.y1)); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,220,120,' + s.t * 6 + ')'; ctx.beginPath(); ctx.arc(sx(s.x0), sy(s.y0), 8, 0, 7); ctx.fill();
+  }
+}
+function drawSnow(){
+  const ox = sx(34.5), oy = sy(0), ow = sx(48) - ox, oh = sy(32) - oy;
+  ctx.save(); ctx.beginPath(); ctx.rect(ox, oy, ow, oh); ctx.clip();
+  ctx.fillStyle = 'rgba(255,255,255,.8)';
+  for (const s of snow){ const X = sx(s.x), Y = sy(s.y); if (X < -5 || X > W + 5 || Y < -5 || Y > H + 5) continue; ctx.fillRect(X, Y, 1.6 * s.s, 1.6 * s.s); }
+  ctx.restore();
+}
+function drawPrompt(){
+  if (dialogOpen || state !== 'play') return;
+  if (player.channel){
+    const ch = player.channel, X = sx(player.x), Y = sy(player.y) - TS * .95, w = TS * 2.4;
+    ctx.fillStyle = 'rgba(5,8,12,.88)'; rr(X - w / 2 - 6, Y - 22, w + 12, 34, 8); ctx.fill();
+    ctx.fillStyle = '#c4d0db'; ctx.font = '600 11px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(ch.label, X, Y - 12);
+    ctx.fillStyle = '#1c2632'; ctx.fillRect(X - w / 2, Y - 2, w, 6); ctx.fillStyle = '#8ec5ea'; ctx.fillRect(X - w / 2, Y - 2, w * clamp(ch.t / ch.dur, 0, 1), 6);
+    return;
+  }
+  const it = interactables()[0]; if (!it) return;
+  const X = sx(player.x), Y = sy(player.y) - TS * .8;
+  const s = (isTouch ? '' : 'E · ') + it.label;
+  ctx.font = '600 12px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(s).width + 16;
+  ctx.fillStyle = 'rgba(5,8,12,.88)'; rr(X - w / 2, Y - 11, w, 22, 11); ctx.fill();
+  ctx.strokeStyle = 'rgba(142,197,234,.35)'; ctx.lineWidth = 1; rr(X - w / 2, Y - 11, w, 22, 11); ctx.stroke();
+  ctx.fillStyle = '#8ec5ea'; ctx.fillText(s, X, Y);
+}
+function drawMinimap(){
+  const s = Math.min(6, (Math.min(W, H) * .5) / MW), mw = MW * s, mh = MH * s;
+  const ox = W - mw - 14, oy = H - mh - (isTouch ? 140 : 14);
+  ctx.fillStyle = 'rgba(5,8,12,.85)'; rr(ox - 8, oy - 8, mw + 16, mh + 16, 8); ctx.fill();
+  for (const k in ROOMS){
+    const r = ROOMS[k];
+    ctx.fillStyle = k === 'outside' ? 'rgba(200,215,230,.25)' : (k === roomOf(player.x, player.y) ? 'rgba(142,197,234,.45)' : 'rgba(120,140,160,.25)');
+    ctx.fillRect(ox + r.x1 * s, oy + r.y1 * s, (r.x2 - r.x1 + 1) * s, (r.y2 - r.y1 + 1) * s);
+    if (!isHall(k) && s >= 5){ ctx.fillStyle = 'rgba(220,230,240,.7)'; ctx.font = '600 8px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(r.n.split(' ')[0], ox + (r.x1 + r.x2 + 1) / 2 * s, oy + (r.y1 + r.y2 + 1) / 2 * s + 3); }
+  }
+  ctx.fillStyle = 'rgba(160,180,200,.5)'; for (const [x, y] of DOORS) ctx.fillRect(ox + x * s, oy + y * s, s, s);
+  ctx.fillStyle = '#ff8a3a'; ctx.beginPath(); ctx.arc(ox + player.x * s, oy + player.y * s, 3, 0, 7); ctx.fill();
+}
+function drawOverlays(){
+  const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .75);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.55)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (player.heat < 40){
+    const a = (40 - player.heat) / 40 * .55;
+    const fg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .25, W / 2, H / 2, Math.max(W, H) * .7);
+    fg.addColorStop(0, 'rgba(200,225,255,0)'); fg.addColorStop(1, 'rgba(200,225,255,' + a + ')');
+    ctx.fillStyle = fg; ctx.fillRect(0, 0, W, H);
+  }
+  if (player.fat < 20){ ctx.fillStyle = 'rgba(0,0,0,' + ((20 - player.fat) / 20 * .35 * (.6 + .4 * Math.sin(time * 1.5))) + ')'; ctx.fillRect(0, 0, W, H); }
+  if (hurtT > 0){ ctx.fillStyle = 'rgba(160,0,0,' + hurtT * .35 + ')'; ctx.fillRect(0, 0, W, H); }
+  if (player.hp < 35){ const p = .12 + .1 * Math.sin(time * 4); ctx.fillStyle = 'rgba(120,0,0,' + p + ')'; ctx.fillRect(0, 0, W, H); }
+  if (player.hidden){
+    ctx.fillStyle = 'rgba(0,0,0,.92)'; ctx.fillRect(0, 0, W, H * .32); ctx.fillRect(0, H * .68, W, H * .32);
+    for (let i = 0; i < 7; i++) ctx.fillRect(0, H * .32 + i * H * .052 + H * .022, W, H * .03);
+  }
+}
+function updateHud(){
+  const h = hourOf(T);
+  $('clock').textContent = clockStr();
+  $('role').innerHTML = player.mimic ? '<span class="badc">Rolün: Taklitçi</span>' : '<span class="ok">Rolün: İnsan</span>';
+  $('power').innerHTML = power() ? '<span class="ok">● Elektrik var</span> · yakıt %' + Math.round(gen.fuel) : '<span class="badc">● Elektrik yok</span> · yakıt bitti';
+  $('bHp').style.width = player.hp + '%'; $('bHeat').style.width = player.heat + '%';
+  $('bBat').style.width = player.bat + '%'; $('bSta').style.width = player.sta + '%'; $('bFat').style.width = player.fat + '%';
+  const obj = [];
+  obj.push(radioDone ? '<span class="ok">✓ Telsiz çalışıyor</span>' : 'Telsiz: ' + Math.min(3, partsInstalled) + '/3 parça' + (player.parts ? ' (+' + player.parts + ' sende)' : '') + (partsInstalled >= 3 ? (dayOf(T) >= 3 ? ' · <span class="warn">ayarla!</span>' : ' · 3. gün ayarlanabilir') : ''));
+  obj.push('Uçak: 5. gün 06:00');
+  obj.push('Hayatta: ' + (crew.filter(c => alive(c)).length + 1) + '/10');
+  if (togetherDay()) obj.push('<span class="warn">Bugün herkes birlikte</span>');
+  if (player.mimic) obj.push(canConvert() ? '<span class="badc">Bugün birini dönüştürebilirsin</span>' : '<span class="dim">Bugün dönüştüremezsin</span>');
+  if (h >= 20 || h < 6) obj.push('<span class="dim">Uyku vakti: yatağın yatakhanede (sağ alt)</span>');
+  if (crew.some(c => c.fight === player)) obj.push('<span class="badc">Biri sana saldırıyor!</span>');
+  $('obj').innerHTML = obj.join('<br>');
+  const iv = [];
+  iv.push('Kan testi: ' + player.kit);
+  iv.push(player.gun ? 'Tabanca · mermi: ' + player.ammo : (player.ammo ? 'Mermi: ' + player.ammo + ' (tabanca yok)' : (player.club ? 'Tahta sopa' : 'Silahsız')));
+  const rsum = Object.keys(RES).filter(k => player.res[k]).map(k => RES[k] + ' ' + player.res[k]);
+  if (rsum.length) iv.push('<span class="dim">' + rsum.join(' · ') + '</span>');
+  if (player.carrying) iv.push('<span style="color:#e8a33d">Yakıt bidonu</span>');
+  if (player.parts) iv.push('<span style="color:#8ec5ea">Telsiz parçası ×' + player.parts + '</span>');
+  $('invBox').innerHTML = iv.join('<br>');
+}
+
+function draw(){
+  ctx.fillStyle = '#020305'; ctx.fillRect(0, 0, W, H);
+  if (!player) return;
+  updateCam();
+  ctx.save();
+  if (shake > 0 && !reduceMotion) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
+  const s = bg.width / (MW * TS);
+  ctx.drawImage(bg, camX * s, camY * s, W * s, H * s, 0, 0, W, H);
+  drawPrints();
+  FURN.filter(f => f.t === 'rug').forEach(drawFurn);
+  FURN.filter(f => f.t !== 'rug').forEach(drawFurn);
+  drawCorpses();
+  drawItems();
+  const shown = [];
+  const sorted = crew.filter(c => alive(c)).sort((a, b) => a.y - b.y);
+  for (const c of sorted){ if (visibleTo(c.x, c.y)){ drawPerson(c); shown.push(c); } }
+  for (const cr of creatures) if (visibleTo(cr.x, cr.y)) drawCreature(cr);
+  drawPlayer();
+  drawParts();
+  drawSnow();
+  drawLighting();
+  const [, aIn] = lightParams();
+  for (const c of shown) if (Math.hypot(c.x - player.x, c.y - player.y) < (aIn < .6 ? 7 : 3.5)) drawName(c);
+  for (const c of shown) drawBubble(c);
+  ctx.font = '600 12px Segoe UI, sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(220,230,240,.45)';
+  ctx.fillText(ROOMS[roomOf(player.x, player.y)].n.toUpperCase(), W / 2, H - 18);
+  drawPrompt();
+  ctx.restore();
+  drawOverlays();
+  if (showMap && state === 'play') drawMinimap();
+}
+
+// =====================================================================
+// DÖNGÜ
+// =====================================================================
+let lastT = performance.now(), hudT = 0;
+function loop(now){
+  const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+  if (player) update(dt);
+  draw();
+  if (state === 'play' && (hudT -= dt) <= 0){ hudT = .15; updateHud(); }
+  requestAnimationFrame(loop);
+}
+function previewShell(){
+  T = 21; crew = makeCrew(true);
+  creatures = []; items = []; corpses = []; shots = []; gen = { fuel: 50, broken: false };
+  player = { id:'p', x: 22.5, y: 9.5, ang: -Math.PI / 2, walk: 0, hp: 100, heat: 100, bat: 100, sta: 100, fat: 100, light: true, hidden: null, channel: null, res: {} };
+  partsInstalled = 0; radioDone = false; cans = 7; garageCans = 2; medUses = 3; soupUses = 2;
+}
+previewShell();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
